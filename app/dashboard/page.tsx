@@ -128,7 +128,8 @@ export default function DashboardPage() {
   const ini = `${perfil?.nombre?.[0] || ''}${perfil?.apellido?.[0] || ''}`.toUpperCase()
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', background: '#faf8f7', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#7D0531 0%,#9a0840 50%,#B05276 100%)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+    <div style={{ maxWidth: '430px', width: '100%', minHeight: '100vh', background: '#faf8f7', position: 'relative', boxShadow: '0 0 80px rgba(0,0,0,.35)' }}>
       {toast && <div className="toast">{toast}</div>}
 
       {/* INICIO */}
@@ -424,6 +425,7 @@ export default function DashboardPage() {
           </button>
         ))}
       </nav>
+    </div>
     </div>
   )
 }
