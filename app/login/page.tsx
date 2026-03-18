@@ -63,9 +63,9 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <div style={{ width: '64px', height: '64px', background: '#7D0531', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', margin: '0 auto 16px' }}>🏋️</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: '900', color: '#7D0531' }}>CaritoFit Pro</div>
-          <div style={{ fontSize: '13px', color: '#8a7070', marginTop: '6px' }}>Entrenamiento personalizado con seguimiento real</div>
+          <img src='/logo.png' alt='Team Carito' style={{ width: '100px', height: '100px', borderRadius: '50%', margin: '0 auto 16px', display: 'block', objectFit: 'cover' }} />
+          <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '28px', fontWeight: '900', color: '#7D0531', letterSpacing: '0.05em' }}>Team Carito</div>
+          <div style={{ fontSize: '13px', color: '#8a7070', marginTop: '6px' }}>Tu equipo de entrenamiento personalizado</div>
         </div>
 
         {/* Tabs */}
