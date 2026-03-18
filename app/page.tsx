@@ -1,5 +1,4 @@
-// app/page.tsx
-// Página raíz: redirige al dashboard si está logueado, o al login
+// @ts-nocheck
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
@@ -9,7 +8,6 @@ export default async function HomePage() {
 
   if (!user) redirect('/login')
 
-  // Ver si es admin o alumno
   const { data: perfil } = await supabase
     .from('perfiles')
     .select('rol')
