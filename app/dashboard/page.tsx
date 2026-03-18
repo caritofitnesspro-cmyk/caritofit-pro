@@ -140,7 +140,7 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                 <div>
                   <div style={{ fontSize: '13px', opacity: .7, marginBottom: '4px' }}>Hola de nuevo 👋</div>
-                  <div style={{ fontFamily: 'Georgia, serif', fontSize: '26px', fontWeight: '900' }}>{perfil?.nombre}!</div>
+                  <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '26px', fontWeight: '900' }}>{perfil?.nombre}!</div>
                 </div>
                 <div style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '16px', color: '#fff' }}>{ini}</div>
               </div>
@@ -181,7 +181,7 @@ export default function DashboardPage() {
             {/* Días de la semana */}
             {diasSemana1.length > 0 && (
               <>
-                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: '#7D0531', marginBottom: '14px' }}>Esta semana</h3>
+                <h3 style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '18px', color: '#7D0531', marginBottom: '14px' }}>Esta semana</h3>
                 <div className="card" style={{ padding: '8px' }}>
                   {diasSemana1.map((dia: any) => {
                     const ejsDia = dia.ejercicios || []
@@ -234,12 +234,12 @@ export default function DashboardPage() {
               <>
                 <div className="card-pine" style={{ marginBottom: '20px' }}>
                   <div style={{ fontSize: '11px', opacity: .6, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '6px' }}>Plan activo</div>
-                  <div style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '700', marginBottom: '10px' }}>{plan.nombre}</div>
+                  <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '20px', fontWeight: '700', marginBottom: '10px' }}>{plan.nombre}</div>
                   <span className="badge badge-pink">🎯 {plan.objetivo}</span>
                 </div>
                 {semanas.map((sem: any) => (
                   <div key={sem.id} style={{ marginBottom: '24px' }}>
-                    <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: '#7D0531', marginBottom: '12px' }}>Semana {sem.numero}</h3>
+                    <h3 style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '16px', color: '#7D0531', marginBottom: '12px' }}>Semana {sem.numero}</h3>
                     <div className="card" style={{ padding: '8px' }}>
                       {(sem.dias || []).map((dia: any) => {
                         const ejs = dia.ejercicios || []
@@ -322,7 +322,7 @@ export default function DashboardPage() {
           </div>
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: '#7D0531' }}>Historial de peso</h3>
+              <h3 style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '18px', color: '#7D0531' }}>Historial de peso</h3>
               <button className="btn-wine" style={{ fontSize: '13px', padding: '8px 14px' }} onClick={() => setShowPesoModal(true)}>+ Registrar</button>
             </div>
             {pesos.length === 0 ? (
@@ -371,7 +371,7 @@ export default function DashboardPage() {
             <div className="card-pine" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '22px', color: '#fff' }}>{ini}</div>
               <div>
-                <div style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '700' }}>{perfil?.nombre} {perfil?.apellido}</div>
+                <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '20px', fontWeight: '700' }}>{perfil?.nombre} {perfil?.apellido}</div>
                 <div style={{ opacity: .7, fontSize: '14px', marginTop: '4px' }}>{perfil?.nivel}</div>
               </div>
             </div>
@@ -400,7 +400,7 @@ export default function DashboardPage() {
       {showPesoModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(125,5,49,.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowPesoModal(false)}>
           <div style={{ background: '#faf8f7', borderRadius: '24px 24px 0 0', padding: '28px', width: '100%', maxWidth: '430px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '700', color: '#7D0531', marginBottom: '18px' }}>Registrar peso</h3>
+            <h3 style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '20px', fontWeight: '700', color: '#7D0531', marginBottom: '18px' }}>Registrar peso</h3>
             <div style={{ marginBottom: '16px' }}>
               <label className="field-label">Peso actual (kg)</label>
               <input className="input-field" type="number" step="0.1" min="20" max="300" placeholder="Ej: 65.5" value={nuevoPeso} onChange={e => setNuevoPeso(e.target.value)} />
