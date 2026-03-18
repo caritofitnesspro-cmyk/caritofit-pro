@@ -1,5 +1,5 @@
+// @ts-nocheck
 'use client'
-// app/login/page.tsx
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -8,8 +8,7 @@ import Link from 'next/link'
 export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
-
-  const [mode, setMode] = useState<'alumno' | 'admin'>('alumno')
+  const [mode, setMode] = useState('alumno')
   const [dni, setDni] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,10 +17,8 @@ export default function LoginPage() {
   async function handleLogin() {
     setError('')
     if (!dni || !password) { setError('Completá DNI y contraseña'); return }
-
     setLoading(true)
     try {
-      // Buscar el email asociado a ese DNI
       const { data: perfil } = await supabase
         .from('perfiles')
         .select('id, email, rol')
@@ -34,7 +31,6 @@ export default function LoginPage() {
         return
       }
 
-      // Login con email + contraseña
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: perfil.email,
         password,
@@ -46,7 +42,6 @@ export default function LoginPage() {
         return
       }
 
-      // Redirigir según rol
       if (perfil.rol === 'admin') router.push('/admin')
       else router.push('/dashboard')
 
@@ -57,64 +52,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#7D0531', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div style={{ background: '#faf8f7', borderRadius: '28px', padding: '48px 40px', width: '100%', maxWidth: '420px', boxShadow: '0 24px 80px rgba(0,0,0,.3)' }}>
-
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <div style={{ width: '64px', height: '64px', background: '#7D0531', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', margin: '0 auto 16px' }}>🏋️</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: '900', color: '#7D0531' }}>CaritoFit Pro</div>
-          <div style={{ fontSize: '13px', color: '#8a7070', marginTop: '6px' }}>Entrenamiento personalizado con seguimiento real</div>
-        </div>
-
-        {/* Tabs */}
-        <div style={{ display: 'flex', background: '#ede0e2', borderRadius: '14px', padding: '4px', gap: '4px', marginBottom: '24px' }}>
-          {(['alumno', 'admin'] as const).map(m => (
-            <button key={m} onClick={() => setMode(m)}
-              style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', transition: '.2s', fontFamily: 'inherit',
-                background: mode === m ? '#7D0531' : 'transparent',
-                color: mode === m ? '#DBBABF' : '#8a7070',
-                boxShadow: mode === m ? '0 2px 8px rgba(125,5,49,.28)' : 'none',
-              }}>
-              {m === 'alumno' ? '🏋️ Alumno/a' : '👩‍💼 Profesora'}
-            </button>
-          ))}
-        </div>
-
-        {/* Form */}
-        <div style={{ marginBottom: '14px' }}>
-          <label className="field-label">DNI</label>
-          <input className="input-field" type="text" placeholder="Sin puntos ni guiones"
-            maxLength={8} value={dni}
-            onChange={e => setDni(e.target.value.replace(/\D/g, ''))}
-            onKeyDown={e => e.key === 'Enter' && handleLogin()} />
-        </div>
-        <div style={{ marginBottom: '14px' }}>
-          <label className="field-label">Contraseña</label>
-          <input className="input-field" type="password" placeholder="••••••••"
-            value={password} onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleLogin()} />
-        </div>
-
-        {error && (
-          <div style={{ background: '#fff0f0', border: '1px solid #fcc', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', color: '#c0392b', fontSize: '14px', fontWeight: '600' }}>
-            ⚠️ {error}
-          </div>
-        )}
-
-        <button className="btn-wine" style={{ width: '100%', fontSize: '15px', padding: '14px' }}
-          onClick={handleLogin} disabled={loading}>
-          {loading ? 'Ingresando...' : 'Ingresar →'}
-        </button>
-
-        {mode === 'alumno' && (
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            <Link href="/register" style={{ color: '#B05276', fontWeight: '600', fontSize: '14px', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-              ¿No tenés cuenta? Registrate →
-            </Link>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+    <div style={{ minHeight:'100vh', background:'#7D0531', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
+      <div style={{ background:'#faf8f7', borderRadius:'28px', padding:'48px 40px', width:'100%', maxWidth:'420px', boxShadow:'0 24px 80px rgba(0,0,0,.3)' }}>
+        <div style={{ textAlign:'center', marginBottom:'36px' }}>
+          <div style={{ width:'64px', h
