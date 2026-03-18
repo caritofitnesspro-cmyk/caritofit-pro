@@ -29,6 +29,8 @@ export default function AdminPage() {
   const [showAddAlumno, setShowAddAlumno] = useState(false)
   const [newA, setNewA] = useState({ nombre:'', apellido:'', dni:'', email:'', telefono:'', edad:'', sexo:'', objetivo:'', nivel:'Principiante', restricciones:'', password:'' })
 
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   useEffect(() => { loadData() }, [])
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -167,17 +169,40 @@ export default function AdminPage() {
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+      {/* Mobile topbar */}
+      <div style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: '#7D0531', padding: '14px 20px', alignItems: 'center', justifyContent: 'space-between', id: 'mobile-topbar' }} className="mobile-topbar">
+        <div style={{ fontFamily: 'Georgia,serif', fontSize: '18px', fontWeight: '900', color: '#DBBABF' }}>Team Carito</div>
+        <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: '#DBBABF', fontSize: '24px', cursor: 'pointer', padding: '4px' }}>☰</button>
+      </div>
+      {/* Overlay mobile */}
+      {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 299 }} />}
       {toast && <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#7D0531', color: '#DBBABF', padding: '12px 22px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', zIndex: 600, whiteSpace: 'nowrap' }}>{toast}</div>}
 
       {/* SIDEBAR */}
-      <aside style={{ background: '#7D0531', color: '#DBBABF', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .mobile-topbar { display: flex !important; }
+          .admin-sidebar { transform: translateX(-100%); position: fixed !important; z-index: 300; transition: transform .3s ease; }
+          .admin-sidebar.open { transform: translateX(0); }
+          .admin-main { padding-top: 60px !important; }
+          .admin-main > div { padding: 20px 16px !important; }
+          .stats-grid-3 { grid-template-columns: 1fr 1fr !important; }
+          .table-scroll { overflow-x: auto; }
+          .grid-2-col { grid-template-columns: 1fr !important; }
+          .builder-cols { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
+      <aside className={sidebarOpen ? 'admin-sidebar open' : 'admin-sidebar'} style={{ background: '#7D0531', color: '#DBBABF', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', width: '260px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 16px 0' }}>
+          <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(219,186,191,.5)', fontSize: '20px', cursor: 'pointer', display: 'none' }} className="close-sidebar">✕</button>
+        </div>
         <div style={{ padding: '32px 28px 24px', borderBottom: '1px solid rgba(219,186,191,.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
             <div style={{ width: '40px', height: '40px', background: '#B05276', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🏋️</div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '900', lineHeight: '1.1' }}>CaritoFit<br />Pro</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '900', lineHeight: '1.1' }}>Team<br />Carito</div>
           </div>
-          <div style={{ fontSize: '11px', color: 'rgba(219,186,191,.5)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: '4px' }}>Training Management</div>
+          <div style={{ fontSize: '11px', color: 'rgba(219,186,191,.5)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: '4px' }}>Panel de entrenamiento</div>
         </div>
 
         <div style={{ padding: '20px 16px 8px' }}>
@@ -187,7 +212,7 @@ export default function AdminPage() {
             { key: 'alumnos',   icon: '👥', label: 'Alumnos/as' },
             { key: 'planes',    icon: '📋', label: 'Planes' },
           ].map(({ key, icon, label }) => (
-            <button key={key} onClick={() => setTab(key as Tab)}
+            <button key={key} onClick={() => { setTab(key as Tab); setSidebarOpen(false) }}
               style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 14px', borderRadius: '12px', cursor: 'pointer', transition: '.2s', fontSize: '14px', fontWeight: '500', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit',
                 background: tab === key ? '#9a0840' : 'transparent',
                 color: tab === key ? '#DBBABF' : 'rgba(219,186,191,.7)',
@@ -213,7 +238,7 @@ export default function AdminPage() {
       </aside>
 
       {/* MAIN */}
-      <main style={{ overflowY: 'auto', background: '#ede0e2' }}>
+      <main className='admin-main' style={{ overflowY: 'auto', background: '#ede0e2', flex: 1, minWidth: 0 }}>
 
         {/* DASHBOARD */}
         {tab === 'dashboard' && (
@@ -222,7 +247,7 @@ export default function AdminPage() {
               <div className="page-eyebrow">Bienvenida</div>
               <div className="page-title">Hola, {admin?.nombre} 👩‍💼</div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' }}>
+            <div className='stats-grid-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' }}>
               {[[alumnos.length, 'Alumnos/as'], [planes.length, 'Planes'], [asignaciones.length, 'Con plan activo']].map(([n, l]) => (
                 <div key={l} style={{ background: '#fff', borderRadius: '16px', padding: '20px', border: '1px solid #d5c4c8', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', background: '#DBBABF', borderRadius: '50%', opacity: .5 }} />
@@ -349,7 +374,7 @@ export default function AdminPage() {
               <p style={{ fontSize: '15px', color: '#2a1520', lineHeight: '1.7', fontStyle: 'italic' }}>"{alumnoActivo.objetivo || '—'}"</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div className='grid-2-col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
               {/* Datos */}
               <div className="card">
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: '#7D0531', marginBottom: '12px' }}>Datos</h3>
