@@ -1,0 +1,111 @@
+/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --rose:        #B05276;
+  --rose-light:  #c4709a;
+  --rose-pale:   #dbbabf;
+  --pine:        #7D0531;
+  --pine-mid:    #9a0840;
+  --pink:        #DBBABF;
+  --pink-mid:    #ede0e2;
+  --pink-dark:   #cda8ad;
+  --gold:        #75824D;
+  --gray:        #C1BEB9;
+  --gray-light:  #e8e6e3;
+  --white:       #faf8f7;
+  --text-dark:   #2a1520;
+  --text-mid:    #5a2a3a;
+  --text-muted:  #8a7070;
+  --border:      #d5c4c8;
+  --shadow:      0 4px 24px rgba(125,5,49,.09);
+  --shadow-lg:   0 12px 48px rgba(125,5,49,.16);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #ede0e2;
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--pink); }
+::-webkit-scrollbar-thumb { background: var(--rose); border-radius: 3px; }
+
+/* ── Componentes reutilizables ── */
+@layer components {
+  .btn-wine {
+    @apply bg-pine-DEFAULT text-pink-DEFAULT font-semibold rounded-xl px-5 py-3 
+           text-sm cursor-pointer transition-all hover:-translate-y-0.5 
+           hover:shadow-lg border-0 inline-flex items-center gap-2 justify-center;
+    box-shadow: 0 4px 14px rgba(125,5,49,.25);
+  }
+  .btn-wine:hover { box-shadow: 0 6px 20px rgba(125,5,49,.38); }
+
+  .btn-ghost {
+    @apply bg-transparent border border-gray-DEFAULT text-text-muted font-semibold
+           rounded-xl px-4 py-2.5 text-sm cursor-pointer transition-all
+           hover:border-rose-DEFAULT hover:text-rose-DEFAULT inline-flex items-center gap-2;
+  }
+
+  .btn-danger {
+    @apply bg-red-50 text-red-600 border border-red-200 font-semibold
+           rounded-xl px-4 py-2 text-sm cursor-pointer transition-all
+           hover:bg-red-100 inline-flex items-center gap-2;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl p-5 border border-gray-DEFAULT/50;
+    box-shadow: var(--shadow);
+  }
+
+  .card-pine {
+    @apply rounded-2xl p-6 text-pink-DEFAULT;
+    background: var(--pine);
+  }
+
+  .input-field {
+    @apply w-full rounded-xl px-4 py-3 text-sm outline-none transition-all border-2;
+    background: var(--pink-mid);
+    border-color: var(--border);
+    color: var(--text-dark);
+    font-family: inherit;
+  }
+  .input-field:focus {
+    border-color: var(--rose);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(176,82,118,.12);
+  }
+
+  .field-label {
+    @apply text-xs font-bold uppercase tracking-wider mb-1.5 block;
+    color: var(--text-mid);
+    letter-spacing: .06em;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold;
+  }
+  .badge-rose   { background: rgba(176,82,118,.15); color: var(--pine); }
+  .badge-green  { @apply bg-green-100 text-green-700; }
+  .badge-amber  { @apply bg-amber-100 text-amber-700; }
+  .badge-pine   { background: rgba(117,130,77,.15); color: var(--gold); }
+  .badge-pink   { background: var(--pink); color: var(--pine); }
+
+  .page-title {
+    font-family: Georgia, serif;
+    @apply text-3xl font-bold;
+    color: var(--pine);
+  }
+
+  .page-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-widest mb-2;
+    color: var(--rose);
+  }
+}
