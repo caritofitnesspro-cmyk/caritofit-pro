@@ -80,12 +80,19 @@ export default function AdminPage() {
     if (!newA.objetivo || newA.objetivo.length < 3) { showToast('⚠️ El objetivo es obligatorio'); return }
     if (!newA.password || newA.password.length < 6) { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return }
 
-    const { data: authData, error } = await supabase.auth.admin.createUser({
+    // Guardar sesión admin antes de crear alumno
+    const { data: { session: adminSession } } = await supabase.auth.getSession()
+
+    const { data: authData, error } = await supabase.auth.signUp({
       email: newA.email,
       password: newA.password,
-      user_metadata: { nombre: newA.nombre, apellido: newA.apellido, dni: newA.dni, rol: 'alumno' },
-      email_confirm: true,
+      options: { data: { nombre: newA.nombre, apellido: newA.apellido, dni: newA.dni, rol: 'alumno' } }
     })
+
+    // Restaurar sesión admin inmediatamente
+    if (adminSession) {
+      await supabase.auth.setSession({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token })
+    }
 
     if (error) { showToast('⚠️ ' + error.message); return }
 
@@ -127,7 +134,7 @@ export default function AdminPage() {
         const { data: diaData } = await supabase.from('dias').insert({ semana_id: semData!.id, dia: dia.dia, tipo: dia.tipo, orden: dia.orden || 0 }).select().single()
         for (let i = 0; i < dia.ejercicios.length; i++) {
           const ej = dia.ejercicios[i]
-          await supabase.from('ejercicios').insert({ dia_id: diaData!.id, nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga, descanso: ej.descanso, observaciones: ej.observaciones, orden: i })
+          await supabase.from('ejercicios').insert({ dia_id: diaData!.id, nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga, descanso: ej.descanso, rpe: ej.rpe || null, rir: ej.rir || null, observaciones: ej.observaciones, orden: i })
         }
       }
     }
@@ -449,7 +456,7 @@ export default function AdminPage() {
                         onClick={() => {
                           const semanas = ((plan as any).semanas || []).map((s: any) => ({
                             id: s.id, numero: s.numero,
-                            dias: (s.dias || []).map((d: any) => ({ id: d.id, dia: d.dia, tipo: d.tipo || '', orden: d.orden || 0, ejercicios: (d.ejercicios || []).map((e: any) => ({ id: e.id, nombre: e.nombre, series: e.series, repeticiones: e.repeticiones, carga: e.carga || '', descanso: e.descanso || '', observaciones: e.observaciones || '' })) }))
+                            dias: (s.dias || []).map((d: any) => ({ id: d.id, dia: d.dia, tipo: d.tipo || '', orden: d.orden || 0, ejercicios: (d.ejercicios || []).map((e: any) => ({ id: e.id, nombre: e.nombre, series: e.series, repeticiones: e.repeticiones, carga: e.carga || '', descanso: e.descanso || '', rpe: e.rpe || '', rir: e.rir || '', observaciones: e.observaciones || '' })) }))
                           }))
                           setBp({ id: plan.id, nombre: plan.nombre, objetivo: plan.objetivo, semanas, asignados: asigAlumnos.map(a => a.id) })
                           setTab('builder')
@@ -570,24 +577,26 @@ export default function AdminPage() {
                     </div>
 
                     {dia.ejercicios.length > 0 && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 60px 70px 80px 80px 32px', gap: '8px', marginBottom: '6px' }}>
-                        {['Ejercicio', 'Series', 'Reps', 'Carga', 'Descanso', ''].map(l => (
-                          <span key={l} style={{ fontSize: '10px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.05em' }}>{l}</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 55px 65px 70px 70px 55px 55px 32px', gap: '6px', marginBottom: '6px' }}>
+                        {['Ejercicio', 'Series', 'Reps', 'Carga', 'Descanso', 'RPE', 'RIR', ''].map(l => (
+                          <span key={l} style={{ fontSize: '10px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.05em', textAlign: l !== 'Ejercicio' ? 'center' : 'left' }}>{l}</span>
                         ))}
                       </div>
                     )}
 
                     {dia.ejercicios.map((ej: any, ei: number) => (
                       <div key={ej.id}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 60px 70px 80px 80px 32px', gap: '8px', marginBottom: '6px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 55px 65px 70px 70px 55px 55px 32px', gap: '6px', marginBottom: '6px' }}>
                           {[
                             { k: 'nombre', ph: 'Nombre del ejercicio' },
                             { k: 'series', ph: '3', type: 'number' },
                             { k: 'repeticiones', ph: '12' },
-                            { k: 'carga', ph: 'kg / PC' },
-                            { k: 'descanso', ph: '60 seg' },
+                            { k: 'carga', ph: 'kg/PC' },
+                            { k: 'descanso', ph: '60s' },
+                            { k: 'rpe', ph: '1-10' },
+                            { k: 'rir', ph: '0-5' },
                           ].map(({ k, ph, type }) => (
-                            <input key={k} type={type || 'text'} placeholder={ph} value={(ej as any)[k]} style={{ background: '#fff', border: '1.5px solid #d5c4c8', borderRadius: '9px', padding: '8px 11px', fontSize: '13px', color: '#2a1520', outline: 'none', width: '100%', fontFamily: 'inherit', textAlign: k !== 'nombre' ? 'center' : 'left' }}
+                            <input key={k} type={type || 'text'} placeholder={ph} value={(ej as any)[k] || ''} style={{ background: '#fff', border: '1.5px solid #d5c4c8', borderRadius: '9px', padding: '8px 6px', fontSize: '13px', color: '#2a1520', outline: 'none', width: '100%', fontFamily: 'inherit', textAlign: k !== 'nombre' ? 'center' : 'left' }}
                               onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: k === 'series' ? parseInt(e.target.value) || 1 : e.target.value } : ex) } : x) } : s) }))} />
                           ))}
                           <button className="btn-danger" style={{ padding: '8px', fontSize: '12px', borderRadius: '9px' }} onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.filter((ex: any) => ex.id !== ej.id) } : x) } : s) }))}>✕</button>
@@ -598,7 +607,7 @@ export default function AdminPage() {
                     ))}
 
                     <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: '13px', marginTop: '4px' }}
-                      onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: [...x.ejercicios, { id: uid(), nombre: '', series: 3, repeticiones: '12', carga: '', descanso: '60 seg', observaciones: '' }] } : x) } : s) }))}>
+                      onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: [...x.ejercicios, { id: uid(), nombre: '', series: 3, repeticiones: '12', carga: '', descanso: '60 seg', rpe: '', rir: '', observaciones: '' }] } : x) } : s) }))}>
                       + Agregar ejercicio
                     </button>
                   </div>
