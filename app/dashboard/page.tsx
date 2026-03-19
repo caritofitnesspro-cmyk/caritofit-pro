@@ -21,6 +21,20 @@ export default function DashboardPage() {
   const [showPesoModal, setShowPesoModal] = useState(false)
   const [diaActivo, setDiaActivo] = useState<Dia | null>(null)
   const [toast, setToast] = useState('')
+  // Fotos de progreso
+  const [fotosProgreso, setFotosProgreso] = useState([])
+  const [showFotoModal, setShowFotoModal] = useState(false)
+  const [fotoUpload, setFotoUpload] = useState(null)
+  const [fotoPreview, setFotoPreview] = useState(null)
+  const fotoRef = typeof window !== 'undefined' ? { current: null } : { current: null }
+  // Series detalle por ejercicio (doble tap)
+  const [ejActivo, setEjActivo] = useState(null) // ejercicio con modal abierto
+  const [seriesData, setSeriesData] = useState({}) // { [ejId]: [{peso, rpe, rir}] }
+  // Caritas al terminar día
+  const [showCaritas, setShowCaritas] = useState(false)
+  const [diaTerminado, setDiaTerminado] = useState(null)
+  // Tap timer para doble tap
+  const lastTap = typeof window !== 'undefined' ? { current: {} } : { current: {} }
 
   useEffect(() => { loadData() }, [])
 
@@ -79,6 +93,7 @@ export default function DashboardPage() {
     setCheckins((chkData || []).map(c => c.ejercicio_id))
 
     setLoading(false)
+    cargarFotosProgreso()
   }
 
   async function toggleCheckin(ejercicioId: string) {
@@ -289,21 +304,35 @@ export default function DashboardPage() {
             ) : (
               (diaActivo as any).ejercicios.map((ej: Ejercicio) => {
                 const done = checkins.includes(ej.id)
+                const series = seriesData[ej.id] || []
                 return (
-                  <div key={ej.id} onClick={() => toggleCheckin(ej.id)}
-                    style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px', background: done ? '#f0fdf4' : '#ede0e2', borderRadius: '14px', marginBottom: '10px', border: `1.5px solid ${done ? '#bbf7d0' : 'transparent'}`, cursor: 'pointer', transition: '.2s' }}>
+                  <div key={ej.id} onClick={() => handleDoubleTap(ej)}
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px', background: done ? '#f0fdf4' : '#ede0e2', borderRadius: '14px', marginBottom: '10px', border: `1.5px solid ${done ? '#bbf7d0' : 'transparent'}`, cursor: 'pointer', transition: '.2s', userSelect: 'none' }}>
                     <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid', borderColor: done ? 'transparent' : '#DBBABF', background: done ? 'linear-gradient(135deg,#22c55e,#16a34a)' : '#faf8f7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '13px', color: '#fff' }}>
                       {done ? '✓' : ''}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '700', fontSize: '15px', marginBottom: '8px', color: done ? '#15803d' : '#2a1520' }}>{ej.nombre}</div>
+                      <div style={{ fontWeight: '700', fontSize: '15px', marginBottom: '4px', color: done ? '#15803d' : '#2a1520' }}>{ej.nombre}</div>
+                      <div style={{ fontSize: '11px', color: '#B05276', marginBottom: '6px', fontStyle: 'italic' }}>Doble toque para registrar series</div>
                       <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: ej.observaciones ? '8px' : '0' }}>
                         <span className="badge badge-rose">{ej.series} series</span>
                         <span className="badge badge-pine">{ej.repeticiones} reps</span>
                         {ej.carga && <span className="badge badge-amber">🏋️ {ej.carga}</span>}
                         {ej.descanso && ej.descanso !== '-' && <span className="badge badge-green">⏱ {ej.descanso}</span>}
                       </div>
-                      {ej.observaciones && <div style={{ fontSize: '12px', color: '#8a7070', fontStyle: 'italic' }}>💡 {ej.observaciones}</div>}
+                      {ej.observaciones && <div style={{ fontSize: '12px', color: '#8a7070', fontStyle: 'italic', marginTop: '4px' }}>💡 {ej.observaciones}</div>}
+                      {series.length > 0 && series.some(s => s.peso || s.rpe || s.rir) && (
+                        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {series.map((s, i) => (s.peso || s.rpe || s.rir) && (
+                            <div key={i} style={{ fontSize: '12px', color: '#5a2a3a', background: 'rgba(176,82,118,.1)', borderRadius: '8px', padding: '4px 10px', display: 'inline-flex', gap: '10px' }}>
+                              <span>Serie {i+1}</span>
+                              {s.peso && <span>⚖️ {s.peso}kg</span>}
+                              {s.rpe && <span>RPE {s.rpe}</span>}
+                              {s.rir && <span>RIR {s.rir}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -321,6 +350,32 @@ export default function DashboardPage() {
             <div className="page-title">Progreso</div>
           </div>
           <div style={{ padding: '16px 20px' }}>
+            {/* Fotos de progreso */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '18px', color: '#7D0531' }}>Fotos de progreso</h3>
+                <button className="btn-wine" style={{ fontSize: '13px', padding: '8px 14px' }} onClick={() => setShowFotoModal(true)}>+ Foto</button>
+              </div>
+              <div style={{ background: '#ede0e2', borderRadius: '12px', padding: '10px 14px', marginBottom: '12px', fontSize: '12px', color: '#8a7070', lineHeight: '1.5' }}>
+                🔒 Tus fotos son <strong>privadas</strong> — solo vos y tu profesora pueden verlas. No se comparten en ningún lado.
+              </div>
+              {fotosProgreso.length === 0 ? (
+                <div className="card" style={{ textAlign: 'center', padding: '32px' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '10px' }}>📸</div>
+                  <p style={{ color: '#8a7070', fontSize: '14px' }}>Todavía no subiste fotos</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                  {fotosProgreso.map((f, i) => (
+                    <div key={i} style={{ borderRadius: '12px', overflow: 'hidden', position: 'relative', aspectRatio: '1' }}>
+                      <img src={f.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(125,5,49,.7)', padding: '4px 6px', fontSize: '10px', color: '#DBBABF', textAlign: 'center' }}>{f.fecha}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '18px', color: '#7D0531' }}>Historial de peso</h3>
               <button className="btn-wine" style={{ fontSize: '13px', padding: '8px 14px' }} onClick={() => setShowPesoModal(true)}>+ Registrar</button>
@@ -411,6 +466,115 @@ export default function DashboardPage() {
       )}
 
       {/* BOTTOM NAV */}
+      {/* MODAL SERIES (doble tap en ejercicio) */}
+      {ejActivo && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(125,5,49,.6)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setEjActivo(null)}>
+          <div style={{ background: '#faf8f7', borderRadius: '24px 24px 0 0', padding: '24px 20px', width: '100%', maxWidth: '430px', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '18px', fontWeight: '700', color: '#7D0531' }}>{ejActivo.nombre}</div>
+              <button onClick={() => setEjActivo(null)} style={{ background: '#ede0e2', border: 'none', borderRadius: '8px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '14px', color: '#8a7070' }}>✕</button>
+            </div>
+            <div style={{ fontSize: '13px', color: '#8a7070', marginBottom: '18px' }}>{ejActivo.series} series · {ejActivo.repeticiones} reps {ejActivo.carga ? `· ${ejActivo.carga}` : ''}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase' }}></div>
+              {[['⚖️ Peso (kg)', 'Ej: 20'], ['RPE (1-10)', 'Ej: 8'], ['RIR', 'Ej: 2']].map(([l]) => (
+                <div key={l} style={{ fontSize: '11px', fontWeight: '700', color: '#7D0531', textTransform: 'uppercase', letterSpacing: '.04em', textAlign: 'center' }}>{l}</div>
+              ))}
+            </div>
+            {(seriesData[ejActivo.id] || Array.from({length: ejActivo.series}, () => ({peso:'',rpe:'',rir:''}))).map((s, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#7D0531', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DBBABF', fontWeight: '700', fontSize: '12px' }}>{i+1}</div>
+                {['peso','rpe','rir'].map(campo => (
+                  <input key={campo} type="number" placeholder={campo === 'peso' ? '0' : campo === 'rpe' ? '1-10' : '0'}
+                    value={s[campo] || ''}
+                    onChange={e => updateSerie(ejActivo.id, i, campo, e.target.value)}
+                    style={{ background: '#ede0e2', border: '1.5px solid #d5c4c8', borderRadius: '10px', padding: '10px 8px', fontSize: '14px', textAlign: 'center', width: '100%', fontFamily: 'inherit', outline: 'none' }} />
+                ))}
+              </div>
+            ))}
+            <div style={{ background: '#ede0e2', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', marginTop: '8px' }}>
+              <div style={{ fontSize: '12px', color: '#8a7070', lineHeight: '1.5' }}>
+                <strong style={{ color: '#7D0531' }}>RPE</strong> = percepción del esfuerzo (1 muy fácil → 10 máximo esfuerzo)<br/>
+                <strong style={{ color: '#7D0531' }}>RIR</strong> = repeticiones en reserva (cuántas más podrías hacer)
+              </div>
+            </div>
+            <button className="btn-wine" style={{ width: '100%', fontSize: '15px', padding: '14px' }} onClick={() => guardarSeries(ejActivo)}>
+              Guardar series ✓
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL FOTOS PROGRESO */}
+      {showFotoModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(125,5,49,.6)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowFotoModal(false)}>
+          <div style={{ background: '#faf8f7', borderRadius: '24px 24px 0 0', padding: '24px 20px', width: '100%', maxWidth: '430px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '18px', fontWeight: '700', color: '#7D0531', marginBottom: '6px' }}>Foto de progreso</div>
+            <div style={{ fontSize: '13px', color: '#8a7070', marginBottom: '18px' }}>🔒 Solo vos y tu profesora pueden verla</div>
+            {fotoPreview ? (
+              <div style={{ marginBottom: '16px', borderRadius: '14px', overflow: 'hidden', maxHeight: '280px' }}>
+                <img src={fotoPreview} style={{ width: '100%', objectFit: 'cover' }} />
+              </div>
+            ) : (
+              <div onClick={() => document.getElementById('foto-input-progreso')?.click()}
+                style={{ background: '#ede0e2', border: '2px dashed #d5c4c8', borderRadius: '14px', padding: '40px', textAlign: 'center', cursor: 'pointer', marginBottom: '16px' }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>📸</div>
+                <div style={{ fontWeight: '600', color: '#7D0531', fontSize: '14px' }}>Tocá para elegir una foto</div>
+                <div style={{ fontSize: '12px', color: '#8a7070', marginTop: '4px' }}>Desde tu galería o cámara</div>
+              </div>
+            )}
+            <input id="foto-input-progreso" type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+              onChange={e => {
+                const f = e.target.files[0]
+                if (!f) return
+                setFotoUpload(f)
+                const r = new FileReader()
+                r.onload = ev => setFotoPreview(ev.target.result)
+                r.readAsDataURL(f)
+              }} />
+            {fotoPreview && (
+              <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '10px' }} onClick={() => document.getElementById('foto-input-progreso')?.click()}>
+                Cambiar foto
+              </button>
+            )}
+            <button className="btn-wine" style={{ width: '100%' }} onClick={subirFotoProgreso} disabled={!fotoUpload}>
+              Guardar foto ✓
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CARITAS AL TERMINAR DÍA */}
+      {showCaritas && diaTerminado && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(125,5,49,.7)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#faf8f7', borderRadius: '28px', padding: '32px 24px', width: '100%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.3)' }}>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏆</div>
+            <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '20px', fontWeight: '900', color: '#7D0531', marginBottom: '8px' }}>¡Día completado!</div>
+            <div style={{ fontSize: '14px', color: '#8a7070', marginBottom: '24px' }}>Terminaste el entrenamiento de {diaTerminado.dia}. ¿Cómo te sentiste?</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginBottom: '20px' }}>
+              {[
+                { emoji: '😫', label: 'Muy difícil' },
+                { emoji: '😓', label: 'Difícil' },
+                { emoji: '😊', label: 'Bien' },
+                { emoji: '💪', label: 'Fuerte' },
+                { emoji: '🔥', label: '¡Increíble!' },
+              ].map(({ emoji, label }) => (
+                <div key={emoji} onClick={() => { showToast(`¡${label}! Seguí así 💪`); setShowCaritas(false) }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '12px 6px', borderRadius: '14px', cursor: 'pointer', border: '2px solid #ede0e2', background: '#faf8f7', transition: '.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#B05276'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = '#ede0e2'}>
+                  <span style={{ fontSize: '28px' }}>{emoji}</span>
+                  <span style={{ fontSize: '10px', fontWeight: '600', color: '#8a7070', textAlign: 'center', lineHeight: '1.2' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+            <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowCaritas(false)}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', background: '#faf8f7', borderTop: '1px solid #d5c4c8', display: 'flex', padding: '8px 0 16px', zIndex: 100 }}>
         {[
           { key: 'inicio', icon: '🏠', label: 'Inicio' },
