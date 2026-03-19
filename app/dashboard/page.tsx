@@ -129,6 +129,76 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
+  // ── NUEVAS FUNCIONES ──
+
+  async function cargarFotosProgreso() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    try {
+      const { data } = await supabase.storage.from('fotos-progreso').list(user.id, { sortBy: { column: 'created_at', order: 'desc' } })
+      if (!data) return
+      const urls = data.map(f => {
+        const { data: u } = supabase.storage.from('fotos-progreso').getPublicUrl(`${user.id}/${f.name}`)
+        return { url: u.publicUrl, fecha: new Date(f.created_at).toLocaleDateString('es-AR') }
+      })
+      setFotosProgreso(urls)
+    } catch(e) { console.log('fotos error', e) }
+  }
+
+  function handleDoubleTap(ej) {
+    const now = Date.now()
+    const last = (lastTap.current)[ej.id] || 0
+    if (now - last < 500) {
+      const existing = seriesData[ej.id] || Array.from({length: ej.series || 3}, () => ({ peso: '', rpe: '', rir: '' }))
+      setSeriesData(p => ({ ...p, [ej.id]: existing }))
+      setEjActivo(ej)
+    } else {
+      toggleCheckin(ej.id)
+      const ejsDia = (diaActivo?.ejercicios || [])
+      const nuevosCheckins = checkins.includes(ej.id)
+        ? checkins.filter(id => id !== ej.id)
+        : [...checkins, ej.id]
+      const todosHechos = ejsDia.length > 0 && ejsDia.every(e => nuevosCheckins.includes(e.id))
+      if (todosHechos) setTimeout(() => { setDiaTerminado(diaActivo); setShowCaritas(true) }, 600)
+    }
+    ;(lastTap.current)[ej.id] = now
+  }
+
+  function updateSerie(ejId, serieIdx, campo, valor) {
+    setSeriesData(p => {
+      const series = [...(p[ejId] || [])]
+      series[serieIdx] = { ...series[serieIdx], [campo]: valor }
+      return { ...p, [ejId]: series }
+    })
+  }
+
+  async function guardarSeries(ej) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const n2 = new Date()
+    const hoy = `${n2.getFullYear()}-${String(n2.getMonth()+1).padStart(2,'0')}-${String(n2.getDate()).padStart(2,'0')}`
+    await supabase.from('checkins').upsert({ alumno_id: user.id, ejercicio_id: ej.id, fecha: hoy }, { onConflict: 'alumno_id,ejercicio_id,fecha' })
+    if (!checkins.includes(ej.id)) setCheckins(p => [...p, ej.id])
+    setEjActivo(null)
+    showToast('✅ Series guardadas!')
+  }
+
+  async function subirFotoProgreso() {
+    if (!fotoUpload) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const ts = Date.now()
+    const ext = fotoUpload.name.split('.').pop()
+    const { data: uploadData, error } = await supabase.storage.from('fotos-progreso').upload(`${user.id}/${ts}.${ext}`, fotoUpload, { upsert: false })
+    if (error) { showToast('⚠️ Error al subir la foto'); return }
+    const { data: urlData } = supabase.storage.from('fotos-progreso').getPublicUrl(uploadData.path)
+    setFotosProgreso(p => [{ url: urlData.publicUrl, fecha: new Date().toLocaleDateString('es-AR') }, ...p])
+    setShowFotoModal(false)
+    setFotoUpload(null)
+    setFotoPreview(null)
+    showToast('📸 Foto guardada!')
+  }
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ede0e2' }}>
       <div style={{ textAlign: 'center' }}>
