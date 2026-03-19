@@ -58,14 +58,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#7D0531', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #1a0008 0%, #7D0531 60%, #B05276 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div style={{ background: '#faf8f7', borderRadius: '28px', padding: '48px 40px', width: '100%', maxWidth: '420px', boxShadow: '0 24px 80px rgba(0,0,0,.3)' }}>
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <img src='/logo.png' alt='Team Carito' style={{ width: '100px', height: '100px', borderRadius: '50%', margin: '0 auto 16px', display: 'block', objectFit: 'cover' }} />
-          <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '28px', fontWeight: '900', color: '#7D0531', letterSpacing: '0.05em' }}>Team Carito</div>
-          <div style={{ fontSize: '13px', color: '#8a7070', marginTop: '6px' }}>Tu equipo de entrenamiento personalizado</div>
+          <img src='/logo.png' alt='Team Carito' style={{ width: '220px', height: 'auto', margin: '0 auto 8px', display: 'block', objectFit: 'contain' }} />
+          <div style={{ fontSize: '13px', color: '#8a7070', marginTop: '4px' }}>Tu equipo de entrenamiento personalizado</div>
         </div>
 
         {/* Tabs */}
