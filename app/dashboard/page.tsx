@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 // app/dashboard/page.tsx — Dashboard del alumno
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Perfil, Plan, Semana, Dia, Ejercicio, Peso } from '@/types/database'
@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const [showFotoModal, setShowFotoModal] = useState(false)
   const [fotoUpload, setFotoUpload] = useState(null)
   const [fotoPreview, setFotoPreview] = useState(null)
-  const fotoRef = typeof window !== 'undefined' ? { current: null } : { current: null }
+  const fotoRef = useRef(null)
   // Series detalle por ejercicio (doble tap)
   const [ejActivo, setEjActivo] = useState(null) // ejercicio con modal abierto
   const [seriesData, setSeriesData] = useState({}) // { [ejId]: [{peso, rpe, rir}] }
@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const [showCaritas, setShowCaritas] = useState(false)
   const [diaTerminado, setDiaTerminado] = useState(null)
   // Tap timer para doble tap
-  const lastTap = typeof window !== 'undefined' ? { current: {} } : { current: {} }
+  const lastTap = useRef({})
 
   useEffect(() => { loadData() }, [])
 
@@ -84,13 +84,14 @@ export default function DashboardPage() {
     setPesos(pesosData || [])
 
     // Cargar checkins de hoy
-    const hoy = new Date().toISOString().split('T')[0]
+    const now = new Date()
+    const hoy = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
     const { data: chkData } = await supabase
       .from('checkins')
       .select('ejercicio_id')
       .eq('alumno_id', user.id)
       .eq('fecha', hoy)
-    setCheckins((chkData || []).map(c => c.ejercicio_id))
+    setCheckins((chkData || []).map(c => c.ejercicio_id).filter(id => id != null))
 
     setLoading(false)
     cargarFotosProgreso()
@@ -516,14 +517,14 @@ export default function DashboardPage() {
                 <img src={fotoPreview} style={{ width: '100%', objectFit: 'cover' }} />
               </div>
             ) : (
-              <div onClick={() => document.getElementById('foto-input-progreso')?.click()}
+              <div onClick={() => fotoRef.current?.click()}
                 style={{ background: '#ede0e2', border: '2px dashed #d5c4c8', borderRadius: '14px', padding: '40px', textAlign: 'center', cursor: 'pointer', marginBottom: '16px' }}>
                 <div style={{ fontSize: '36px', marginBottom: '8px' }}>📸</div>
                 <div style={{ fontWeight: '600', color: '#7D0531', fontSize: '14px' }}>Tocá para elegir una foto</div>
                 <div style={{ fontSize: '12px', color: '#8a7070', marginTop: '4px' }}>Desde tu galería o cámara</div>
               </div>
             )}
-            <input id="foto-input-progreso" type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+            <input ref={fotoRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
               onChange={e => {
                 const f = e.target.files[0]
                 if (!f) return
@@ -533,7 +534,7 @@ export default function DashboardPage() {
                 r.readAsDataURL(f)
               }} />
             {fotoPreview && (
-              <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '10px' }} onClick={() => document.getElementById('foto-input-progreso')?.click()}>
+              <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '10px' }} onClick={() => fotoRef.current?.click()}>
                 Cambiar foto
               </button>
             )}
