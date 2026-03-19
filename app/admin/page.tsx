@@ -381,7 +381,7 @@ export default function AdminPage() {
               <p style={{ fontSize: '15px', color: '#2a1520', lineHeight: '1.7', fontStyle: 'italic' }}>"{alumnoActivo.objetivo || '—'}"</p>
             </div>
 
-            <div className='grid-2-col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
               {/* Datos */}
               <div className="card">
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: '#7D0531', marginBottom: '12px' }}>Datos</h3>
@@ -394,21 +394,65 @@ export default function AdminPage() {
               </div>
 
               {/* Plan */}
-              <div className="card">
+              <div className="card" style={{ gridColumn: '1 / -1' }}>
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: '#7D0531', marginBottom: '12px' }}>Plan asignado</h3>
                 {(() => {
                   const plan = getPlanAlumno(alumnoActivo.id)
-                  return plan ? (
-                    <div style={{ background: '#ede0e2', borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
-                      <span className="badge badge-green" style={{ marginBottom: '8px', display: 'inline-block' }}>✓ Activo</span>
-                      <div style={{ fontWeight: '700', fontSize: '14px', color: '#7D0531' }}>{plan.nombre}</div>
-                      <div style={{ fontSize: '12px', color: '#8a7070', marginTop: '2px' }}>🎯 {plan.objetivo}</div>
-                    </div>
-                  ) : (
-                    <div style={{ color: '#8a7070', fontSize: '14px', paddingBottom: '12px' }}>Sin plan asignado</div>
+                  if (!plan) return <div style={{ color: '#8a7070', fontSize: '14px', paddingBottom: '12px' }}>Sin plan asignado</div>
+                  return (
+                    <>
+                      <div style={{ background: '#7D0531', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span className="badge badge-green" style={{ marginBottom: '6px', display: 'inline-block' }}>✓ Activo</span>
+                          <div style={{ fontWeight: '700', fontSize: '15px', color: '#DBBABF' }}>{plan.nombre}</div>
+                          <div style={{ fontSize: '12px', color: 'rgba(219,186,191,.7)', marginTop: '2px' }}>🎯 {plan.objetivo}</div>
+                        </div>
+                        <button onClick={() => {
+                          const semanas = ((plan as any).semanas || []).map((s: any) => ({
+                            id: s.id, numero: s.numero,
+                            dias: (s.dias || []).map((d: any) => ({
+                              id: d.id, dia: d.dia, tipo: d.tipo || '', orden: d.orden || 0,
+                              ejercicios: (d.ejercicios || []).map((e: any) => ({ id: e.id, nombre: e.nombre, series: e.series, repeticiones: e.repeticiones, carga: e.carga || '', descanso: e.descanso || '', rpe: e.rpe || '', rir: e.rir || '', observaciones: e.observaciones || '' }))
+                            }))
+                          }))
+                          setBp({ id: plan.id, nombre: plan.nombre, objetivo: plan.objetivo, semanas, asignados: [alumnoActivo.id] })
+                          setTab('builder')
+                        }} style={{ background: '#B05276', border: 'none', borderRadius: '10px', padding: '8px 14px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+                          ✏️ Editar
+                        </button>
+                      </div>
+                      {((plan as any).semanas || []).map((sem: any) => (
+                        <div key={sem.id} style={{ marginBottom: '16px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#7D0531', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ background: '#7D0531', color: '#DBBABF', borderRadius: '50%', width: '22px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '800' }}>{sem.numero}</span>
+                            Semana {sem.numero}
+                          </div>
+                          {(sem.dias || []).map((dia: any) => (
+                            <div key={dia.id} style={{ background: '#ede0e2', borderRadius: '12px', padding: '12px 14px', marginBottom: '8px' }}>
+                              <div style={{ fontWeight: '700', fontSize: '13px', color: '#2a1520', marginBottom: '8px' }}>
+                                {dia.dia} {dia.tipo && <span style={{ fontWeight: '400', color: '#8a7070' }}>— {dia.tipo}</span>}
+                              </div>
+                              {(dia.ejercicios || []).length === 0 ? (
+                                <div style={{ fontSize: '12px', color: '#8a7070', fontStyle: 'italic' }}>Sin ejercicios cargados</div>
+                              ) : (dia.ejercicios || []).map((ej: any, i: number) => (
+                                <div key={ej.id} style={{ fontSize: '13px', color: '#2a1520', padding: '6px 0', borderBottom: i < dia.ejercicios.length - 1 ? '1px solid rgba(0,0,0,.07)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontWeight: '600', flex: 1 }}>{ej.nombre}</span>
+                                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    <span style={{ background: 'rgba(176,82,118,.15)', color: '#7D0531', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap' }}>{ej.series}×{ej.repeticiones}</span>
+                                    {ej.carga && <span style={{ background: '#fef3c7', color: '#d97706', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>{ej.carga}</span>}
+                                    {ej.rpe && <span style={{ background: '#ede0e2', color: '#5a2a3a', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>RPE {ej.rpe}</span>}
+                                    {ej.rir && <span style={{ background: '#ede0e2', color: '#5a2a3a', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>RIR {ej.rir}</span>}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </>
                   )
                 })()}
-                <div style={{ marginBottom: '10px' }}>
+                <div style={{ marginTop: '8px' }}>
                   <label style={{ fontSize: '12px', fontWeight: '700', color: '#5a2a3a', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: '6px' }}>Cambiar plan</label>
                   <select value={getPlanAlumno(alumnoActivo.id)?.id || ''} onChange={e => asignarPlan(alumnoActivo.id, e.target.value || null)}
                     style={{ background: '#ede0e2', border: '1.5px solid #d5c4c8', borderRadius: '10px', padding: '9px 12px', fontSize: '14px', width: '100%', fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
