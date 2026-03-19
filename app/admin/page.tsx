@@ -30,6 +30,7 @@ export default function AdminPage() {
   const [newA, setNewA] = useState({ nombre:'', apellido:'', dni:'', email:'', telefono:'', edad:'', sexo:'', objetivo:'', nivel:'Principiante', restricciones:'', password:'' })
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [planExpandido, setPlanExpandido] = useState(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -489,10 +490,10 @@ export default function AdminPage() {
               const totalDias = (plan as any).semanas?.reduce((a: number, s: any) => a + (s.dias?.length || 0), 0) || 0
               const totalEjs = (plan as any).semanas?.reduce((a: number, s: any) => a + (s.dias || []).reduce((b: number, d: any) => b + (d.ejercicios?.length || 0), 0), 0) || 0
               return (
-                <div key={plan.id} className="card" style={{ marginBottom: '16px' }}>
+                <div key={plan.id} className="card" style={{ marginBottom: '16px', cursor: 'pointer' }} onClick={() => setPlanExpandido(planExpandido === plan.id ? null : plan.id)}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                     <div>
-                      <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '700', color: '#7D0531', marginBottom: '6px' }}>{plan.nombre}</h3>
+                      <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '700', color: '#7D0531', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>{plan.nombre} <span style={{ fontSize: '14px', opacity: .5 }}>{planExpandido === plan.id ? '▲' : '▼'}</span></h3>
                       <span className="badge badge-rose">🎯 {plan.objetivo}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -528,6 +529,39 @@ export default function AdminPage() {
                       )) : <span style={{ color: '#8a7070', fontSize: '13px' }}>Ningún alumno/a</span>}
                     </div>
                   </div>
+                  {/* Detalle expandible del plan */}
+                  {planExpandido === plan.id && (
+                    <div style={{ borderTop: '1px solid #d5c4c8', marginTop: '14px', paddingTop: '14px' }} onClick={e => e.stopPropagation()}>
+                      {((plan as any).semanas || []).map((sem: any) => (
+                        <div key={sem.id} style={{ marginBottom: '16px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#7D0531', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ background: '#7D0531', color: '#DBBABF', borderRadius: '50%', width: '22px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '800', flexShrink: 0 }}>{sem.numero}</span>
+                            Semana {sem.numero}
+                          </div>
+                          {(sem.dias || []).map((dia: any) => (
+                            <div key={dia.id} style={{ background: '#ede0e2', borderRadius: '12px', padding: '12px 14px', marginBottom: '8px' }}>
+                              <div style={{ fontWeight: '700', fontSize: '13px', color: '#2a1520', marginBottom: '8px' }}>
+                                {dia.dia} {dia.tipo && <span style={{ fontWeight: '400', color: '#8a7070' }}>— {dia.tipo}</span>}
+                              </div>
+                              {(dia.ejercicios || []).length === 0 ? (
+                                <div style={{ fontSize: '12px', color: '#8a7070', fontStyle: 'italic' }}>Sin ejercicios cargados</div>
+                              ) : (dia.ejercicios || []).map((ej: any, i: number) => (
+                                <div key={ej.id} style={{ fontSize: '13px', padding: '6px 0', borderBottom: i < dia.ejercicios.length - 1 ? '1px solid rgba(0,0,0,.07)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontWeight: '600', flex: 1, color: '#2a1520' }}>{ej.nombre}</span>
+                                  <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    <span style={{ background: 'rgba(176,82,118,.15)', color: '#7D0531', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap' }}>{ej.series}×{ej.repeticiones}</span>
+                                    {ej.carga && <span style={{ background: '#fef3c7', color: '#d97706', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>{ej.carga}</span>}
+                                    {ej.rpe && <span style={{ background: '#ede0e2', color: '#5a2a3a', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>RPE {ej.rpe}</span>}
+                                    {ej.rir && <span style={{ background: '#ede0e2', color: '#5a2a3a', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>RIR {ej.rir}</span>}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
             })}
