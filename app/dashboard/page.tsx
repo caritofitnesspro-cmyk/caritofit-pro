@@ -274,7 +274,11 @@ export default function DashboardPage() {
                     const doneCount = ejsDia.filter((e: Ejercicio) => checkins.includes(e.id)).length
                     const allDone = ejsDia.length > 0 && doneCount === ejsDia.length
                     return (
-                      <div key={dia.id} onClick={() => { setDiaActivo(dia); setTab('plan') }}
+                      <div key={dia.id} onClick={() => {
+                        // Find full dia with ejercicios from semanas
+                        const fullDia = semanas.flatMap((s:any) => s.dias || []).find((d:any) => d.id === dia.id) || dia
+                        setDiaActivo(fullDia); setTab('plan')
+                      }}
                         style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderBottom: '1px solid #ede0e2', cursor: 'pointer', transition: '.15s' }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#ede0e2')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
@@ -331,7 +335,10 @@ export default function DashboardPage() {
                         const ejs = dia.ejercicios || []
                         const done = ejs.filter((e: Ejercicio) => checkins.includes(e.id)).length
                         return (
-                          <div key={dia.id} onClick={() => setDiaActivo(dia)}
+                          <div key={dia.id} onClick={() => {
+                            const fullDia = semanas.flatMap((s:any) => s.dias || []).find((d:any) => d.id === dia.id) || dia
+                            setDiaActivo(fullDia)
+                          }}
                             style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderBottom: '1px solid #ede0e2', cursor: 'pointer' }}
                             onMouseEnter={e => (e.currentTarget.style.background = '#ede0e2')}
                             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
