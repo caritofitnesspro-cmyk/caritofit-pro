@@ -2,33 +2,35 @@
 'use client'
 
 import { useState } from 'react'
-import type { RoutineExercise } from '@/types/routines'
+import type { Ejercicio } from '@/types/routines'
 
 interface Props {
-  exercise: RoutineExercise
+  ejercicio: Ejercicio
   index: number
   total: number
   onMoveUp: () => void
   onMoveDown: () => void
   onDelete: () => void
-  onUpdate: (data: Partial<RoutineExercise>) => void
+  onUpdate: (data: Partial<Ejercicio>) => void
 }
 
 export function RoutineExerciseItem({
-  exercise, index, total, onMoveUp, onMoveDown, onDelete, onUpdate
+  ejercicio, index, total, onMoveUp, onMoveDown, onDelete, onUpdate
 }: Props) {
   const [editing, setEditing] = useState(false)
-  const [sets, setSets] = useState(String(exercise.sets ?? ''))
-  const [reps, setReps] = useState(exercise.reps ?? '')
-  const [rest, setRest] = useState(String(exercise.rest ?? ''))
-  const [notes, setNotes] = useState(exercise.notes ?? '')
+  const [series, setSeries] = useState(String(ejercicio.series ?? ''))
+  const [reps, setReps] = useState(ejercicio.repeticiones ?? '')
+  const [descanso, setDescanso] = useState(String(ejercicio.descanso ?? ''))
+  const [carga, setCarga] = useState(ejercicio.carga ?? '')
+  const [notas, setNotas] = useState(ejercicio.notas ?? '')
 
   const handleSave = () => {
     onUpdate({
-      sets: sets ? parseInt(sets) : null,
-      reps: reps || null,
-      rest: rest ? parseInt(rest) : null,
-      notes: notes || null,
+      series: series ? parseInt(series) : null,
+      repeticiones: reps || null,
+      descanso: descanso ? parseInt(descanso) : null,
+      carga: carga || null,
+      notas: notas || null,
     })
     setEditing(false)
   }
@@ -42,35 +44,36 @@ export function RoutineExerciseItem({
         {/* Nombre y resumen */}
         <div className="flex items-center gap-2">
           <span className="font-medium text-slate-200 text-sm truncate">
-            {exercise.exercise?.name ?? 'Ejercicio'}
+            {ejercicio.nombre ?? 'Ejercicio'}
           </span>
           {!editing && (
             <span className="text-slate-500 text-xs">
-              {exercise.sets ? `${exercise.sets}×` : ''}
-              {exercise.reps}
-              {exercise.rest ? ` · ${exercise.rest}″` : ''}
+              {ejercicio.series ? `${ejercicio.series}×` : ''}
+              {ejercicio.repeticiones}
+              {ejercicio.carga ? ` · ${ejercicio.carga}` : ''}
+              {ejercicio.descanso ? ` · ${ejercicio.descanso}″` : ''}
             </span>
           )}
         </div>
 
         {/* Formulario de edición */}
         {editing && (
-          <div className="mt-2 grid grid-cols-3 gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
                 Series
               </label>
               <input
                 type="number"
-                value={sets}
-                onChange={(e) => setSets(e.target.value)}
+                value={series}
+                onChange={(e) => setSeries(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 placeholder="4"
               />
             </div>
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Reps
+                Repeticiones
               </label>
               <input
                 type="text"
@@ -82,29 +85,41 @@ export function RoutineExerciseItem({
             </div>
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Desc (seg)
+                Carga
+              </label>
+              <input
+                type="text"
+                value={carga}
+                onChange={(e) => setCarga(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
+                placeholder="20kg o peso corporal"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
+                Descanso (seg)
               </label>
               <input
                 type="number"
-                value={rest}
-                onChange={(e) => setRest(e.target.value)}
+                value={descanso}
+                onChange={(e) => setDescanso(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 placeholder="60"
               />
             </div>
-            <div className="col-span-3">
+            <div className="col-span-2">
               <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
                 Notas
               </label>
               <input
                 type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                value={notas}
+                onChange={(e) => setNotas(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 placeholder="Nota para el alumno..."
               />
             </div>
-            <div className="col-span-3 flex gap-2">
+            <div className="col-span-2 flex gap-2">
               <button
                 onClick={handleSave}
                 className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm py-1.5 rounded font-medium transition-colors"
@@ -134,4 +149,23 @@ export function RoutineExerciseItem({
           <button
             onClick={onMoveDown}
             disabled={index === total - 1}
-            className="w-6 h-6 text-[10px] rounded flex items-center justify-center text-
+            className="w-6 h-6 text-[10px] rounded flex items-center justify-center text-slate-500
+              hover:bg-slate-700 hover:text-white disabled:opacity-20 transition-colors"
+          >▼</button>
+        </div>
+        <button
+          onClick={() => setEditing(!editing)}
+          className="w-8 h-8 rounded flex items-center justify-center text-slate-400
+            hover:bg-slate-700 hover:text-white transition-colors"
+          title="Editar"
+        >✎</button>
+        <button
+          onClick={onDelete}
+          className="w-8 h-8 rounded flex items-center justify-center text-slate-500
+            hover:bg-red-900/40 hover:text-red-400 transition-colors"
+          title="Eliminar"
+        >×</button>
+      </div>
+    </div>
+  )
+}
