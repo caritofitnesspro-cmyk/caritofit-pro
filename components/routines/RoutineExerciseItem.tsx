@@ -24,7 +24,7 @@ export function RoutineExerciseItem({
   const [reps, setReps] = useState(ejercicio.repeticiones ?? '')
   const [descanso, setDescanso] = useState(ejercicio.descanso ?? '')
   const [carga, setCarga] = useState(ejercicio.carga ?? '')
-  const [observaciones, setNotas] = useState(ejercicio.notas ?? '')
+  const [notas, setNotas] = useState(ejercicio.observaciones ?? '')
   const nombreRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
