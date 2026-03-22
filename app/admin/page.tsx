@@ -674,30 +674,40 @@ export default function AdminPage() {
       {/* MODAL EDITOR DE BLOQUES */}
       {diaEditorActivo && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
           onClick={() => setDiaEditorActivo(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(2,6,23,0.7)', backdropFilter: 'blur(4px)' }}
         >
           <div
-            style={{ background: '#0f172a', borderRadius: '24px 24px 0 0', padding: '24px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: '640px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', background: '#0F172A', borderRadius: '20px 20px 0 0', border: '1px solid rgba(51,65,85,0.8)', borderBottom: 'none', boxShadow: '0 -8px 48px rgba(0,0,0,0.6)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ color: 'white', fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: '700' }}>
-                🧱 Bloques — {diaEditorActivo.nombre}
-              </h3>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(51,65,85,0.5)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+                  🧱
+                </div>
+                <div>
+                  <div style={{ color: '#F1F5F9', fontWeight: '700', fontSize: '15px', lineHeight: 1.2 }}>Bloques</div>
+                  <div style={{ color: '#64748B', fontSize: '12px', marginTop: '2px' }}>{diaEditorActivo.nombre}</div>
+                </div>
+              </div>
               <button
                 onClick={() => setDiaEditorActivo(null)}
-                style={{ background: '#1e293b', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: '#94a3b8', fontSize: '16px' }}
+                style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(51,65,85,0.6)', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', color: '#64748B', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >✕</button>
             </div>
-            <RoutineDayEditor
-              diaId={diaEditorActivo.id}
-              diaNombre={diaEditorActivo.nombre}
-              diaNumero={diaEditorActivo.numero}
-              onAgregarEjercicio={() => {
-                showToast('💡 Guardá el plan primero, luego agregá ejercicios desde el bloque')
-              }}
-            />
+            {/* Contenido scrolleable */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 24px' }}>
+              <RoutineDayEditor
+                diaId={diaEditorActivo.id}
+                diaNombre={diaEditorActivo.nombre}
+                diaNumero={diaEditorActivo.numero}
+                onAgregarEjercicio={() => {
+                  showToast('💡 Guardá el plan primero, luego agregá ejercicios desde el bloque')
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
