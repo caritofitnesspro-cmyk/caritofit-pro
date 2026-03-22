@@ -674,7 +674,7 @@ export default function AdminPage() {
       {/* MODAL EDITOR DE BLOQUES */}
       {diaEditorActivo && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
           onClick={() => setDiaEditorActivo(null)}
         >
           <div
