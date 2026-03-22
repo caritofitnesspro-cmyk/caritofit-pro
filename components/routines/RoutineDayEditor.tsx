@@ -19,9 +19,7 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
     load, agregarBloque, actualizarBloque, eliminarBloque, duplicarBloque, moverBloque
   } = useRoutineBlocks(diaId)
 
-  useEffect(() => {
-    load()
-  }, [load])
+  useEffect(() => { load() }, [load])
 
   const handleUpdateEjercicio = async (ejercicioId: string, data: any) => {
     const client = supabase as any
@@ -41,50 +39,48 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
   ) => {
     const bloque = bloques.find((b) => b.id === bloqueId)
     if (!bloque?.ejercicios) return
-
     const ejs = [...bloque.ejercicios]
     const idx = ejs.findIndex((e) => e.id === ejercicioId)
     const newIdx = direccion === 'up' ? idx - 1 : idx + 1
     if (newIdx < 0 || newIdx >= ejs.length) return
-
     ;[ejs[idx], ejs[newIdx]] = [ejs[newIdx], ejs[idx]]
-
     const client = supabase as any
     for (let i = 0; i < ejs.length; i++) {
       await client.from('ejercicios').update({ orden: i }).eq('id', ejs[i].id)
     }
-
     await load()
   }
 
   return (
-    <section className="space-y-4">
-
-      {/* Header del día */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center
-          text-white font-bold text-sm shrink-0">
-          {diaNumero}
-        </div>
-        <h3 className="font-bold text-white text-base">
-          {diaNombre || `Día ${diaNumero}`}
-        </h3>
-      </div>
+    <div className="space-y-3">
 
       {/* Error */}
       {error && (
-        <p className="text-red-400 text-xs bg-red-950/30 border border-red-800 rounded-lg px-3 py-2">
-          Error: {error}
-        </p>
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg
+          bg-red-950/40 border border-red-900/60 text-red-400 text-xs">
+          <span>⚠</span> {error}
+        </div>
       )}
 
       {/* Loading */}
       {loading ? (
-        <div className="text-center text-slate-500 py-8 text-sm">
+        <div className="flex items-center justify-center py-10 gap-2 text-slate-500 text-sm">
+          <span className="animate-spin text-base">⟳</span>
           Cargando bloques…
         </div>
       ) : (
         <div className="space-y-3">
+
+          {/* Sin bloques */}
+          {bloques.length === 0 && (
+            <div className="text-center py-8 px-4">
+              <div className="text-3xl mb-3">🧱</div>
+              <p className="text-slate-400 text-sm font-medium mb-1">Sin bloques todavía</p>
+              <p className="text-slate-600 text-xs">
+                Agregá bloques para organizar los ejercicios del día
+              </p>
+            </div>
+          )}
 
           {/* Lista de bloques */}
           {bloques.map((bloque, i) => (
@@ -111,16 +107,18 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
               nombre: `Bloque ${String.fromCharCode(65 + bloques.length)}`,
               tipo: 'normal',
             })}
-            className="w-full py-3 rounded-xl border-2 border-dashed border-slate-700
-              text-slate-500 text-sm font-medium hover:border-blue-600 hover:text-blue-400
-              hover:bg-blue-950/20 transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-xl border-2 border-dashed border-slate-700/60
+              text-slate-500 text-sm font-semibold
+              hover:border-green-500/40 hover:text-green-400 hover:bg-green-500/5
+              transition-all duration-200 flex items-center justify-center gap-2
+              group"
           >
-            <span className="text-lg leading-none">+</span>
+            <span className="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
             Agregar bloque al Día {diaNumero}
           </button>
 
         </div>
       )}
-    </section>
+    </div>
   )
 }
