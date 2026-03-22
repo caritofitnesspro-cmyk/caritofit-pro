@@ -1,7 +1,7 @@
 // components/routines/RoutineExerciseItem.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Ejercicio } from '@/types/routines'
 
 interface Props {
@@ -17,15 +17,27 @@ interface Props {
 export function RoutineExerciseItem({
   ejercicio, index, total, onMoveUp, onMoveDown, onDelete, onUpdate
 }: Props) {
-  const [editing, setEditing] = useState(false)
+  // Si el nombre es 'Nuevo ejercicio', arrancamos en modo edición automáticamente
+  const isNuevo = ejercicio.nombre === 'Nuevo ejercicio' || !ejercicio.nombre
+  const [editing, setEditing] = useState(isNuevo)
+  const [nombre, setNombre] = useState(isNuevo ? '' : (ejercicio.nombre ?? ''))
   const [series, setSeries] = useState(String(ejercicio.series ?? ''))
   const [reps, setReps] = useState(ejercicio.repeticiones ?? '')
   const [descanso, setDescanso] = useState(String(ejercicio.descanso ?? ''))
   const [carga, setCarga] = useState(ejercicio.carga ?? '')
   const [notas, setNotas] = useState(ejercicio.notas ?? '')
+  const nombreRef = useRef<HTMLInputElement>(null)
+
+  // Foco automático en el campo nombre cuando se abre en modo edición
+  useEffect(() => {
+    if (editing && nombreRef.current) {
+      setTimeout(() => nombreRef.current?.focus(), 50)
+    }
+  }, [editing])
 
   const handleSave = () => {
     onUpdate({
+      nombre: nombre || 'Ejercicio',
       series: series ? parseInt(series) : null,
       repeticiones: reps || null,
       descanso: descanso ? parseInt(descanso) : null,
@@ -35,100 +47,134 @@ export function RoutineExerciseItem({
     setEditing(false)
   }
 
+  const displayNombre = nombre || ejercicio.nombre || 'Ejercicio'
+
   return (
-    <div className="flex items-start gap-2 py-2 border-b border-slate-800 last:border-0">
+    <div className="flex items-start gap-2 py-2.5 px-3 border-b border-slate-800/60 last:border-0">
       {/* Ícono de agarre */}
-      <span className="mt-1 text-slate-600 text-xs select-none">☰</span>
+      <span className="mt-1 text-slate-600 text-xs select-none pt-0.5">☰</span>
 
       <div className="flex-1 min-w-0">
         {/* Nombre y resumen */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-200 text-sm truncate">
-            {ejercicio.nombre ?? 'Ejercicio'}
-          </span>
-          {!editing && (
-            <span className="text-slate-500 text-xs">
+        {!editing && (
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-slate-200 text-sm truncate">
+              {displayNombre}
+            </span>
+            <span className="text-slate-500 text-xs shrink-0">
               {ejercicio.series ? `${ejercicio.series}×` : ''}
               {ejercicio.repeticiones}
               {ejercicio.carga ? ` · ${ejercicio.carga}` : ''}
               {ejercicio.descanso ? ` · ${ejercicio.descanso}″` : ''}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Formulario de edición */}
         {editing && (
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="space-y-2">
+            {/* Nombre — campo principal y más importante */}
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Series
+                Nombre del ejercicio
               </label>
               <input
-                type="number"
-                value={series}
-                onChange={(e) => setSeries(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
-                placeholder="4"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Repeticiones
-              </label>
-              <input
+                ref={nombreRef}
                 type="text"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
-                placeholder="10 o 30seg"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+                className="w-full bg-slate-800 border border-green-500/40 rounded-lg px-3 py-2
+                  text-sm text-white font-medium placeholder-slate-600
+                  focus:outline-none focus:border-green-500/70 focus:ring-1 focus:ring-green-500/20"
+                placeholder="Ej: Sentadilla con barra, Press de banca..."
               />
             </div>
-            <div>
-              <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Carga
-              </label>
-              <input
-                type="text"
-                value={carga}
-                onChange={(e) => setCarga(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
-                placeholder="20kg o peso corporal"
-              />
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
+                  Series
+                </label>
+                <input
+                  type="number"
+                  value={series}
+                  onChange={(e) => setSeries(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5
+                    text-sm text-white focus:outline-none focus:border-slate-500"
+                  placeholder="3"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
+                  Reps
+                </label>
+                <input
+                  type="text"
+                  value={reps}
+                  onChange={(e) => setReps(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5
+                    text-sm text-white focus:outline-none focus:border-slate-500"
+                  placeholder="12 o 30seg"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
+                  Carga
+                </label>
+                <input
+                  type="text"
+                  value={carga}
+                  onChange={(e) => setCarga(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5
+                    text-sm text-white focus:outline-none focus:border-slate-500"
+                  placeholder="20kg / PC"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
+                  Descanso (seg)
+                </label>
+                <input
+                  type="number"
+                  value={descanso}
+                  onChange={(e) => setDescanso(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5
+                    text-sm text-white focus:outline-none focus:border-slate-500"
+                  placeholder="60"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
+                  Notas
+                </label>
+                <input
+                  type="text"
+                  value={notas}
+                  onChange={(e) => setNotas(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5
+                    text-sm text-white focus:outline-none focus:border-slate-500"
+                  placeholder="Nota para el alumno..."
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Descanso (seg)
-              </label>
-              <input
-                type="number"
-                value={descanso}
-                onChange={(e) => setDescanso(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
-                placeholder="60"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Notas
-              </label>
-              <input
-                type="text"
-                value={notas}
-                onChange={(e) => setNotas(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
-                placeholder="Nota para el alumno..."
-              />
-            </div>
-            <div className="col-span-2 flex gap-2">
+
+            <div className="flex gap-2 pt-1">
               <button
                 onClick={handleSave}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm py-1.5 rounded font-medium transition-colors"
+                className="flex-1 bg-green-600 hover:bg-green-500 text-white text-sm py-2
+                  rounded-lg font-semibold transition-colors"
               >
                 Guardar
               </button>
               <button
-                onClick={() => setEditing(false)}
-                className="px-3 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm py-1.5 rounded transition-colors"
+                onClick={() => {
+                  if (isNuevo) { onDelete(); return }
+                  setNombre(ejercicio.nombre ?? '')
+                  setEditing(false)
+                }}
+                className="px-4 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm
+                  py-2 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
@@ -137,35 +183,39 @@ export function RoutineExerciseItem({
         )}
       </div>
 
-      {/* Botones de acción */}
-      <div className="flex items-center gap-1 shrink-0">
-        <div className="flex flex-col gap-0.5">
+      {/* Botones de acción (solo cuando no está editando) */}
+      {!editing && (
+        <div className="flex items-center gap-1 shrink-0">
+          <div className="flex flex-col gap-0.5">
+            <button
+              onClick={onMoveUp}
+              disabled={index === 0}
+              className="w-6 h-6 text-[10px] rounded flex items-center justify-center
+                text-slate-600 hover:bg-slate-700 hover:text-white
+                disabled:opacity-20 transition-colors"
+            >▲</button>
+            <button
+              onClick={onMoveDown}
+              disabled={index === total - 1}
+              className="w-6 h-6 text-[10px] rounded flex items-center justify-center
+                text-slate-600 hover:bg-slate-700 hover:text-white
+                disabled:opacity-20 transition-colors"
+            >▼</button>
+          </div>
           <button
-            onClick={onMoveUp}
-            disabled={index === 0}
-            className="w-6 h-6 text-[10px] rounded flex items-center justify-center text-slate-500
-              hover:bg-slate-700 hover:text-white disabled:opacity-20 transition-colors"
-          >▲</button>
+            onClick={() => setEditing(true)}
+            className="w-8 h-8 rounded flex items-center justify-center
+              text-slate-500 hover:bg-slate-700 hover:text-white transition-colors"
+            title="Editar"
+          >✎</button>
           <button
-            onClick={onMoveDown}
-            disabled={index === total - 1}
-            className="w-6 h-6 text-[10px] rounded flex items-center justify-center text-slate-500
-              hover:bg-slate-700 hover:text-white disabled:opacity-20 transition-colors"
-          >▼</button>
+            onClick={onDelete}
+            className="w-8 h-8 rounded flex items-center justify-center
+              text-slate-600 hover:bg-red-900/40 hover:text-red-400 transition-colors"
+            title="Eliminar"
+          >×</button>
         </div>
-        <button
-          onClick={() => setEditing(!editing)}
-          className="w-8 h-8 rounded flex items-center justify-center text-slate-400
-            hover:bg-slate-700 hover:text-white transition-colors"
-          title="Editar"
-        >✎</button>
-        <button
-          onClick={onDelete}
-          className="w-8 h-8 rounded flex items-center justify-center text-slate-500
-            hover:bg-red-900/40 hover:text-red-400 transition-colors"
-          title="Eliminar"
-        >×</button>
-      </div>
+      )}
     </div>
   )
 }
