@@ -1,7 +1,8 @@
 // types/database.ts
-// Tipos TypeScript que coinciden exactamente con las tablas de Supabase
 export type Rol = 'admin' | 'alumno'
 export type Nivel = 'Principiante' | 'Intermedio' | 'Avanzado'
+export type TipoBloque = 'normal' | 'circuito' | 'superserie' | 'entrada_en_calor' | 'vuelta_a_la_calma'
+
 export interface Perfil {
   id: string
   rol: Rol
@@ -69,6 +70,17 @@ export interface Ejercicio {
   created_at: string
   completado?: boolean
 }
+export interface Bloque {
+  id: string
+  dia_id: string
+  nombre: string
+  tipo: TipoBloque
+  descripcion?: string | null
+  rondas?: number | null
+  descanso_entre_rondas?: number | null
+  orden: number
+  creado_en?: string
+}
 export interface Checkin {
   id: string
   alumno_id: string
@@ -92,6 +104,7 @@ export type Database = {
       semanas:      { Row: Semana;     Insert: Omit<Semana, 'id' | 'created_at'>;     Update: Partial<Semana> }
       dias:         { Row: Dia;        Insert: Omit<Dia, 'id' | 'created_at'>;        Update: Partial<Dia> }
       ejercicios:   { Row: Ejercicio;  Insert: Omit<Ejercicio, 'id' | 'created_at'>;  Update: Partial<Ejercicio> }
+      bloques:      { Row: Bloque;     Insert: Omit<Bloque, 'id' | 'creado_en'>;      Update: Partial<Bloque> }
       checkins:     { Row: Checkin;    Insert: Omit<Checkin, 'id' | 'created_at'>;    Update: Partial<Checkin> }
       pesos:        { Row: Peso;       Insert: Omit<Peso, 'id' | 'created_at'>;       Update: Partial<Peso> }
     }
