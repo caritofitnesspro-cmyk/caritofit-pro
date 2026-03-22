@@ -40,7 +40,7 @@ export function RoutineExerciseItem({
       repeticiones: reps || null,
       descanso: descanso || null,  // texto directo, no parseInt
       carga: carga || null,
-      notas: notas || null,
+      observaciones: notas || null,
     })
     setEditing(false)
   }
