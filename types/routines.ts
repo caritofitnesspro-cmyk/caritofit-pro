@@ -17,7 +17,6 @@ export interface Bloque {
   descanso_entre_rondas?: number | null
   orden: number
   creado_en?: string
-  // Ejercicios del bloque (poblado en queries)
   ejercicios?: Ejercicio[]
 }
 
@@ -52,13 +51,10 @@ export interface BloqueFormData {
   descanso_entre_rondas?: number
 }
 
-export const TIPO_BLOQUE_CONFIG: Record
-  TipoBloque,
-  { label: string; color: string; bgColor: string; emoji: string }
-> = {
+export const TIPO_BLOQUE_CONFIG: Record<TipoBloque, { label: string; color: string; bgColor: string; emoji: string }> = {
   normal:            { label: 'Normal',            color: 'text-blue-400',   bgColor: 'bg-blue-950/40 border-blue-800',    emoji: '🔵' },
   circuito:          { label: 'Circuito',          color: 'text-green-400',  bgColor: 'bg-green-950/40 border-green-800',  emoji: '🟢' },
-  superserie:        { label: 'Superserie',        color: 'text-violet-400', bgColor: 'bg-violet-950/40 border-violet-800',emoji: '🟣' },
-  entrada_en_calor:  { label: 'Entrada en calor',  color: 'text-orange-400', bgColor: 'bg-orange-950/40 border-orange-800',emoji: '🟠' },
+  superserie:        { label: 'Superserie',        color: 'text-violet-400', bgColor: 'bg-violet-950/40 border-violet-800', emoji: '🟣' },
+  entrada_en_calor:  { label: 'Entrada en calor',  color: 'text-orange-400', bgColor: 'bg-orange-950/40 border-orange-800', emoji: '🟠' },
   vuelta_a_la_calma: { label: 'Vuelta a la calma', color: 'text-cyan-400',   bgColor: 'bg-cyan-950/40 border-cyan-800',    emoji: '🩵' },
 }
