@@ -107,7 +107,7 @@ export async function duplicarBloque(
       series: ej.series,
       repeticiones: ej.repeticiones,
       descanso: ej.descanso,
-      notas: ej.notas,
+      observaciones: ej.observaciones,
       orden: ej.orden,
       carga: ej.carga,
     }))
