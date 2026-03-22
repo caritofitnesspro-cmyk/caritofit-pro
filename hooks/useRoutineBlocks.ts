@@ -2,11 +2,11 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import type { RoutineBlock, BlockFormData } from '@/types/routines'
-import * as blockQueries from '@/lib/routine-blocks'
+import type { Bloque, BloqueFormData } from '@/types/routines'
+import * as bloqueQueries from '@/lib/routine-blocks'
 
-export function useRoutineBlocks(dayId: string) {
-  const [blocks, setBlocks] = useState<RoutineBlock[]>([])
+export function useRoutineBlocks(diaId: string) {
+  const [bloques, setBloques] = useState<Bloque[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -14,59 +14,56 @@ export function useRoutineBlocks(dayId: string) {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await blockQueries.getBlocksWithExercises(dayId)
-      setBlocks(data)
+      const data = await bloqueQueries.getBloquesConEjercicios(diaId)
+      setBloques(data)
     } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [dayId])
+  }, [diaId])
 
   // Agregar bloque nuevo
-  const addBlock = useCallback(async (formData: BlockFormData) => {
-    // Aparece en pantalla al instante (optimistic)
+  const agregarBloque = useCallback(async (formData: BloqueFormData) => {
     const tempId = `temp-${Date.now()}`
-    const optimistic: RoutineBlock = {
+    const optimista: Bloque = {
       id: tempId,
-      day_id: dayId,
-      order: blocks.length,
-      exercises: [],
+      dia_id: diaId,
+      orden: bloques.length,
+      ejercicios: [],
       ...formData,
     }
-    setBlocks((prev) => [...prev, optimistic])
+    setBloques((prev) => [...prev, optimista])
 
     try {
-      const real = await blockQueries.createBlock(dayId, formData, blocks.length)
-      setBlocks((prev) =>
-        prev.map((b) => (b.id === tempId ? { ...real, exercises: [] } : b))
+      const real = await bloqueQueries.crearBloque(diaId, formData, bloques.length)
+      setBloques((prev) =>
+        prev.map((b) => (b.id === tempId ? { ...real, ejercicios: [] } : b))
       )
     } catch (e: any) {
-      // Si falla, lo saca de pantalla
-      setBlocks((prev) => prev.filter((b) => b.id !== tempId))
+      setBloques((prev) => prev.filter((b) => b.id !== tempId))
       setError(e.message)
     }
-  }, [dayId, blocks.length])
+  }, [diaId, bloques.length])
 
   // Actualizar nombre, tipo, descripción, etc.
-  const updateBlock = useCallback(async (blockId: string, updates: Partial<BlockFormData>) => {
-    // Actualiza en pantalla al instante
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === blockId ? { ...b, ...updates } : b))
+  const actualizarBloque = useCallback(async (bloqueId: string, updates: Partial<BloqueFormData>) => {
+    setBloques((prev) =>
+      prev.map((b) => (b.id === bloqueId ? { ...b, ...updates } : b))
     )
     try {
-      await blockQueries.updateBlock(blockId, updates)
+      await bloqueQueries.actualizarBloque(bloqueId, updates)
     } catch (e: any) {
       setError(e.message)
-      await load() // Si falla, recarga desde Supabase
+      await load()
     }
   }, [load])
 
   // Eliminar bloque
-  const removeBlock = useCallback(async (blockId: string) => {
-    setBlocks((prev) => prev.filter((b) => b.id !== blockId))
+  const eliminarBloque = useCallback(async (bloqueId: string) => {
+    setBloques((prev) => prev.filter((b) => b.id !== bloqueId))
     try {
-      await blockQueries.deleteBlock(blockId)
+      await bloqueQueries.eliminarBloque(bloqueId)
     } catch (e: any) {
       setError(e.message)
       await load()
@@ -74,51 +71,51 @@ export function useRoutineBlocks(dayId: string) {
   }, [load])
 
   // Duplicar bloque
-  const duplicateBlock = useCallback(async (block: RoutineBlock) => {
+  const duplicarBloque = useCallback(async (bloque: Bloque) => {
     try {
-      const copy = await blockQueries.duplicateBlock(block, blocks.length)
-      setBlocks((prev) => [
+      const copia = await bloqueQueries.duplicarBloque(bloque, bloques.length)
+      setBloques((prev) => [
         ...prev,
-        { ...copy, exercises: block.exercises ? [...block.exercises] : [] },
+        { ...copia, ejercicios: bloque.ejercicios ? [...bloque.ejercicios] : [] },
       ])
     } catch (e: any) {
       setError(e.message)
     }
-  }, [blocks.length])
+  }, [bloques.length])
 
   // Subir o bajar un bloque
-  const moveBlock = useCallback(async (blockId: string, direction: 'up' | 'down') => {
-    const idx = blocks.findIndex((b) => b.id === blockId)
+  const moverBloque = useCallback(async (bloqueId: string, direccion: 'up' | 'down') => {
+    const idx = bloques.findIndex((b) => b.id === bloqueId)
     if (idx === -1) return
 
-    const newIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (newIdx < 0 || newIdx >= blocks.length) return
+    const newIdx = direccion === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= bloques.length) return
 
-    const reordered = [...blocks]
-    ;[reordered[idx], reordered[newIdx]] = [reordered[newIdx], reordered[idx]]
-    const withOrder = reordered.map((b, i) => ({ ...b, order: i }))
+    const reordenados = [...bloques]
+    ;[reordenados[idx], reordenados[newIdx]] = [reordenados[newIdx], reordenados[idx]]
+    const conOrden = reordenados.map((b, i) => ({ ...b, orden: i }))
 
-    setBlocks(withOrder)
+    setBloques(conOrden)
 
     try {
-      await blockQueries.reorderBlocks(
-        withOrder.map((b) => ({ id: b.id, order: b.order }))
+      await bloqueQueries.reordenarBloques(
+        conOrden.map((b) => ({ id: b.id, orden: b.orden }))
       )
     } catch (e: any) {
       setError(e.message)
       await load()
     }
-  }, [blocks, load])
+  }, [bloques, load])
 
   return {
-    blocks,
+    bloques,
     loading,
     error,
     load,
-    addBlock,
-    updateBlock,
-    removeBlock,
-    duplicateBlock,
-    moveBlock,
+    agregarBloque,
+    actualizarBloque,
+    eliminarBloque,
+    duplicarBloque,
+    moverBloque,
   }
 }
