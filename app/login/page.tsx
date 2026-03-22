@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 // app/login/page.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
@@ -15,6 +15,27 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [brandImageUrl, setBrandImageUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadBrandLogo() {
+      try {
+        const { data } = await (supabase as any)
+          .from('perfiles')
+          .select('brand_image_url')
+          .eq('rol', 'admin')
+          .not('brand_image_url', 'is', null)
+          .limit(1)
+          .single()
+        if (data?.brand_image_url) {
+          setBrandImageUrl(data.brand_image_url)
+        }
+      } catch {
+        // Sin logo configurado, usa el estático
+      }
+    }
+    loadBrandLogo()
+  }, [])
 
   async function handleLogin() {
     setError('')
@@ -22,7 +43,6 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      // Buscar el email asociado a ese DNI
       const { data: perfil } = await supabase
         .from('perfiles')
         .select('id, email, rol')
@@ -35,7 +55,6 @@ export default function LoginPage() {
         return
       }
 
-      // Login con email + contraseña
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: perfil.email,
         password,
@@ -47,7 +66,6 @@ export default function LoginPage() {
         return
       }
 
-      // Redirigir según rol
       if (perfil.rol === 'admin') router.push('/admin')
       else router.push('/dashboard')
 
@@ -61,9 +79,23 @@ export default function LoginPage() {
     <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #1a0008 0%, #7D0531 60%, #B05276 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div style={{ background: '#faf8f7', borderRadius: '28px', padding: '48px 40px', width: '100%', maxWidth: '420px', boxShadow: '0 24px 80px rgba(0,0,0,.3)' }}>
 
-        {/* Logo */}
+        {/* Logo — dinámico si existe, estático como fallback */}
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <img src='/logo.png' alt='Team Carito' style={{ width: '220px', height: 'auto', margin: '0 auto 8px', display: 'block', objectFit: 'contain' }} />
+          {brandImageUrl ? (
+            <div style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '4px solid #DBBABF', boxShadow: '0 8px 24px rgba(125,5,49,.25)' }}>
+              <img
+                src={brandImageUrl}
+                alt='Logo'
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          ) : (
+            <img
+              src='/logo.png'
+              alt='Team Carito'
+              style={{ width: '220px', height: 'auto', margin: '0 auto 8px', display: 'block', objectFit: 'contain' }}
+            />
+          )}
           <div style={{ fontSize: '13px', color: '#8a7070', marginTop: '4px' }}>Tu equipo de entrenamiento personalizado</div>
         </div>
 
