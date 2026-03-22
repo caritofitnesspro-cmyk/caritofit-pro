@@ -4,10 +4,120 @@
 import { useState } from 'react'
 import type { Bloque, Ejercicio, TipoBloque, BloqueFormData } from '@/types/routines'
 import { TIPO_BLOQUE_CONFIG } from '@/types/routines'
-import { BlockTypeBadge } from './BlockTypeBadge'
 import { RoutineExerciseItem } from './RoutineExerciseItem'
-import { ReorderButtons } from './ReorderButtons'
 
+// ── ReorderControls ───────────────────────────────────────
+interface ReorderProps {
+  onUp: () => void
+  onDown: () => void
+  disableUp?: boolean
+  disableDown?: boolean
+}
+
+function ReorderControls({ onUp, onDown, disableUp, disableDown }: ReorderProps) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <button
+        onClick={onUp}
+        disabled={disableUp}
+        className="w-6 h-6 rounded-md flex items-center justify-center
+          text-slate-500 hover:text-slate-200 hover:bg-slate-700
+          disabled:opacity-20 disabled:cursor-not-allowed transition-all text-[10px]"
+      >▲</button>
+      <button
+        onClick={onDown}
+        disabled={disableDown}
+        className="w-6 h-6 rounded-md flex items-center justify-center
+          text-slate-500 hover:text-slate-200 hover:bg-slate-700
+          disabled:opacity-20 disabled:cursor-not-allowed transition-all text-[10px]"
+      >▼</button>
+    </div>
+  )
+}
+
+// ── BlockTypePills ────────────────────────────────────────
+const TIPOS: { value: TipoBloque; label: string; emoji: string }[] = [
+  { value: 'normal',            label: 'Normal',       emoji: '💪' },
+  { value: 'entrada_en_calor',  label: 'Calor',        emoji: '🔥' },
+  { value: 'circuito',          label: 'Circuito',     emoji: '🔁' },
+  { value: 'superserie',        label: 'Superserie',   emoji: '⚡' },
+  { value: 'vuelta_a_la_calma', label: 'Calma',        emoji: '🧘' },
+]
+
+const TIPO_COLORS: Record<TipoBloque, string> = {
+  normal:            'bg-blue-500/15 text-blue-300 border-blue-500/30 hover:bg-blue-500/25',
+  circuito:          'bg-green-500/15 text-green-300 border-green-500/30 hover:bg-green-500/25',
+  superserie:        'bg-violet-500/15 text-violet-300 border-violet-500/30 hover:bg-violet-500/25',
+  entrada_en_calor:  'bg-orange-500/15 text-orange-300 border-orange-500/30 hover:bg-orange-500/25',
+  vuelta_a_la_calma: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/25',
+}
+
+const TIPO_ACTIVE: Record<TipoBloque, string> = {
+  normal:            'bg-blue-500 text-white border-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.4)]',
+  circuito:          'bg-green-500 text-white border-green-400 shadow-[0_0_12px_rgba(34,197,94,0.4)]',
+  superserie:        'bg-violet-500 text-white border-violet-400 shadow-[0_0_12px_rgba(139,92,246,0.4)]',
+  entrada_en_calor:  'bg-orange-500 text-white border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.4)]',
+  vuelta_a_la_calma: 'bg-cyan-500 text-white border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]',
+}
+
+interface BlockTypePillsProps {
+  value: TipoBloque
+  onChange: (tipo: TipoBloque) => void
+}
+
+function BlockTypePills({ value, onChange }: BlockTypePillsProps) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {TIPOS.map((t) => {
+        const isActive = value === t.value
+        return (
+          <button
+            key={t.value}
+            onClick={() => onChange(t.value)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold
+              border transition-all duration-150 cursor-pointer
+              ${isActive ? TIPO_ACTIVE[t.value] : TIPO_COLORS[t.value]}`}
+          >
+            <span>{t.emoji}</span>
+            <span>{t.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── SecondaryButton ───────────────────────────────────────
+function SecondaryButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+        bg-slate-800 border border-slate-700 text-slate-400
+        hover:bg-slate-700 hover:text-slate-200 hover:border-slate-600
+        transition-all duration-150"
+    >
+      {children}
+    </button>
+  )
+}
+
+// ── DangerButton ──────────────────────────────────────────
+function DangerButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+        bg-slate-800 border border-slate-700 text-slate-500
+        hover:bg-red-950/50 hover:text-red-400 hover:border-red-900
+        transition-all duration-150"
+    >
+      {children}
+    </button>
+  )
+}
+
+// ── BlockCard ─────────────────────────────────────────────
 interface Props {
   bloque: Bloque
   index: number
@@ -18,18 +128,10 @@ interface Props {
   onDuplicate: () => void
   onUpdate: (data: Partial<BloqueFormData>) => void
   onAddEjercicio: (bloqueId: string) => void
-  onUpdateEjercicio: (ejercicioId: string, data: Partial<Ejercicio>) => void
+  onUpdateEjercicio: (ejercicioId: string, data: any) => void
   onDeleteEjercicio: (ejercicioId: string) => void
   onMoveEjercicio: (ejercicioId: string, direccion: 'up' | 'down') => void
 }
-
-const TIPOS: TipoBloque[] = [
-  'normal',
-  'circuito',
-  'superserie',
-  'entrada_en_calor',
-  'vuelta_a_la_calma',
-]
 
 export function RoutineBlockCard({
   bloque, index, total,
@@ -38,16 +140,18 @@ export function RoutineBlockCard({
 }: Props) {
   const [expanded, setExpanded] = useState(true)
   const [editingNombre, setEditingNombre] = useState(false)
-  const config = TIPO_BLOQUE_CONFIG[bloque.tipo]
   const ejercicios = bloque.ejercicios ?? []
   const isCircuito = bloque.tipo === 'circuito' || bloque.tipo === 'superserie'
 
+  const tipoActivo = TIPOS.find(t => t.value === bloque.tipo)
+
   return (
-    <div className={`rounded-xl border ${config.bgColor} transition-all duration-200`}>
+    <div className="rounded-xl border border-slate-700/60 bg-slate-800/50 backdrop-blur-sm
+      shadow-[0_2px_16px_rgba(0,0,0,0.3)] transition-all duration-200 overflow-hidden">
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-2 p-3">
-        <ReorderButtons
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-700/40">
+        <ReorderControls
           onUp={onMoveUp}
           onDown={onMoveDown}
           disableUp={index === 0}
@@ -60,158 +164,169 @@ export function RoutineBlockCard({
               autoFocus
               type="text"
               defaultValue={bloque.nombre}
-              onBlur={(e) => {
-                onUpdate({ nombre: e.target.value })
-                setEditingNombre(false)
-              }}
+              onBlur={(e) => { onUpdate({ nombre: e.target.value }); setEditingNombre(false) }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
                 if (e.key === 'Escape') setEditingNombre(false)
               }}
-              className="w-full bg-transparent border-b border-slate-500 text-white font-semibold
-                text-sm focus:outline-none focus:border-blue-400 pb-0.5"
+              className="w-full bg-slate-900/80 border border-slate-600 rounded-lg
+                px-2.5 py-1 text-white font-semibold text-sm
+                focus:outline-none focus:border-green-500/60 focus:ring-1 focus:ring-green-500/20"
             />
           ) : (
             <button
               onClick={() => setEditingNombre(true)}
-              className="text-left font-semibold text-white text-sm hover:text-blue-300 transition-colors w-full truncate"
+              className="text-left font-bold text-slate-100 text-sm hover:text-white
+                transition-colors w-full truncate group flex items-center gap-1.5"
             >
               {bloque.nombre}
+              <span className="text-slate-600 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">
+                ✎
+              </span>
             </button>
           )}
+
           <div className="flex items-center gap-2 mt-1">
-            <BlockTypeBadge tipo={bloque.tipo} />
+            {tipoActivo && (
+              <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase
+                tracking-widest px-2 py-0.5 rounded-full border
+                ${TIPO_COLORS[bloque.tipo]}`}>
+                {tipoActivo.emoji} {tipoActivo.label}
+              </span>
+            )}
             {isCircuito && bloque.rondas && (
-              <span className="text-xs text-slate-400">{bloque.rondas} rondas</span>
+              <span className="text-[10px] text-slate-500 font-medium">
+                {bloque.rondas} rondas
+              </span>
             )}
           </div>
         </div>
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-8 h-8 rounded flex items-center justify-center text-slate-400
-            hover:bg-slate-700 hover:text-white transition-colors text-xs"
+          className="w-7 h-7 rounded-lg flex items-center justify-center
+            text-slate-500 hover:text-slate-300 hover:bg-slate-700/50
+            transition-all text-[10px]"
         >
           {expanded ? '▲' : '▼'}
         </button>
       </div>
 
-      {/* ── Contenido expandible ── */}
+      {/* ── Contenido ── */}
       {expanded && (
-        <div className="px-3 pb-3 space-y-3">
+        <div className="px-4 py-3 space-y-4">
 
-          {/* Config del bloque */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Tipo
-              </label>
-              <select
-                value={bloque.tipo}
-                onChange={(e) => onUpdate({ tipo: e.target.value as TipoBloque })}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5
-                  text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-              >
-                {TIPOS.map((t) => (
-                  <option key={t} value={t}>{TIPO_BLOQUE_CONFIG[t].label}</option>
-                ))}
-              </select>
-            </div>
-
-            {isCircuito && (
-              <>
-                <div>
-                  <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                    Rondas
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={bloque.rondas ?? ''}
-                    onChange={(e) => onUpdate({ rondas: e.target.value ? parseInt(e.target.value) : undefined })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5
-                      text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                    placeholder="3"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                    Descanso entre rondas (seg)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={bloque.descanso_entre_rondas ?? ''}
-                    onChange={(e) => onUpdate({ descanso_entre_rondas: e.target.value ? parseInt(e.target.value) : undefined })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5
-                      text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                    placeholder="60"
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="col-span-2">
-              <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                Descripción (opcional)
-              </label>
-              <input
-                type="text"
-                value={bloque.descripcion ?? ''}
-                onChange={(e) => onUpdate({ descripcion: e.target.value || undefined })}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5
-                  text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                placeholder="Instrucciones para este bloque..."
-              />
-            </div>
+          {/* Tipo de bloque */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+              Tipo de bloque
+            </label>
+            <BlockTypePills
+              value={bloque.tipo}
+              onChange={(tipo) => onUpdate({ tipo })}
+            />
           </div>
 
-          {/* Lista de ejercicios */}
-          <div className="rounded-lg bg-slate-900/50 p-2">
-            {ejercicios.length === 0 ? (
-              <p className="text-center text-slate-600 text-xs py-3">
-                Sin ejercicios todavía
-              </p>
-            ) : (
-              ejercicios.map((ej, i) => (
-                <RoutineExerciseItem
-                  key={ej.id}
-                  ejercicio={ej}
-                  index={i}
-                  total={ejercicios.length}
-                  onMoveUp={() => onMoveEjercicio(ej.id, 'up')}
-                  onMoveDown={() => onMoveEjercicio(ej.id, 'down')}
-                  onDelete={() => onDeleteEjercicio(ej.id)}
-                  onUpdate={(data) => onUpdateEjercicio(ej.id, data)}
+          {/* Rondas y descanso (solo circuito/superserie) */}
+          {isCircuito && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Rondas
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={bloque.rondas ?? ''}
+                  onChange={(e) => onUpdate({ rondas: e.target.value ? parseInt(e.target.value) : undefined })}
+                  placeholder="3"
+                  className="w-full bg-slate-900/60 border border-slate-700 rounded-lg
+                    px-3 py-2 text-sm text-slate-200 placeholder-slate-600
+                    focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/10
+                    transition-all"
                 />
-              ))
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Descanso entre rondas (seg)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={bloque.descanso_entre_rondas ?? ''}
+                  onChange={(e) => onUpdate({ descanso_entre_rondas: e.target.value ? parseInt(e.target.value) : undefined })}
+                  placeholder="60"
+                  className="w-full bg-slate-900/60 border border-slate-700 rounded-lg
+                    px-3 py-2 text-sm text-slate-200 placeholder-slate-600
+                    focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/10
+                    transition-all"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Descripción */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+              Descripción <span className="normal-case font-normal text-slate-600">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              value={bloque.descripcion ?? ''}
+              onChange={(e) => onUpdate({ descripcion: e.target.value || undefined })}
+              placeholder="Instrucciones o notas para este bloque..."
+              className="w-full bg-slate-900/60 border border-slate-700 rounded-lg
+                px-3 py-2 text-sm text-slate-200 placeholder-slate-600
+                focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/10
+                transition-all"
+            />
+          </div>
+
+          {/* Ejercicios */}
+          <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 overflow-hidden">
+            {ejercicios.length === 0 ? (
+              <div className="py-6 text-center">
+                <p className="text-slate-600 text-xs">Sin ejercicios en este bloque</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-800/60">
+                {ejercicios.map((ej, i) => (
+                  <RoutineExerciseItem
+                    key={ej.id}
+                    ejercicio={ej}
+                    index={i}
+                    total={ejercicios.length}
+                    onMoveUp={() => onMoveEjercicio(ej.id, 'up')}
+                    onMoveDown={() => onMoveEjercicio(ej.id, 'down')}
+                    onDelete={() => onDeleteEjercicio(ej.id)}
+                    onUpdate={(data) => onUpdateEjercicio(ej.id, data)}
+                  />
+                ))}
+              </div>
             )}
+
+            {/* Botón agregar ejercicio */}
             <button
               onClick={() => onAddEjercicio(bloque.id)}
-              className="mt-2 w-full py-2 rounded-lg border border-dashed border-slate-700
-                text-slate-500 text-xs hover:border-blue-600 hover:text-blue-400
-                transition-colors flex items-center justify-center gap-1"
+              className="w-full py-2.5 flex items-center justify-center gap-2
+                text-xs font-semibold text-slate-500
+                border-t border-slate-800/60
+                hover:text-green-400 hover:bg-green-500/5
+                transition-all duration-150"
             >
-              <span className="text-base leading-none">+</span> Agregar ejercicio
+              <span className="text-base leading-none">+</span>
+              Agregar ejercicio
             </button>
           </div>
 
-          {/* Footer */}
-          <div className="flex gap-2 justify-end pt-1">
-            <button
-              onClick={onDuplicate}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800
-                hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition-colors"
-            >
+          {/* Acciones del bloque */}
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <SecondaryButton onClick={onDuplicate}>
               ⧉ Duplicar
-            </button>
-            <button
-              onClick={onDelete}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800
-                hover:bg-red-900/50 text-slate-400 hover:text-red-400 text-xs transition-colors"
-            >
-              🗑 Eliminar
-            </button>
+            </SecondaryButton>
+            <DangerButton onClick={onDelete}>
+              🗑 Eliminar bloque
+            </DangerButton>
           </div>
 
         </div>
