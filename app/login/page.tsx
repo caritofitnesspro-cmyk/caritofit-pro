@@ -16,20 +16,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [brandImageUrl, setBrandImageUrl] = useState<string | null>(null)
+  const [brandName, setBrandName] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadBrandLogo() {
       try {
         const { data } = await (supabase as any)
           .from('perfiles')
-          .select('brand_image_url')
+          .select('brand_image_url, brand_name')
           .eq('rol', 'admin')
-          .not('brand_image_url', 'is', null)
           .limit(1)
           .single()
-        if (data?.brand_image_url) {
-          setBrandImageUrl(data.brand_image_url)
-        }
+        if (data?.brand_image_url) setBrandImageUrl(data.brand_image_url)
+        if (data?.brand_name) setBrandName(data.brand_name)
       } catch {
         // Sin logo configurado, usa el estático
       }
@@ -95,6 +94,9 @@ export default function LoginPage() {
               alt='Team Carito'
               style={{ width: '220px', height: 'auto', margin: '0 auto 8px', display: 'block', objectFit: 'contain' }}
             />
+          )}
+          {brandName && (
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: '900', color: '#7D0531', marginTop: '10px', marginBottom: '2px' }}>{brandName}</div>
           )}
           <div style={{ fontSize: '13px', color: '#8a7070', marginTop: '4px' }}>Tu equipo de entrenamiento personalizado</div>
         </div>
