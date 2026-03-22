@@ -5,7 +5,6 @@ import { useEffect } from 'react'
 import { useRoutineBlocks } from '@/hooks/useRoutineBlocks'
 import { RoutineBlockCard } from './RoutineBlockCard'
 import { supabase } from '@/lib/supabase'
-import type { Ejercicio } from '@/types/routines'
 
 interface Props {
   diaId: string
@@ -24,7 +23,7 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
     load()
   }, [load])
 
-  const handleUpdateEjercicio = async (ejercicioId: string, data: Partial<Ejercicio>) => {
+  const handleUpdateEjercicio = async (ejercicioId: string, data: Record<string, any>) => {
     await supabase.from('ejercicios').update(data).eq('id', ejercicioId)
     await load()
   }
