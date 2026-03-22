@@ -21,6 +21,23 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
 
   useEffect(() => { load() }, [load])
 
+  const handleAddEjercicio = async (bloqueId: string) => {
+    const client = supabase as any
+    const ejerciciosDelBloque = bloques.find(b => b.id === bloqueId)?.ejercicios ?? []
+    const { error } = await client.from('ejercicios').insert({
+      dia_id: diaId,
+      bloque_id: bloqueId,
+      nombre: 'Nuevo ejercicio',
+      series: 3,
+      repeticiones: '12',
+      carga: '',
+      descanso: '60 seg',
+      orden: ejerciciosDelBloque.length,
+    })
+    if (error) console.error('Error agregando ejercicio:', error)
+    await load()
+  }
+
   const handleUpdateEjercicio = async (ejercicioId: string, data: any) => {
     const client = supabase as any
     await client.from('ejercicios').update(data).eq('id', ejercicioId)
@@ -54,7 +71,6 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
   return (
     <div className="space-y-3">
 
-      {/* Error */}
       {error && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg
           bg-red-950/40 border border-red-900/60 text-red-400 text-xs">
@@ -62,7 +78,6 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
         </div>
       )}
 
-      {/* Loading */}
       {loading ? (
         <div className="flex items-center justify-center py-10 gap-2 text-slate-500 text-sm">
           <span className="animate-spin text-base">⟳</span>
@@ -71,7 +86,6 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
       ) : (
         <div className="space-y-3">
 
-          {/* Sin bloques */}
           {bloques.length === 0 && (
             <div className="text-center py-8 px-4">
               <div className="text-3xl mb-3">🧱</div>
@@ -82,7 +96,6 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
             </div>
           )}
 
-          {/* Lista de bloques */}
           {bloques.map((bloque, i) => (
             <RoutineBlockCard
               key={bloque.id}
@@ -94,14 +107,13 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
               onDelete={() => eliminarBloque(bloque.id)}
               onDuplicate={() => duplicarBloque(bloque)}
               onUpdate={(data) => actualizarBloque(bloque.id, data)}
-              onAddEjercicio={(bloqueId) => onAgregarEjercicio(bloqueId, diaId)}
+              onAddEjercicio={handleAddEjercicio}
               onUpdateEjercicio={handleUpdateEjercicio}
               onDeleteEjercicio={handleDeleteEjercicio}
               onMoveEjercicio={(ejId, dir) => handleMoverEjercicio(bloque.id, ejId, dir)}
             />
           ))}
 
-          {/* Botón agregar bloque */}
           <button
             onClick={() => agregarBloque({
               nombre: `Bloque ${String.fromCharCode(65 + bloques.length)}`,
@@ -110,8 +122,7 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
             className="w-full py-3 rounded-xl border-2 border-dashed border-slate-700/60
               text-slate-500 text-sm font-semibold
               hover:border-green-500/40 hover:text-green-400 hover:bg-green-500/5
-              transition-all duration-200 flex items-center justify-center gap-2
-              group"
+              transition-all duration-200 flex items-center justify-center gap-2 group"
           >
             <span className="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
             Agregar bloque al Día {diaNumero}
