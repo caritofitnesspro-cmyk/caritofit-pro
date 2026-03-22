@@ -1,7 +1,7 @@
 // hooks/useBrand.ts
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export interface BrandConfig {
@@ -18,14 +18,9 @@ const DEFAULTS: BrandConfig = {
   secondaryColor: '#B05276',
 }
 
-export function useBrand(adminId?: string) {
+export function useBrand() {
   const [brand, setBrand] = useState<BrandConfig>(DEFAULTS)
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!adminId) { setLoading(false); return }
-    loadBrand(adminId)
-  }, [adminId])
 
   async function loadBrand(id: string) {
     const { data } = await (supabase as any)
@@ -47,7 +42,7 @@ export function useBrand(adminId?: string) {
     setLoading(false)
   }
 
-  async function saveBrand(updates: Partial<BrandConfig>, adminId: string) {
+  async function saveBrand(updates: Partial<BrandConfig>, adminId: string): Promise<boolean> {
     const { error } = await (supabase as any)
       .from('perfiles')
       .update({
@@ -67,10 +62,9 @@ export function useBrand(adminId?: string) {
   }
 
   async function uploadBrandImage(file: File, adminId: string): Promise<string | null> {
-    // Validaciones
     const validTypes = ['image/png', 'image/jpeg', 'image/webp']
     if (!validTypes.includes(file.type)) return null
-    if (file.size > 2 * 1024 * 1024) return null // 2MB max
+    if (file.size > 2 * 1024 * 1024) return null
 
     const ext = file.name.split('.').pop()
     const path = `${adminId}/logo.${ext}`
@@ -92,5 +86,8 @@ export function useBrand(adminId?: string) {
 }
 
 export function applyBrandCSS(config: BrandConfig) {
+  if (typeof window === 'undefined') return
   const root = document.documentElement
-  root.style.setProperty('--color-primary',   config.primaryCo
+  root.style.setProperty('--color-primary', config.primaryColor)
+  root.style.setProperty('--color-secondary', config.secondaryColor)
+}
