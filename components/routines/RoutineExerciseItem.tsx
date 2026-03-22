@@ -17,18 +17,16 @@ interface Props {
 export function RoutineExerciseItem({
   ejercicio, index, total, onMoveUp, onMoveDown, onDelete, onUpdate
 }: Props) {
-  // Si el nombre es 'Nuevo ejercicio', arrancamos en modo edición automáticamente
   const isNuevo = ejercicio.nombre === 'Nuevo ejercicio' || !ejercicio.nombre
   const [editing, setEditing] = useState(isNuevo)
   const [nombre, setNombre] = useState(isNuevo ? '' : (ejercicio.nombre ?? ''))
   const [series, setSeries] = useState(String(ejercicio.series ?? ''))
   const [reps, setReps] = useState(ejercicio.repeticiones ?? '')
-  const [descanso, setDescanso] = useState(String(ejercicio.descanso ?? ''))
+  const [descanso, setDescanso] = useState(ejercicio.descanso ?? '')
   const [carga, setCarga] = useState(ejercicio.carga ?? '')
   const [notas, setNotas] = useState(ejercicio.notas ?? '')
   const nombreRef = useRef<HTMLInputElement>(null)
 
-  // Foco automático en el campo nombre cuando se abre en modo edición
   useEffect(() => {
     if (editing && nombreRef.current) {
       setTimeout(() => nombreRef.current?.focus(), 50)
@@ -40,7 +38,7 @@ export function RoutineExerciseItem({
       nombre: nombre || 'Ejercicio',
       series: series ? parseInt(series) : null,
       repeticiones: reps || null,
-      descanso: descanso ? parseInt(descanso) : null,
+      descanso: descanso || null,  // texto directo, no parseInt
       carga: carga || null,
       notas: notas || null,
     })
@@ -51,11 +49,9 @@ export function RoutineExerciseItem({
 
   return (
     <div className="flex items-start gap-2 py-2.5 px-3 border-b border-slate-800/60 last:border-0">
-      {/* Ícono de agarre */}
       <span className="mt-1 text-slate-600 text-xs select-none pt-0.5">☰</span>
 
       <div className="flex-1 min-w-0">
-        {/* Nombre y resumen */}
         {!editing && (
           <div className="flex items-center gap-2">
             <span className="font-medium text-slate-200 text-sm truncate">
@@ -70,10 +66,8 @@ export function RoutineExerciseItem({
           </div>
         )}
 
-        {/* Formulario de edición */}
         {editing && (
           <div className="space-y-2">
-            {/* Nombre — campo principal y más importante */}
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
                 Nombre del ejercicio
@@ -93,9 +87,7 @@ export function RoutineExerciseItem({
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                  Series
-                </label>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Series</label>
                 <input
                   type="number"
                   value={series}
@@ -106,9 +98,7 @@ export function RoutineExerciseItem({
                 />
               </div>
               <div>
-                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                  Reps
-                </label>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Reps</label>
                 <input
                   type="text"
                   value={reps}
@@ -119,9 +109,7 @@ export function RoutineExerciseItem({
                 />
               </div>
               <div>
-                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                  Carga
-                </label>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Carga</label>
                 <input
                   type="text"
                   value={carga}
@@ -132,22 +120,18 @@ export function RoutineExerciseItem({
                 />
               </div>
               <div>
-                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                  Descanso (seg)
-                </label>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Descanso</label>
                 <input
-                  type="number"
+                  type="text"
                   value={descanso}
                   onChange={(e) => setDescanso(e.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5
                     text-sm text-white focus:outline-none focus:border-slate-500"
-                  placeholder="60"
+                  placeholder="60 seg"
                 />
               </div>
               <div className="col-span-2">
-                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-                  Notas
-                </label>
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Notas</label>
                 <input
                   type="text"
                   value={notas}
@@ -183,7 +167,6 @@ export function RoutineExerciseItem({
         )}
       </div>
 
-      {/* Botones de acción (solo cuando no está editando) */}
       {!editing && (
         <div className="flex items-center gap-1 shrink-0">
           <div className="flex flex-col gap-0.5">
