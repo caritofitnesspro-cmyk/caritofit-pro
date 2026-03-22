@@ -12,8 +12,8 @@ function EjercicioFila({ ej }: { ej: Ejercicio }) {
         <span className="text-slate-200 text-sm font-medium">
           {ej.nombre ?? 'Ejercicio'}
         </span>
-        {ej.notas && (
-          <p className="text-slate-500 text-xs mt-0.5">{ej.notas}</p>
+        {ej.observaciones && (
+          <p className="text-slate-500 text-xs mt-0.5">{ej.observaciones}</p>
         )}
       </div>
       <div className="text-right shrink-0 ml-3">
