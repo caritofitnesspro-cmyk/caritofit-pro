@@ -35,6 +35,8 @@ export default function AdminPage() {
 
   // Modal editor de bloques
   const [diaEditorActivo, setDiaEditorActivo] = useState<{id: string, nombre: string, numero: number} | null>(null)
+  // Conteo de bloques por día
+  const [bloquesConteo, setBloquesConteo] = useState<Record<string, number>>({})
 
   useEffect(() => { loadData() }, [])
 
@@ -227,6 +229,19 @@ export default function AdminPage() {
   async function logout() {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  async function cargarConteosBloques(planId: string) {
+    try {
+      const client = supabase as any
+      const { data } = await client.from('bloques').select('id, dia_id')
+      if (!data) return
+      const conteo: Record<string, number> = {}
+      data.forEach((b: any) => {
+        conteo[b.dia_id] = (conteo[b.dia_id] || 0) + 1
+      })
+      setBloquesConteo(conteo)
+    } catch(e) { console.log('conteo error', e) }
   }
 
   if (loading) return (
@@ -500,6 +515,7 @@ export default function AdminPage() {
                           }))
                           setBp({ id: plan.id, nombre: plan.nombre, objetivo: plan.objetivo, semanas, asignados: asigAlumnos.map(a => a.id) })
                           setTab('builder')
+                          cargarConteosBloques(plan.id)
                         }}>✏️ Editar</button>
                       <button className="btn-danger" style={{ fontSize: '13px', padding: '8px 12px' }} onClick={() => eliminarPlan(plan.id)}>🗑</button>
                     </div>
@@ -771,7 +787,7 @@ export default function AdminPage() {
                 </div>
               </div>
               <button
-                onClick={() => setDiaEditorActivo(null)}
+                onClick={() => { setDiaEditorActivo(null); if (bp?.id) cargarConteosBloques(bp.id) }}
                 style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(51,65,85,0.6)', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', color: '#64748B', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >✕</button>
             </div>
