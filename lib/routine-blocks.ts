@@ -1,56 +1,53 @@
 // lib/routine-blocks.ts
 
 import { supabase } from '@/lib/supabase'
-import type { RoutineBlock, RoutineExercise, BlockFormData } from '@/types/routines'
+import type { Bloque, Ejercicio, BloqueFormData } from '@/types/routines'
 
 // ── Leer bloques con sus ejercicios ──────────────────────
-export async function getBlocksWithExercises(dayId: string): Promise<RoutineBlock[]> {
+export async function getBloquesConEjercicios(diaId: string): Promise<Bloque[]> {
   const { data, error } = await supabase
-    .from('routine_blocks')
+    .from('bloques')
     .select(`
       *,
-      exercises:routine_exercises(
-        *,
-        exercise:exercises(id, name, muscle_group, video_url, image_url)
-      )
+      ejercicios(*)
     `)
-    .eq('day_id', dayId)
-    .order('order', { ascending: true })
-    .order('order', { referencedTable: 'routine_exercises', ascending: true })
+    .eq('dia_id', diaId)
+    .order('orden', { ascending: true })
+    .order('orden', { referencedTable: 'ejercicios', ascending: true })
 
   if (error) throw error
   return data ?? []
 }
 
 // ── Leer ejercicios sin bloque (legacy) ──────────────────
-export async function getLegacyExercises(dayId: string): Promise<RoutineExercise[]> {
+export async function getEjerciciosLegacy(diaId: string): Promise<Ejercicio[]> {
   const { data, error } = await supabase
-    .from('routine_exercises')
-    .select(`*, exercise:exercises(id, name, muscle_group)`)
-    .eq('day_id', dayId)
-    .is('block_id', null)
-    .order('order', { ascending: true })
+    .from('ejercicios')
+    .select('*')
+    .eq('dia_id', diaId)
+    .is('bloque_id', null)
+    .order('orden', { ascending: true })
 
   if (error) throw error
   return data ?? []
 }
 
 // ── Crear bloque ──────────────────────────────────────────
-export async function createBlock(
-  dayId: string,
-  formData: BlockFormData,
-  currentCount: number
-): Promise<RoutineBlock> {
+export async function crearBloque(
+  diaId: string,
+  formData: BloqueFormData,
+  cantidadActual: number
+): Promise<Bloque> {
   const { data, error } = await supabase
-    .from('routine_blocks')
+    .from('bloques')
     .insert({
-      day_id: dayId,
-      name: formData.name || `Bloque ${String.fromCharCode(65 + currentCount)}`,
-      type: formData.type,
-      description: formData.description || null,
-      rounds: formData.rounds || null,
-      rest_between_rounds: formData.rest_between_rounds || null,
-      order: currentCount,
+      dia_id: diaId,
+      nombre: formData.nombre || `Bloque ${String.fromCharCode(65 + cantidadActual)}`,
+      tipo: formData.tipo,
+      descripcion: formData.descripcion || null,
+      rondas: formData.rondas || null,
+      descanso_entre_rondas: formData.descanso_entre_rondas || null,
+      orden: cantidadActual,
     })
     .select()
     .single()
@@ -60,91 +57,92 @@ export async function createBlock(
 }
 
 // ── Actualizar bloque ─────────────────────────────────────
-export async function updateBlock(
-  blockId: string,
-  updates: Partial<BlockFormData>
+export async function actualizarBloque(
+  bloqueId: string,
+  updates: Partial<BloqueFormData>
 ): Promise<void> {
   const { error } = await supabase
-    .from('routine_blocks')
+    .from('bloques')
     .update(updates)
-    .eq('id', blockId)
+    .eq('id', bloqueId)
 
   if (error) throw error
 }
 
 // ── Eliminar bloque ───────────────────────────────────────
-export async function deleteBlock(blockId: string): Promise<void> {
+export async function eliminarBloque(bloqueId: string): Promise<void> {
   const { error } = await supabase
-    .from('routine_blocks')
+    .from('bloques')
     .delete()
-    .eq('id', blockId)
+    .eq('id', bloqueId)
 
   if (error) throw error
 }
 
 // ── Duplicar bloque con sus ejercicios ───────────────────
-export async function duplicateBlock(
-  block: RoutineBlock,
-  newOrder: number
-): Promise<RoutineBlock> {
-  const { data: newBlock, error: blockError } = await supabase
-    .from('routine_blocks')
+export async function duplicarBloque(
+  bloque: Bloque,
+  nuevoOrden: number
+): Promise<Bloque> {
+  const { data: nuevoBloque, error: errorBloque } = await supabase
+    .from('bloques')
     .insert({
-      day_id: block.day_id,
-      name: `${block.name} (copia)`,
-      type: block.type,
-      description: block.description,
-      rounds: block.rounds,
-      rest_between_rounds: block.rest_between_rounds,
-      order: newOrder,
+      dia_id: bloque.dia_id,
+      nombre: `${bloque.nombre} (copia)`,
+      tipo: bloque.tipo,
+      descripcion: bloque.descripcion,
+      rondas: bloque.rondas,
+      descanso_entre_rondas: bloque.descanso_entre_rondas,
+      orden: nuevoOrden,
     })
     .select()
     .single()
 
-  if (blockError) throw blockError
+  if (errorBloque) throw errorBloque
 
-  if (block.exercises && block.exercises.length > 0) {
-    const copies = block.exercises.map((ex) => ({
-      day_id: ex.day_id,
-      block_id: newBlock.id,
-      exercise_id: ex.exercise_id,
-      sets: ex.sets,
-      reps: ex.reps,
-      rest: ex.rest,
-      notes: ex.notes,
-      order: ex.order,
+  if (bloque.ejercicios && bloque.ejercicios.length > 0) {
+    const copias = bloque.ejercicios.map((ej) => ({
+      dia_id: ej.dia_id,
+      bloque_id: nuevoBloque.id,
+      nombre: ej.nombre,
+      series: ej.series,
+      repeticiones: ej.repeticiones,
+      descanso: ej.descanso,
+      notas: ej.notas,
+      orden: ej.orden,
+      carga: ej.carga,
     }))
 
-    const { error: exError } = await supabase
-      .from('routine_exercises')
-      .insert(copies)
+    const { error: errorEj } = await supabase
+      .from('ejercicios')
+      .insert(copias)
 
-    if (exError) throw exError
+    if (errorEj) throw errorEj
   }
 
-  return newBlock
+  return nuevoBloque
 }
 
 // ── Reordenar bloques ─────────────────────────────────────
-export async function reorderBlocks(
-  blocks: { id: string; order: number }[]
+export async function reordenarBloques(
+  bloques: { id: string; orden: number }[]
 ): Promise<void> {
-  for (const b of blocks) {
+  for (const b of bloques) {
     await supabase
-      .from('routine_blocks')
-      .update({ order: b.order })
+      .from('bloques')
+      .update({ orden: b.orden })
       .eq('id', b.id)
   }
 }
 
 // ── Reordenar ejercicios ──────────────────────────────────
-export async function reorderExercises(
-  exercises: { id: string; order: number }[]
+export async function reordenarEjercicios(
+  ejercicios: { id: string; orden: number }[]
 ): Promise<void> {
-  for (const ex of exercises) {
+  for (const ej of ejercicios) {
     await supabase
-      .from('routine_exercises')
-      .update({ order: ex.order })
-      .eq('id', ex.id)
+      .from('ejercicios')
+      .update({ orden: ej.orden })
+      .eq('id', ej.id)
   }
 }
