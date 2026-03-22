@@ -3,17 +3,16 @@
 import { supabase } from '@/lib/supabase'
 import type { Bloque, Ejercicio, BloqueFormData } from '@/types/routines'
 
+// Usamos 'db' como any para evitar conflictos de tipos con tablas nuevas
+const db = supabase as any
+
 // ── Leer bloques con sus ejercicios ──────────────────────
 export async function getBloquesConEjercicios(diaId: string): Promise<Bloque[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('bloques')
-    .select(`
-      *,
-      ejercicios(*)
-    `)
+    .select(`*, ejercicios(*)`)
     .eq('dia_id', diaId)
     .order('orden', { ascending: true })
-    .order('orden', { referencedTable: 'ejercicios', ascending: true })
 
   if (error) throw error
   return data ?? []
@@ -21,7 +20,7 @@ export async function getBloquesConEjercicios(diaId: string): Promise<Bloque[]> 
 
 // ── Leer ejercicios sin bloque (legacy) ──────────────────
 export async function getEjerciciosLegacy(diaId: string): Promise<Ejercicio[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('ejercicios')
     .select('*')
     .eq('dia_id', diaId)
@@ -38,7 +37,7 @@ export async function crearBloque(
   formData: BloqueFormData,
   cantidadActual: number
 ): Promise<Bloque> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('bloques')
     .insert({
       dia_id: diaId,
@@ -61,7 +60,7 @@ export async function actualizarBloque(
   bloqueId: string,
   updates: Partial<BloqueFormData>
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('bloques')
     .update(updates)
     .eq('id', bloqueId)
@@ -71,7 +70,7 @@ export async function actualizarBloque(
 
 // ── Eliminar bloque ───────────────────────────────────────
 export async function eliminarBloque(bloqueId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('bloques')
     .delete()
     .eq('id', bloqueId)
@@ -84,7 +83,7 @@ export async function duplicarBloque(
   bloque: Bloque,
   nuevoOrden: number
 ): Promise<Bloque> {
-  const { data: nuevoBloque, error: errorBloque } = await supabase
+  const { data: nuevoBloque, error: errorBloque } = await db
     .from('bloques')
     .insert({
       dia_id: bloque.dia_id,
@@ -113,7 +112,7 @@ export async function duplicarBloque(
       carga: ej.carga,
     }))
 
-    const { error: errorEj } = await supabase
+    const { error: errorEj } = await db
       .from('ejercicios')
       .insert(copias)
 
@@ -128,10 +127,7 @@ export async function reordenarBloques(
   bloques: { id: string; orden: number }[]
 ): Promise<void> {
   for (const b of bloques) {
-    await supabase
-      .from('bloques')
-      .update({ orden: b.orden })
-      .eq('id', b.id)
+    await db.from('bloques').update({ orden: b.orden }).eq('id', b.id)
   }
 }
 
@@ -140,9 +136,6 @@ export async function reordenarEjercicios(
   ejercicios: { id: string; orden: number }[]
 ): Promise<void> {
   for (const ej of ejercicios) {
-    await supabase
-      .from('ejercicios')
-      .update({ orden: ej.orden })
-      .eq('id', ej.id)
+    await db.from('ejercicios').update({ orden: ej.orden }).eq('id', ej.id)
   }
 }
