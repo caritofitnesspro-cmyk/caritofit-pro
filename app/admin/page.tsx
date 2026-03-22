@@ -620,10 +620,22 @@ export default function AdminPage() {
                     {DIAS_SEM.map(d => {
                       const ya = sem.dias.find((x: any) => x.dia === d)
                       return (
-                        <button key={d} onClick={() => {
+                        <button key={d} onClick={async () => {
                           if (ya) {
+                            // Si el día tiene un ID real, borrarlo de Supabase
+                            if (ya.id && !ya.id.startsWith('tmp') && bp.id) {
+                              await supabase.from('dias').delete().eq('id', ya.id)
+                            }
                             setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.dia !== d) } : s) }))
                           } else {
+                            // Si el plan ya existe, crear el día en Supabase inmediatamente
+                            if (bp.id && sem.id && !sem.id.startsWith('tmp')) {
+                              const { data: newDia } = await supabase.from('dias').insert({ semana_id: sem.id, dia: d, tipo: '', orden: sem.dias.length }).select().single()
+                              if (newDia) {
+                                setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: newDia.id, dia: d, tipo: '', orden: s.dias.length, ejercicios: [] }] } : s) }))
+                                return
+                              }
+                            }
                             setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: uid(), dia: d, tipo: '', orden: s.dias.length, ejercicios: [] }] } : s) }))
                           }
                         }}
