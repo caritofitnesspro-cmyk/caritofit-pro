@@ -1,14 +1,14 @@
 // components/routines/BlockTypeBadge.tsx
 
-import { BLOCK_TYPE_CONFIG, type RoutineBlockType } from '@/types/routines'
+import { TIPO_BLOQUE_CONFIG, type TipoBloque } from '@/types/routines'
 
 interface Props {
-  type: RoutineBlockType
+  tipo: TipoBloque
   size?: 'sm' | 'md'
 }
 
-export function BlockTypeBadge({ type, size = 'sm' }: Props) {
-  const config = BLOCK_TYPE_CONFIG[type]
+export function BlockTypeBadge({ tipo, size = 'sm' }: Props) {
+  const config = TIPO_BLOQUE_CONFIG[tipo]
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full font-semibold uppercase tracking-wider border
