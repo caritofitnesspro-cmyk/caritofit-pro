@@ -148,15 +148,32 @@ export default function DashboardPage() {
   }
 
   async function cargarBloques(diaId: string) {
-    const client = supabase as any
-    const { data } = await client
-      .from('bloques')
-      .select('*, ejercicios(*)')
-      .eq('dia_id', diaId)
-      .order('orden', { ascending: true })
-    setBloquesActivos(data || [])
+  const client = supabase as any
+  const { data: bloques } = await client
+    .from('bloques')
+    .select('*')
+    .eq('dia_id', diaId)
+    .order('orden', { ascending: true })
+
+  if (!bloques || bloques.length === 0) {
+    setBloquesActivos([])
+    return
   }
 
+  const bloqueIds = bloques.map((b: any) => b.id)
+  const { data: ejercicios } = await client
+    .from('ejercicios')
+    .select('*')
+    .in('bloque_id', bloqueIds)
+    .order('orden', { ascending: true })
+
+  const bloquesConEjercicios = bloques.map((b: any) => ({
+    ...b,
+    ejercicios: (ejercicios || []).filter((e: any) => e.bloque_id === b.id)
+  }))
+
+  setBloquesActivos(bloquesConEjercicios)
+}
   function handleDoubleTap(ej) {
     const now = Date.now()
     const last = (lastTap.current)[ej.id] || 0
