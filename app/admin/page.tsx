@@ -624,7 +624,7 @@ export default function AdminPage() {
                     </button>
 
                     {/* ── BOTÓN EDITAR BLOQUES ── */}
-                    {dia.id && !String(dia.id).startsWith('tmp') && bp.id && (
+                    {bp.id && dia.id && (
                       <button
                         style={{ width: '100%', marginTop: '8px', padding: '10px', borderRadius: '10px', border: '1.5px dashed #B05276', background: 'transparent', color: '#7D0531', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         onClick={() => setDiaEditorActivo({ id: dia.id, nombre: dia.tipo || dia.dia, numero: dia.orden + 1 })}
