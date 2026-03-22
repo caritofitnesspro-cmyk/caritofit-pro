@@ -35,6 +35,8 @@ export default function DashboardPage() {
   const [diaTerminado, setDiaTerminado] = useState(null)
   // Tap timer para doble tap
   const lastTap = useRef({})
+  // Bloques del día activo
+  const [bloquesActivos, setBloquesActivos] = useState<any[]>([])
 
   useEffect(() => { loadData() }, [])
 
@@ -143,6 +145,16 @@ export default function DashboardPage() {
       })
       setFotosProgreso(urls)
     } catch(e) { console.log('fotos error', e) }
+  }
+
+  async function cargarBloques(diaId: string) {
+    const client = supabase as any
+    const { data } = await client
+      .from('bloques')
+      .select('*, ejercicios(*)')
+      .eq('dia_id', diaId)
+      .order('orden', { ascending: true })
+    setBloquesActivos(data || [])
   }
 
   function handleDoubleTap(ej) {
@@ -277,7 +289,7 @@ export default function DashboardPage() {
                       <div key={dia.id} onClick={() => {
                         // Find full dia with ejercicios from semanas
                         const fullDia = semanas.flatMap((s:any) => s.dias || []).find((d:any) => d.id === dia.id) || dia
-                        setDiaActivo(fullDia); setTab('plan')
+                        setDiaActivo(fullDia); setTab('plan'); cargarBloques(fullDia.id)
                       }}
                         style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderBottom: '1px solid #ede0e2', cursor: 'pointer', transition: '.15s' }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#ede0e2')}
@@ -337,7 +349,7 @@ export default function DashboardPage() {
                         return (
                           <div key={dia.id} onClick={() => {
                             const fullDia = semanas.flatMap((s:any) => s.dias || []).find((d:any) => d.id === dia.id) || dia
-                            setDiaActivo(fullDia)
+                            setDiaActivo(fullDia); cargarBloques(fullDia.id)
                           }}
                             style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderBottom: '1px solid #ede0e2', cursor: 'pointer' }}
                             onMouseEnter={e => (e.currentTarget.style.background = '#ede0e2')}
@@ -374,12 +386,93 @@ export default function DashboardPage() {
             <div style={{ width: '60px' }} />
           </div>
           <div style={{ padding: '16px 20px' }}>
-            {((diaActivo as any).ejercicios || []).length === 0 ? (
+            {bloquesActivos.length > 0 ? (
+              // ── Vista con bloques ──
+              bloquesActivos.map((bloque: any) => {
+                const TIPO_EMOJI: any = { normal: '💪', circuito: '🔁', superserie: '⚡', entrada_en_calor: '🔥', vuelta_a_la_calma: '🧘' }
+                const TIPO_LABEL: any = { normal: 'Normal', circuito: 'Circuito', superserie: 'Superserie', entrada_en_calor: 'Entrada en calor', vuelta_a_la_calma: 'Vuelta a la calma' }
+                const TIPO_COLOR: any = { normal: '#3b82f6', circuito: '#22c55e', superserie: '#8b5cf6', entrada_en_calor: '#f97316', vuelta_a_la_calma: '#06b6d4' }
+                const color = TIPO_COLOR[bloque.tipo] || '#7D0531'
+                const isCircuito = bloque.tipo === 'circuito' || bloque.tipo === 'superserie'
+                return (
+                  <div key={bloque.id} style={{ marginBottom: '16px', borderRadius: '16px', border: `1.5px solid ${color}30`, overflow: 'hidden' }}>
+                    {/* Header del bloque */}
+                    <div style={{ background: `${color}15`, padding: '10px 14px', borderBottom: `1px solid ${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '16px' }}>{TIPO_EMOJI[bloque.tipo] || '💪'}</span>
+                        <div>
+                          <div style={{ fontWeight: '700', fontSize: '13px', color: '#2a1520' }}>{bloque.nombre}</div>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color, textTransform: 'uppercase', letterSpacing: '.06em' }}>{TIPO_LABEL[bloque.tipo]}</div>
+                        </div>
+                      </div>
+                      {isCircuito && bloque.rondas && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: `${color}20`, borderRadius: '20px', padding: '4px 10px' }}>
+                          <span style={{ fontSize: '12px' }}>🔁</span>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color }}>{bloque.rondas} rondas</span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Descripción del bloque */}
+                    {bloque.descripcion && (
+                      <div style={{ background: `${color}08`, padding: '8px 14px', fontSize: '12px', color: '#8a7070', fontStyle: 'italic', borderBottom: `1px solid ${color}15` }}>
+                        {bloque.descripcion}
+                      </div>
+                    )}
+                    {/* Ejercicios del bloque */}
+                    <div style={{ background: '#faf8f7' }}>
+                      {(bloque.ejercicios || []).map((ej: any) => {
+                        const done = checkins.includes(ej.id)
+                        const series = seriesData[ej.id] || []
+                        return (
+                          <div key={ej.id} onClick={() => handleDoubleTap(ej)}
+                            style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '14px', borderBottom: '1px solid #ede0e2', background: done ? '#f0fdf4' : '#faf8f7', cursor: 'pointer', transition: '.15s', userSelect: 'none' }}>
+                            <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '2px solid', borderColor: done ? 'transparent' : '#DBBABF', background: done ? 'linear-gradient(135deg,#22c55e,#16a34a)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '12px', color: '#fff', marginTop: '2px' }}>
+                              {done ? '✓' : ''}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: '700', fontSize: '14px', marginBottom: '4px', color: done ? '#15803d' : '#2a1520' }}>{ej.nombre}</div>
+                              <div style={{ fontSize: '11px', color: '#B05276', marginBottom: '6px', fontStyle: 'italic' }}>Doble toque para registrar series</div>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {ej.series && <span className="badge badge-rose">{ej.series} series</span>}
+                                {ej.repeticiones && <span className="badge badge-pine">{ej.repeticiones} reps</span>}
+                                {ej.carga && <span className="badge badge-amber">🏋️ {ej.carga}</span>}
+                                {ej.descanso && ej.descanso !== '-' && <span className="badge badge-green">⏱ {ej.descanso}</span>}
+                              </div>
+                              {ej.observaciones && <div style={{ fontSize: '12px', color: '#8a7070', fontStyle: 'italic', marginTop: '6px' }}>💡 {ej.observaciones}</div>}
+                              {series.length > 0 && series.some((s: any) => s.peso || s.rpe || s.rir) && (
+                                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {series.map((s: any, i: number) => (s.peso || s.rpe || s.rir) && (
+                                    <div key={i} style={{ fontSize: '12px', color: '#5a2a3a', background: 'rgba(176,82,118,.1)', borderRadius: '8px', padding: '4px 10px', display: 'inline-flex', gap: '10px' }}>
+                                      <span>Serie {i+1}</span>
+                                      {s.peso && <span>⚖️ {s.peso}kg</span>}
+                                      {s.rpe && <span>RPE {s.rpe}</span>}
+                                      {s.rir && <span>RIR {s.rir}</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {/* Descanso entre rondas */}
+                    {isCircuito && bloque.descanso_entre_rondas && (
+                      <div style={{ background: `${color}10`, padding: '8px 14px', fontSize: '12px', color: '#8a7070', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>⏱</span> Descanso entre rondas: <strong style={{ color }}>{bloque.descanso_entre_rondas} seg</strong>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            ) : ((diaActivo as any).ejercicios || []).length === 0 ? (
+              // ── Sin ejercicios ──
               <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
                 <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
                 <p style={{ color: '#8a7070' }}>Los ejercicios se cargarán pronto</p>
               </div>
             ) : (
+              // ── Vista legacy sin bloques ──
               (diaActivo as any).ejercicios.map((ej: Ejercicio) => {
                 const done = checkins.includes(ej.id)
                 const series = seriesData[ej.id] || []
