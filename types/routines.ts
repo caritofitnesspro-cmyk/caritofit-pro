@@ -27,7 +27,7 @@ export interface Ejercicio {
   nombre?: string
   series?: number | null
   repeticiones?: string | null
-  descanso?: number | null
+  descanso?: string | null
   notas?: string | null
   orden?: number
   carga?: string | null
