@@ -14,39 +14,45 @@ export default function BrandingPage() {
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [ready, setReady] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Formulario local
   const [form, setForm] = useState({
-    brandName: '',
+    brandName: 'Mi Equipo',
     primaryColor: '#7D0531',
     secondaryColor: '#B05276',
     brandImageUrl: null as string | null,
   })
   const [previewImage, setPreviewImage] = useState<string | null>(null)
 
-  const { brand, loading, saveBrand, uploadBrandImage } = useBrand(adminId || undefined)
+  const { saveBrand, uploadBrandImage, loadBrand } = useBrand()
 
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setAdminId(user.id)
+
+      // Cargar branding directamente
+      const { data } = await (supabase as any)
+        .from('perfiles')
+        .select('brand_name, brand_image_url, primary_color, secondary_color')
+        .eq('id', user.id)
+        .single()
+
+      if (data) {
+        setForm({
+          brandName:      data.brand_name      || 'Mi Equipo',
+          primaryColor:   data.primary_color   || '#7D0531',
+          secondaryColor: data.secondary_color || '#B05276',
+          brandImageUrl:  data.brand_image_url || null,
+        })
+        setPreviewImage(data.brand_image_url || null)
+      }
+      setReady(true)
     }
     init()
   }, [])
-
-  useEffect(() => {
-    if (!loading && brand) {
-      setForm({
-        brandName:      brand.brandName,
-        primaryColor:   brand.primaryColor,
-        secondaryColor: brand.secondaryColor,
-        brandImageUrl:  brand.brandImageUrl,
-      })
-      setPreviewImage(brand.brandImageUrl)
-    }
-  }, [loading, brand])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -57,7 +63,6 @@ export default function BrandingPage() {
     const file = e.target.files?.[0]
     if (!file || !adminId) return
 
-    // Preview local inmediato
     const reader = new FileReader()
     reader.onload = ev => setPreviewImage(ev.target?.result as string)
     reader.readAsDataURL(file)
@@ -82,6 +87,7 @@ export default function BrandingPage() {
     if (ok) {
       showToast('✅ Branding guardado')
       applyBrandCSS(form as any)
+      loadBrand(adminId)
     } else {
       showToast('⚠️ Error al guardar')
     }
@@ -90,7 +96,7 @@ export default function BrandingPage() {
   const p = form.primaryColor
   const s = form.secondaryColor
 
-  if (loading) return (
+  if (!ready) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ede0e2' }}>
       <div style={{ color: '#7D0531', fontWeight: '600' }}>Cargando...</div>
     </div>
@@ -114,40 +120,31 @@ export default function BrandingPage() {
           </div>
         </div>
 
-        {/* ── FORMULARIO ── */}
+        {/* FORMULARIO */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* Nombre de marca */}
           <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', border: '1px solid #d5c4c8' }}>
             <label style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: '8px' }}>
               Nombre de marca
             </label>
-            <input
-              type="text"
-              value={form.brandName}
+            <input type="text" value={form.brandName}
               onChange={e => setForm(p => ({ ...p, brandName: e.target.value }))}
               placeholder="Ej: Team Carito, FitZone, PowerCoach..."
-              style={{ width: '100%', background: '#ede0e2', border: '1.5px solid #d5c4c8', borderRadius: '10px', padding: '12px 14px', fontSize: '15px', fontFamily: 'inherit', outline: 'none', color: '#2a1520', boxSizing: 'border-box' }}
-            />
+              style={{ width: '100%', background: '#ede0e2', border: '1.5px solid #d5c4c8', borderRadius: '10px', padding: '12px 14px', fontSize: '15px', fontFamily: 'inherit', outline: 'none', color: '#2a1520', boxSizing: 'border-box' }} />
           </div>
 
-          {/* Logo */}
           <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', border: '1px solid #d5c4c8' }}>
             <label style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: '12px' }}>
               Logo / Imagen de marca
             </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {/* Preview del logo */}
               <div style={{ width: '72px', height: '72px', borderRadius: '16px', background: p, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                 {previewImage
                   ? <img src={previewImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: '28px' }}>🏋️</span>
-                }
+                  : <span style={{ fontSize: '28px' }}>🏋️</span>}
               </div>
               <div style={{ flex: 1 }}>
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading}
+                <button onClick={() => fileRef.current?.click()} disabled={uploading}
                   style={{ background: p, color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', opacity: uploading ? .6 : 1 }}>
                   {uploading ? 'Subiendo...' : previewImage ? '🔄 Cambiar imagen' : '📸 Subir logo'}
                 </button>
@@ -157,7 +154,6 @@ export default function BrandingPage() {
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }} onChange={handleImageChange} />
           </div>
 
-          {/* Colores */}
           <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', border: '1px solid #d5c4c8' }}>
             <label style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: '16px' }}>
               Colores
@@ -188,27 +184,23 @@ export default function BrandingPage() {
             </div>
           </div>
 
-          {/* Guardar */}
           <button onClick={handleSave} disabled={saving}
             style={{ background: p, color: '#fff', border: 'none', borderRadius: '14px', padding: '16px', fontSize: '16px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? .7 : 1, transition: '.2s' }}>
             {saving ? 'Guardando...' : '💾 Guardar configuración'}
           </button>
         </div>
 
-        {/* ── PREVIEW ── */}
+        {/* PREVIEW */}
         <div style={{ position: 'sticky', top: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '12px' }}>
             Vista previa
           </div>
-
-          {/* Preview Sidebar */}
           <div style={{ background: p, borderRadius: '20px', padding: '24px', marginBottom: '16px', color: '#fff' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,.15)' }}>
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: s, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                 {previewImage
                   ? <img src={previewImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: '20px' }}>🏋️</span>
-                }
+                  : <span style={{ fontSize: '20px' }}>🏋️</span>}
               </div>
               <div>
                 <div style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: '900', lineHeight: 1.1 }}>{form.brandName || 'Mi Equipo'}</div>
@@ -222,8 +214,6 @@ export default function BrandingPage() {
               </div>
             ))}
           </div>
-
-          {/* Preview botones y badges */}
           <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', border: '1px solid #d5c4c8' }}>
             <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '14px' }}>Elementos de UI</div>
             <button style={{ background: p, color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 20px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '10px', width: '100%' }}>
