@@ -31,7 +31,7 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
       series: 3,
       repeticiones: '12',
       carga: '',
-      descanso: '60 seg',
+      descanso: 60,
       orden: ejerciciosDelBloque.length,
     })
     if (error) console.error('Error agregando ejercicio:', error)
