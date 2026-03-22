@@ -35,6 +35,8 @@ export default function AdminPage() {
 
   // Modal editor de bloques
   const [diaEditorActivo, setDiaEditorActivo] = useState<{id: string, nombre: string, numero: number} | null>(null)
+  // Conteo de bloques por día para el builder
+  const [bloquesConteo, setBloquesConteo] = useState<Record<string, number>>({})
 
   useEffect(() => { loadData() }, [])
 
@@ -227,6 +229,19 @@ export default function AdminPage() {
   async function logout() {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  async function cargarConteosBloques(planId: string) {
+    const client = supabase as any
+    const { data } = await client
+      .from('bloques')
+      .select('id, dia_id')
+    if (!data) return
+    const conteo: Record<string, number> = {}
+    data.forEach((b: any) => {
+      conteo[b.dia_id] = (conteo[b.dia_id] || 0) + 1
+    })
+    setBloquesConteo(conteo)
   }
 
   if (loading) return (
@@ -500,6 +515,7 @@ export default function AdminPage() {
                           }))
                           setBp({ id: plan.id, nombre: plan.nombre, objetivo: plan.objetivo, semanas, asignados: asigAlumnos.map(a => a.id) })
                           setTab('builder')
+                          cargarConteosBloques(plan.id)
                         }}>✏️ Editar</button>
                       <button className="btn-danger" style={{ fontSize: '13px', padding: '8px 12px' }} onClick={() => eliminarPlan(plan.id)}>🗑</button>
                     </div>
@@ -651,7 +667,14 @@ export default function AdminPage() {
                 {sem.dias.map((dia: any) => (
                   <div key={dia.id} style={{ background: '#ede0e2', borderRadius: '13px', padding: '16px', marginBottom: '12px', border: '1px solid #d5c4c8' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <span style={{ fontWeight: '700', fontSize: '15px', color: '#7D0531' }}>{dia.dia}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontWeight: '700', fontSize: '15px', color: '#7D0531' }}>{dia.dia}</span>
+                        {bloquesConteo[dia.id] > 0 && (
+                          <span style={{ background: '#7D0531', color: '#DBBABF', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>
+                            🧱 {bloquesConteo[dia.id]} bloque{bloquesConteo[dia.id] !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
                       <button className="btn-danger" style={{ fontSize: '11px', padding: '5px 10px' }} onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.id !== dia.id) } : s) }))}>✕</button>
                     </div>
                     <div style={{ marginBottom: '12px' }}>
@@ -766,7 +789,7 @@ export default function AdminPage() {
                 </div>
               </div>
               <button
-                onClick={() => setDiaEditorActivo(null)}
+                onClick={() => { setDiaEditorActivo(null); if (bp?.id) cargarConteosBloques(bp.id) }}
                 style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(51,65,85,0.6)', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', color: '#64748B', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >✕</button>
             </div>
