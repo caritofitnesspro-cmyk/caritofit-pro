@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Perfil, Plan, Asignacion } from '@/types/database'
 import { RoutineDayEditor } from '@/components/routines/RoutineDayEditor'
+import { useBrand, applyBrandCSS } from '@/hooks/useBrand'
 
 type Tab = 'dashboard' | 'alumnos' | 'ficha' | 'planes' | 'builder'
 
 export default function AdminPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { brand, loadBrand } = useBrand()
 
   const [tab, setTab]               = useState<Tab>('dashboard')
   const [loading, setLoading]       = useState(true)
@@ -49,6 +51,7 @@ export default function AdminPage() {
     const { data: p } = await supabase.from('perfiles').select('*').eq('id', user.id).single() as any
     if (!p || p.rol !== 'admin') { router.push('/dashboard'); return }
     setAdmin(p)
+    loadBrand(p.id)
 
     // Cargar alumnos
     const { data: as } = await supabase.from('perfiles').select('*').eq('rol', 'alumno').order('nombre')
@@ -260,7 +263,7 @@ export default function AdminPage() {
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
       {/* Mobile topbar */}
       <div style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: '#7D0531', padding: '14px 20px', alignItems: 'center', justifyContent: 'space-between', id: 'mobile-topbar' }} className="mobile-topbar">
-        <div style={{ fontFamily: 'Georgia,serif', fontSize: '18px', fontWeight: '900', color: '#DBBABF' }}>Team Carito</div>
+        <div style={{ fontFamily: 'Georgia,serif', fontSize: '18px', fontWeight: '900', color: '#DBBABF' }}>{brand.brandName}</div>
         <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: '#DBBABF', fontSize: '24px', cursor: 'pointer', padding: '4px' }}>☰</button>
       </div>
       {/* Overlay mobile */}
@@ -287,8 +290,13 @@ export default function AdminPage() {
         </div>
         <div style={{ padding: '32px 28px 24px', borderBottom: '1px solid rgba(219,186,191,.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-            <div style={{ width: '40px', height: '40px', background: '#B05276', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🏋️</div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '900', lineHeight: '1.1' }}>Team<br />Carito</div>
+            <div style={{ width: '40px', height: '40px', background: brand.secondaryColor, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', overflow: 'hidden', flexShrink: 0 }}>
+              {brand.brandImageUrl
+                ? <img src={brand.brandImageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span>🏋️</span>
+              }
+            </div>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '900', lineHeight: '1.1' }}>{brand.brandName}</div>
           </div>
           <div style={{ fontSize: '11px', color: 'rgba(219,186,191,.5)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: '4px' }}>Panel de entrenamiento</div>
         </div>
@@ -299,8 +307,9 @@ export default function AdminPage() {
             { key: 'dashboard', icon: '🏠', label: 'Dashboard' },
             { key: 'alumnos',   icon: '👥', label: 'Alumnos/as' },
             { key: 'planes',    icon: '📋', label: 'Planes' },
+            { key: 'branding',  icon: '🎨', label: 'Mi marca' },
           ].map(({ key, icon, label }) => (
-            <button key={key} onClick={() => { setTab(key as Tab); setSidebarOpen(false) }}
+            <button key={key} onClick={() => { if (key === 'branding') { router.push('/admin/branding'); return } setTab(key as Tab); setSidebarOpen(false) }}
               style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 14px', borderRadius: '12px', cursor: 'pointer', transition: '.2s', fontSize: '14px', fontWeight: '500', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit',
                 background: tab === key ? '#9a0840' : 'transparent',
                 color: tab === key ? '#DBBABF' : 'rgba(219,186,191,.7)',
