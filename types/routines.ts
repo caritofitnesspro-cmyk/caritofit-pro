@@ -1,65 +1,59 @@
-// src/types/routines.ts
+// types/routines.ts
 
-export type RoutineBlockType =
+export type TipoBloque =
   | 'normal'
   | 'circuito'
   | 'superserie'
   | 'entrada_en_calor'
-  | 'vuelta_a_la_calma';
+  | 'vuelta_a_la_calma'
 
-export interface RoutineBlock {
-  id: string;
-  day_id: string;
-  name: string;
-  type: RoutineBlockType;
-  description?: string | null;
-  rounds?: number | null;
-  rest_between_rounds?: number | null;
-  order: number;
-  created_at?: string;
-  updated_at?: string;
-  exercises?: RoutineExercise[];
+export interface Bloque {
+  id: string
+  dia_id: string
+  nombre: string
+  tipo: TipoBloque
+  descripcion?: string | null
+  rondas?: number | null
+  descanso_entre_rondas?: number | null
+  orden: number
+  creado_en?: string
+  // Ejercicios del bloque (poblado en queries)
+  ejercicios?: Ejercicio[]
 }
 
-export interface RoutineExercise {
-  id: string;
-  day_id: string;
-  block_id?: string | null;
-  exercise_id: string;
-  sets?: number | null;
-  reps?: string | null;
-  rest?: number | null;
-  notes?: string | null;
-  order: number;
-  exercise?: {
-    id: string;
-    name: string;
-    muscle_group?: string;
-    video_url?: string;
-    image_url?: string;
-  };
+export interface Ejercicio {
+  id: string
+  dia_id: string
+  bloque_id?: string | null
+  nombre?: string
+  series?: number | null
+  repeticiones?: string | null
+  descanso?: number | null
+  notas?: string | null
+  orden?: number
+  carga?: string | null
 }
 
-export interface RoutineDayWithBlocks {
-  id: string;
-  routine_id: string;
-  day_number: number;
-  name?: string | null;
-  blocks: RoutineBlock[];
-  legacy_exercises: RoutineExercise[];
-  has_blocks: boolean;
+export interface DiaConBloques {
+  id: string
+  plan_id?: string
+  numero: number
+  nombre?: string | null
+  bloques: Bloque[]
+  ejercicios_legacy: Ejercicio[]
+  tiene_bloques: boolean
 }
 
-export interface BlockFormData {
-  name: string;
-  type: RoutineBlockType;
-  description?: string;
-  rounds?: number;
-  rest_between_rounds?: number;
+export interface BloqueFormData {
+  nombre: string
+  tipo: TipoBloque
+  descripcion?: string
+  rondas?: number
+  descanso_entre_rondas?: number
 }
 
-export const BLOCK_TYPE_CONFIG: Record
-  RoutineBlockType,
+export const TIPO_BLOQUE_CONFIG: Record
+  TipoBloque,
   { label: string; color: string; bgColor: string; emoji: string }
 > = {
   normal:            { label: 'Normal',            color: 'text-blue-400',   bgColor: 'bg-blue-950/40 border-blue-800',    emoji: '🔵' },
@@ -67,4 +61,4 @@ export const BLOCK_TYPE_CONFIG: Record
   superserie:        { label: 'Superserie',        color: 'text-violet-400', bgColor: 'bg-violet-950/40 border-violet-800',emoji: '🟣' },
   entrada_en_calor:  { label: 'Entrada en calor',  color: 'text-orange-400', bgColor: 'bg-orange-950/40 border-orange-800',emoji: '🟠' },
   vuelta_a_la_calma: { label: 'Vuelta a la calma', color: 'text-cyan-400',   bgColor: 'bg-cyan-950/40 border-cyan-800',    emoji: '🩵' },
-};
+}
