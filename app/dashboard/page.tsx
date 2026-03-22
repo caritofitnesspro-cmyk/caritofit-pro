@@ -366,7 +366,7 @@ export default function DashboardPage() {
                         return (
                           <div key={dia.id} onClick={() => {
                             const fullDia = semanas.flatMap((s:any) => s.dias || []).find((d:any) => d.id === dia.id) || dia
-                            setDiaActivo(fullDia); cargarBloques(fullDia.id)
+                            setBloquesActivos([]); setDiaActivo(fullDia); cargarBloques(fullDia.id)
                           }}
                             style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderBottom: '1px solid #ede0e2', cursor: 'pointer' }}
                             onMouseEnter={e => (e.currentTarget.style.background = '#ede0e2')}
