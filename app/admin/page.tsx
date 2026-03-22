@@ -124,22 +124,83 @@ export default function AdminPage() {
     let planId = bp.id
 
     if (planId) {
+      // Actualizar plan existente sin borrar días (preserva bloques)
       await supabase.from('planes').update({ nombre: bp.nombre, objetivo: bp.objetivo }).eq('id', planId)
-      // Borrar semanas existentes (cascade borra días y ejercicios)
-      await supabase.from('semanas').delete().eq('plan_id', planId)
+
+      // IDs que vienen del builder (los que queremos conservar)
+      const semanaIds = bp.semanas.map((s: any) => s.id).filter((id: string) => id && !id.startsWith('tmp'))
+      const diaIds = bp.semanas.flatMap((s: any) => s.dias.map((d: any) => d.id)).filter((id: string) => id && !id.startsWith('tmp'))
+      const ejIds = bp.semanas.flatMap((s: any) => s.dias.flatMap((d: any) => d.ejercicios.map((e: any) => e.id))).filter((id: string) => id && !id.startsWith('tmp'))
+
+      // Borrar semanas que ya no existen
+      const { data: semsActuales } = await supabase.from('semanas').select('id').eq('plan_id', planId)
+      for (const sem of (semsActuales || [])) {
+        if (!semanaIds.includes(sem.id)) {
+          await supabase.from('semanas').delete().eq('id', sem.id)
+        }
+      }
+
+      // Borrar días que ya no existen (preserva bloques de los días que sí existen)
+      const { data: diasActuales } = await supabase.from('dias').select('id, semana_id').in('semana_id', semanaIds.length ? semanaIds : ['none'])
+      for (const dia of (diasActuales || [])) {
+        if (!diaIds.includes(dia.id)) {
+          await supabase.from('dias').delete().eq('id', dia.id)
+        }
+      }
+
+      // Borrar ejercicios sin bloque que ya no existen
+      if (diaIds.length > 0) {
+        const { data: ejsActuales } = await supabase.from('ejercicios').select('id').in('dia_id', diaIds).is('bloque_id', null)
+        for (const ej of (ejsActuales || [])) {
+          if (!ejIds.includes(ej.id)) {
+            await supabase.from('ejercicios').delete().eq('id', ej.id)
+          }
+        }
+      }
+
+      // Actualizar/crear semanas y días
+      for (const sem of bp.semanas) {
+        let semId = sem.id
+        if (semId && !semId.startsWith('tmp')) {
+          await supabase.from('semanas').update({ numero: sem.numero }).eq('id', semId)
+        } else {
+          const { data: newSem } = await supabase.from('semanas').insert({ plan_id: planId, numero: sem.numero }).select().single()
+          semId = newSem!.id
+        }
+
+        for (const dia of sem.dias) {
+          let diaId = dia.id
+          if (diaId && !diaId.startsWith('tmp')) {
+            await supabase.from('dias').update({ dia: dia.dia, tipo: dia.tipo, orden: dia.orden || 0 }).eq('id', diaId)
+          } else {
+            const { data: newDia } = await supabase.from('dias').insert({ semana_id: semId, dia: dia.dia, tipo: dia.tipo, orden: dia.orden || 0 }).select().single()
+            diaId = newDia!.id
+          }
+
+          for (let i = 0; i < dia.ejercicios.length; i++) {
+            const ej = dia.ejercicios[i]
+            if (ej.id && !ej.id.startsWith('tmp')) {
+              await supabase.from('ejercicios').update({ nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga, descanso: ej.descanso, rpe: ej.rpe || null, rir: ej.rir || null, observaciones: ej.observaciones, orden: i }).eq('id', ej.id)
+            } else {
+              await supabase.from('ejercicios').insert({ dia_id: diaId, nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga, descanso: ej.descanso, rpe: ej.rpe || null, rir: ej.rir || null, observaciones: ej.observaciones, orden: i })
+            }
+          }
+        }
+      }
+
     } else {
+      // Plan nuevo — crear todo desde cero
       const { data: newPlan } = await supabase.from('planes').insert({ nombre: bp.nombre, objetivo: bp.objetivo, admin_id: admin!.id }).select().single()
       planId = newPlan!.id
-    }
 
-    // Insertar semanas, días y ejercicios
-    for (const sem of bp.semanas) {
-      const { data: semData } = await supabase.from('semanas').insert({ plan_id: planId, numero: sem.numero }).select().single()
-      for (const dia of sem.dias) {
-        const { data: diaData } = await supabase.from('dias').insert({ semana_id: semData!.id, dia: dia.dia, tipo: dia.tipo, orden: dia.orden || 0 }).select().single()
-        for (let i = 0; i < dia.ejercicios.length; i++) {
-          const ej = dia.ejercicios[i]
-          await supabase.from('ejercicios').insert({ dia_id: diaData!.id, nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga, descanso: ej.descanso, rpe: ej.rpe || null, rir: ej.rir || null, observaciones: ej.observaciones, orden: i })
+      for (const sem of bp.semanas) {
+        const { data: semData } = await supabase.from('semanas').insert({ plan_id: planId, numero: sem.numero }).select().single()
+        for (const dia of sem.dias) {
+          const { data: diaData } = await supabase.from('dias').insert({ semana_id: semData!.id, dia: dia.dia, tipo: dia.tipo, orden: dia.orden || 0 }).select().single()
+          for (let i = 0; i < dia.ejercicios.length; i++) {
+            const ej = dia.ejercicios[i]
+            await supabase.from('ejercicios').insert({ dia_id: diaData!.id, nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga, descanso: ej.descanso, rpe: ej.rpe || null, rir: ej.rir || null, observaciones: ej.observaciones, orden: i })
+          }
         }
       }
     }
