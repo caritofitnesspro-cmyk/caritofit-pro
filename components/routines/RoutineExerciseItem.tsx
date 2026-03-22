@@ -138,7 +138,7 @@ export function RoutineExerciseItem({
                   onChange={(e) => setNotas(e.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5
                     text-sm text-white focus:outline-none focus:border-slate-500"
-                  placeholder="Nota para el alumno..."
+                  placeholder="Observaciones para el alumno..."
                 />
               </div>
             </div>
