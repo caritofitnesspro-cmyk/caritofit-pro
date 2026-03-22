@@ -23,8 +23,9 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
     load()
   }, [load])
 
-  const handleUpdateEjercicio = async (ejercicioId: string, data: Record<string, any>) => {
-    await supabase.from('ejercicios').update(data).eq('id', ejercicioId)
+  const handleUpdateEjercicio = async (ejercicioId: string, data: any) => {
+    const client = supabase as any
+    await client.from('ejercicios').update(data).eq('id', ejercicioId)
     await load()
   }
 
@@ -48,11 +49,9 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
 
     ;[ejs[idx], ejs[newIdx]] = [ejs[newIdx], ejs[idx]]
 
+    const client = supabase as any
     for (let i = 0; i < ejs.length; i++) {
-      await supabase
-        .from('ejercicios')
-        .update({ orden: i })
-        .eq('id', ejs[i].id)
+      await client.from('ejercicios').update({ orden: i }).eq('id', ejs[i].id)
     }
 
     await load()
