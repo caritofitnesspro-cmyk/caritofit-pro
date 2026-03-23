@@ -54,11 +54,11 @@ export default function AdminPage() {
     loadBrand(p.id)
 
     // Cargar alumnos
-    const { data: as } = await supabase.from('perfiles').select('*').eq('rol', 'alumno').order('nombre')
+    const { data: as } = await supabase.from('perfiles').select('*').eq('rol', 'alumno').eq('admin_id', p.id).order('nombre')
     setAlumnos(as || [])
 
     // Cargar planes con semanas/días/ejercicios
-    const { data: ps } = await supabase.from('planes').select(`*, semanas(*, dias(*, ejercicios(*)))`).order('created_at', { ascending: false })
+    const { data: ps } = await supabase.from('planes').select(`*, semanas(*, dias(*, ejercicios(*)))`).eq('admin_id', p.id).order('created_at', { ascending: false })
     setPlanes(ps || [])
 
     // Cargar asignaciones
@@ -111,6 +111,7 @@ export default function AdminPage() {
         telefono: newA.telefono, edad: parseInt(newA.edad) || undefined,
         sexo: newA.sexo, objetivo: newA.objetivo, nivel: newA.nivel as any,
         restricciones: newA.restricciones, aprobado: true,
+        admin_id: admin!.id,
       }).eq('id', authData.user.id)
     }
 
