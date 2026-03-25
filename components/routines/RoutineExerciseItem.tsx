@@ -12,10 +12,17 @@ interface Props {
   onMoveDown: () => void
   onDelete: () => void
   onUpdate: (data: Partial<Ejercicio>) => void
+  // Drag & drop
+  onDragStart?: (index: number) => void
+  onDragEnter?: (index: number) => void
+  onDragEnd?: () => void
+  isDragging?: boolean
+  isDragOver?: boolean
 }
 
 export function RoutineExerciseItem({
-  ejercicio, index, total, onMoveUp, onMoveDown, onDelete, onUpdate
+  ejercicio, index, total, onMoveUp, onMoveDown, onDelete, onUpdate,
+  onDragStart, onDragEnter, onDragEnd, isDragging, isDragOver
 }: Props) {
   const isNuevo = ejercicio.nombre === 'Nuevo ejercicio' || !ejercicio.nombre
   const [editing, setEditing] = useState(isNuevo)
@@ -26,6 +33,12 @@ export function RoutineExerciseItem({
   const [carga, setCarga] = useState(ejercicio.carga ?? '')
   const [notas, setNotas] = useState(ejercicio.observaciones ?? '')
   const nombreRef = useRef<HTMLInputElement>(null)
+
+  // Touch drag state
+  const touchStartY = useRef<number>(0)
+  const touchStartIndex = useRef<number>(0)
+  const isDraggingTouch = useRef<boolean>(false)
+  const dragHandleRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (editing && nombreRef.current) {
@@ -38,18 +51,94 @@ export function RoutineExerciseItem({
       nombre: nombre || 'Ejercicio',
       series: series ? parseInt(series) : null,
       repeticiones: reps || null,
-      descanso: descanso || null,  // texto directo, no parseInt
+      descanso: descanso || null,
       carga: carga || null,
       observaciones: notas || null,
     })
     setEditing(false)
   }
 
+  // ── Touch handlers para drag & drop ──
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (editing) return
+    touchStartY.current = e.touches[0].clientY
+    touchStartIndex.current = index
+    isDraggingTouch.current = false
+    onDragStart?.(index)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (editing) return
+    const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current)
+    if (deltaY > 8) {
+      isDraggingTouch.current = true
+      e.preventDefault() // prevenir scroll mientras arrastra
+
+      // Detectar sobre qué elemento está el dedo
+      const touch = e.touches[0]
+      const el = document.elementFromPoint(touch.clientX, touch.clientY)
+      const exerciseEl = el?.closest('[data-exercise-index]')
+      if (exerciseEl) {
+        const targetIndex = parseInt(exerciseEl.getAttribute('data-exercise-index') || '-1')
+        if (targetIndex !== -1 && targetIndex !== index) {
+          onDragEnter?.(targetIndex)
+        }
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    isDraggingTouch.current = false
+    onDragEnd?.()
+  }
+
   const displayNombre = nombre || ejercicio.nombre || 'Ejercicio'
 
   return (
-    <div className="flex items-start gap-2 py-2.5 px-3 border-b border-slate-800/60 last:border-0">
-      <span className="mt-1 text-slate-600 text-xs select-none pt-0.5">☰</span>
+    <div
+      data-exercise-index={index}
+      style={{
+        opacity: isDragging ? 0.4 : 1,
+        background: isDragOver ? 'rgba(125,5,49,0.06)' : 'transparent',
+        borderTop: isDragOver ? '2px solid #7D0531' : '1px solid rgba(51,65,85,0.6)',
+        transition: 'opacity 0.15s, background 0.15s, border-color 0.15s',
+        touchAction: editing ? 'auto' : 'none',
+      }}
+      className="flex items-start gap-2 py-2.5 px-3 last:border-b-0"
+    >
+      {/* Handle de drag — solo visible cuando no está editando */}
+      {!editing && (
+        <div
+          ref={dragHandleRef}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          // Mouse drag (desktop)
+          draggable
+          onDragStart={() => onDragStart?.(index)}
+          onDragEnd={onDragEnd}
+          style={{
+            cursor: 'grab',
+            padding: '4px 2px',
+            marginTop: '2px',
+            touchAction: 'none',
+            userSelect: 'none',
+            flexShrink: 0,
+          }}
+          title="Arrastrá para reordenar"
+        >
+          <svg width="12" height="16" viewBox="0 0 12 16" fill="none">
+            <circle cx="4" cy="3" r="1.5" fill="#64748B"/>
+            <circle cx="8" cy="3" r="1.5" fill="#64748B"/>
+            <circle cx="4" cy="8" r="1.5" fill="#64748B"/>
+            <circle cx="8" cy="8" r="1.5" fill="#64748B"/>
+            <circle cx="4" cy="13" r="1.5" fill="#64748B"/>
+            <circle cx="8" cy="13" r="1.5" fill="#64748B"/>
+          </svg>
+        </div>
+      )}
+
+      {editing && <span className="mt-1 text-slate-600 text-xs select-none pt-0.5 w-4" />}
 
       <div className="flex-1 min-w-0">
         {!editing && (
@@ -61,7 +150,7 @@ export function RoutineExerciseItem({
               {ejercicio.series ? `${ejercicio.series}×` : ''}
               {ejercicio.repeticiones}
               {ejercicio.carga ? ` · ${ejercicio.carga}` : ''}
-              {ejercicio.descanso ? ` · ${ejercicio.descanso}″` : ''}
+              {ejercicio.descanso ? ` · ${ejercicio.descanso}` : ''}
             </span>
           </div>
         )}
@@ -169,22 +258,6 @@ export function RoutineExerciseItem({
 
       {!editing && (
         <div className="flex items-center gap-1 shrink-0">
-          <div className="flex flex-col gap-0.5">
-            <button
-              onClick={onMoveUp}
-              disabled={index === 0}
-              className="w-6 h-6 text-[10px] rounded flex items-center justify-center
-                text-slate-600 hover:bg-slate-700 hover:text-white
-                disabled:opacity-20 transition-colors"
-            >▲</button>
-            <button
-              onClick={onMoveDown}
-              disabled={index === total - 1}
-              className="w-6 h-6 text-[10px] rounded flex items-center justify-center
-                text-slate-600 hover:bg-slate-700 hover:text-white
-                disabled:opacity-20 transition-colors"
-            >▼</button>
-          </div>
           <button
             onClick={() => setEditing(true)}
             className="w-8 h-8 rounded flex items-center justify-center
