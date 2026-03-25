@@ -1,36 +1,28 @@
 // @ts-nocheck
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-export default function RegisterAdminPage() {
+function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const planParam = searchParams.get('plan')
   const supabase = createClient()
 
-  const [form, setForm] = useState({
-    nombre: '',
-    apellido: '',
-    email: '',
-    password: '',
-    codigo: '',
-  })
+  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', password: '', codigo: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     try {
-      // 1. Validar código de invitación
       const { data: codigo, error: codigoError } = await supabase
         .from('codigos_invitacion')
         .select('id, usado')
@@ -41,22 +33,15 @@ export default function RegisterAdminPage() {
       if (!codigo) throw new Error('Código de invitación inválido')
       if (codigo.usado) throw new Error('Este código ya fue utilizado')
 
-      // 2. Crear cuenta en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
-        options: {
-          data: {
-            nombre: form.nombre,
-            apellido: form.apellido,
-          },
-        },
+        options: { data: { nombre: form.nombre, apellido: form.apellido } },
       })
 
       if (authError) throw new Error(authError.message)
       if (!authData.user) throw new Error('No se pudo crear el usuario')
 
-      // 3. Actualizar perfil con rol admin
       const { error: profileError } = await supabase
         .from('perfiles')
         .upsert({
@@ -65,288 +50,158 @@ export default function RegisterAdminPage() {
           apellido: form.apellido,
           email: form.email,
           rol: 'admin',
-          primary_color: '#7D0531',
-          secondary_color: '#B05276',
+          plan: 'free',
+          primary_color: '#5B8CFF',
+          secondary_color: '#4A74D9',
         })
 
       if (profileError) throw new Error('Error al guardar el perfil')
 
-      // 4. Marcar código como usado
-      const { error: updateError } = await supabase
+      await supabase
         .from('codigos_invitacion')
         .update({ usado: true, usado_por: authData.user.id })
         .eq('id', codigo.id)
 
-      if (updateError) throw new Error('Error al actualizar el código')
-
       setSuccess(true)
-      setTimeout(() => router.push('/login'), 3000)
+      setTimeout(() => {
+        router.push(planParam === 'pro' ? '/login?next=/admin/upgrade' : '/login')
+      }, 2500)
 
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
     } finally {
       setLoading(false)
     }
   }
 
+  const isPro = planParam === 'pro'
+
   if (success) {
     return (
-      <>
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
-          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-          .r-root { min-height: 100vh; background: #F5F2EE; display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif; }
-          .r-success { text-align: center; padding: 2rem; }
-          .r-success-icon { font-size: 64px; margin-bottom: 16px; }
-          .r-success-title { font-family: 'Fraunces', Georgia, serif; font-size: 28px; font-weight: 900; color: #1C1714; margin-bottom: 8px; }
-          .r-success-sub { font-size: 15px; color: #9E9188; }
-        `}</style>
-        <div className="r-root">
-          <div className="r-success">
-            <div className="r-success-icon">✅</div>
-            <div className="r-success-title">¡Cuenta creada con éxito!</div>
-            <div className="r-success-sub">Redirigiendo al login...</div>
-          </div>
+      <div style={styles.root}>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
+          <div style={styles.title}>¡Cuenta creada!</div>
+          <div style={styles.sub}>{isPro ? 'Redirigiendo para activar tu plan PRO...' : 'Redirigiendo al login...'}</div>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+    <div style={styles.root}>
+      <div style={{ ...styles.card, borderTop: `3px solid ${isPro ? '#5B8CFF' : '#5B8CFF'}` }}>
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        .r-root {
-          min-height: 100vh;
-          background: #F5F2EE;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px 16px;
-          font-family: 'DM Sans', sans-serif;
-        }
-
-        .r-card {
-          background: #ffffff;
-          border-radius: 24px;
-          padding: 48px 40px 40px;
-          width: 100%;
-          max-width: 420px;
-          border: 1px solid #E6E0DA;
-          box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
-          position: relative;
-          animation: slideUp .45s cubic-bezier(.22,.68,0,1.2) both;
-        }
-
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .r-card::before {
-          content: '';
-          position: absolute;
-          top: 0; left: 36px; right: 36px;
-          height: 2.5px;
-          background: linear-gradient(90deg, #7D0531, #B05276);
-          border-radius: 0 0 6px 6px;
-        }
-
-        .r-brand {
-          text-align: center;
-          margin-bottom: 32px;
-        }
-
-        .r-logo {
-          width: 68px; height: 68px;
-          border-radius: 18px;
-          background: #7D053112;
-          border: 1.5px solid #E6E0DA;
-          display: flex; align-items: center; justify-content: center;
-          margin: 0 auto 14px;
-          font-size: 28px;
-        }
-
-        .r-title {
-          font-family: 'Fraunces', Georgia, serif;
-          font-size: 22px;
-          font-weight: 900;
-          color: #1C1714;
-          margin-bottom: 4px;
-        }
-
-        .r-sub {
-          font-size: 13.5px;
-          color: #9E9188;
-        }
-
-        .r-field { margin-bottom: 14px; }
-
-        .r-label {
-          display: block;
-          font-size: 11.5px;
-          font-weight: 600;
-          color: #6B6259;
-          text-transform: uppercase;
-          letter-spacing: .07em;
-          margin-bottom: 6px;
-        }
-
-        .r-input {
-          width: 100%;
-          background: #FFFFFF;
-          border: 1.5px solid #D8D0C8;
-          border-radius: 12px;
-          padding: 13px 16px;
-          font-size: 15px;
-          font-family: 'DM Sans', sans-serif;
-          color: #1C1714;
-          outline: none;
-          transition: border-color .15s, box-shadow .15s;
-          -webkit-appearance: none;
-        }
-
-        .r-input::placeholder { color: #BDB5AD; font-weight: 300; }
-
-        .r-input:focus {
-          border-color: #7D0531;
-          box-shadow: 0 0 0 3.5px #7D05311C;
-        }
-
-        .r-divider {
-          border: none;
-          border-top: 1px dashed #E0D8D0;
-          margin: 18px 0;
-        }
-
-        .r-error {
-          background: #FFF5F5;
-          border: 1px solid #FED7D7;
-          border-radius: 10px;
-          padding: 11px 14px;
-          margin-bottom: 14px;
-          color: #C53030;
-          font-size: 13.5px;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .r-cta {
-          width: 100%;
-          background: #7D0531;
-          color: #ffffff;
-          border: none;
-          border-radius: 13px;
-          padding: 15px;
-          font-size: 15px;
-          font-weight: 600;
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
-          transition: opacity .15s, transform .12s;
-          margin-top: 4px;
-          box-shadow: 0 2px 8px #7D053135;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .r-cta:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
-        .r-cta:disabled { opacity: .6; cursor: not-allowed; }
-
-        .r-spinner {
-          width: 16px; height: 16px;
-          border: 2.5px solid rgba(255,255,255,.4);
-          border-top-color: white;
-          border-radius: 50%;
-          animation: spin .7s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .r-back {
-          text-align: center;
-          margin-top: 18px;
-          font-size: 13.5px;
-          color: #9E9188;
-        }
-
-        .r-back a {
-          color: #7D0531;
-          font-weight: 500;
-          text-decoration: none;
-          border-bottom: 1px solid #7D053130;
-        }
-
-        .r-back a:hover { border-color: #7D0531; }
-
-        @media (max-width: 480px) {
-          .r-card { padding: 36px 24px 32px; }
-        }
-      `}</style>
-
-      <div className="r-root">
-        <div className="r-card">
-
-          <div className="r-brand">
-            <div className="r-logo">🏋️</div>
-            <div className="r-title">Registro de profesora</div>
-            <div className="r-sub">Usá tu código de invitación</div>
+        <div style={styles.brand}>
+          <div style={styles.logo}>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="16" fill="#5B8CFF"/>
+              <text x="16" y="22" textAnchor="middle" fontFamily="Georgia,serif" fontSize="20" fontWeight="700" fill="#000000">P</text>
+            </svg>
           </div>
-
-          <form onSubmit={handleSubmit}>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-              <div className="r-field" style={{ marginBottom: 0 }}>
-                <label className="r-label">Nombre</label>
-                <input className="r-input" name="nombre" placeholder="María" value={form.nombre} onChange={handleChange} required />
-              </div>
-              <div className="r-field" style={{ marginBottom: 0 }}>
-                <label className="r-label">Apellido</label>
-                <input className="r-input" name="apellido" placeholder="García" value={form.apellido} onChange={handleChange} required />
-              </div>
-            </div>
-
-            <div className="r-field">
-              <label className="r-label">Email</label>
-              <input className="r-input" name="email" type="email" placeholder="profe@email.com" value={form.email} onChange={handleChange} required />
-            </div>
-
-            <div className="r-field">
-              <label className="r-label">Contraseña</label>
-              <input className="r-input" name="password" type="password" placeholder="Mínimo 6 caracteres" value={form.password} onChange={handleChange} required minLength={6} />
-            </div>
-
-            <hr className="r-divider" />
-
-            <div className="r-field">
-              <label className="r-label">Código de invitación</label>
-              <input className="r-input" name="codigo" placeholder="Ej: PULSE2026" value={form.codigo} onChange={handleChange} required style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }} />
-            </div>
-
-            {error && (
-              <div className="r-error">
-                <span style={{ fontSize: 16 }}>⚠️</span> {error}
-              </div>
-            )}
-
-            <button type="submit" className="r-cta" disabled={loading}>
-              {loading ? <><div className="r-spinner" /> Creando cuenta...</> : 'Crear cuenta →'}
-            </button>
-
-          </form>
-
-          <div className="r-back">
-            ¿Ya tenés cuenta? <a href="/login">Iniciá sesión</a>
-          </div>
-
+          {isPro && (
+            <div style={styles.proBadge}>Plan PRO</div>
+          )}
+          <div style={styles.title}>{isPro ? 'Crear cuenta PRO' : 'Registro de profesora'}</div>
+          <div style={styles.sub}>{isPro ? 'Después del registro activamos tu suscripción' : 'Usá tu código de invitación'}</div>
         </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div>
+              <label style={styles.label}>Nombre</label>
+              <input style={styles.input} name="nombre" placeholder="María" value={form.nombre} onChange={handleChange} required />
+            </div>
+            <div>
+              <label style={styles.label}>Apellido</label>
+              <input style={styles.input} name="apellido" placeholder="García" value={form.apellido} onChange={handleChange} required />
+            </div>
+          </div>
+
+          <div>
+            <label style={styles.label}>Email</label>
+            <input style={styles.input} name="email" type="email" placeholder="profe@email.com" value={form.email} onChange={handleChange} required />
+          </div>
+
+          <div>
+            <label style={styles.label}>Contraseña</label>
+            <input style={styles.input} name="password" type="password" placeholder="Mínimo 6 caracteres" value={form.password} onChange={handleChange} required minLength={6} />
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px dashed #E0D8D0', margin: '4px 0' }} />
+
+          <div>
+            <label style={styles.label}>Código de invitación</label>
+            <input
+              style={{ ...styles.input, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}
+              name="codigo"
+              placeholder="Ej: PULSE2026"
+              value={form.codigo}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {error && (
+            <div style={styles.error}>⚠️ {error}</div>
+          )}
+
+          <button type="submit" disabled={loading} style={{ ...styles.cta, opacity: loading ? 0.7 : 1 }}>
+            {loading ? 'Creando cuenta...' : isPro ? 'Crear cuenta y activar PRO →' : 'Crear cuenta →'}
+          </button>
+
+        </form>
+
+        <div style={styles.back}>
+          ¿Ya tenés cuenta? <a href="/login" style={{ color: '#5B8CFF', fontWeight: 500, textDecoration: 'none' }}>Iniciá sesión</a>
+        </div>
+
       </div>
-    </>
+    </div>
+  )
+}
+
+const styles = {
+  root: {
+    minHeight: '100vh',
+    background: '#F5F2EE',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '24px 16px',
+    fontFamily: "'DM Sans', sans-serif",
+  },
+  card: {
+    background: '#ffffff',
+    borderRadius: 24,
+    padding: '48px 40px 40px',
+    width: '100%',
+    maxWidth: 420,
+    border: '1px solid #E6E0DA',
+    boxShadow: '0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06)',
+    position: 'relative' as const,
+  },
+  brand: { textAlign: 'center' as const, marginBottom: 28 },
+  logo: { width: 56, height: 56, borderRadius: 16, background: '#5B8CFF18', border: '1.5px solid #E6E0DA', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' },
+  proBadge: { display: 'inline-block', background: '#5B8CFF', color: 'white', fontSize: 11, fontWeight: 600, padding: '3px 12px', borderRadius: 20, letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' as const },
+  title: { fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, fontWeight: 900, color: '#1C1714', marginBottom: 4 },
+  sub: { fontSize: 13.5, color: '#9E9188' },
+  label: { display: 'block', fontSize: 11.5, fontWeight: 600, color: '#6B6259', textTransform: 'uppercase' as const, letterSpacing: '.07em', marginBottom: 6 },
+  input: { width: '100%', background: '#FFFFFF', border: '1.5px solid #D8D0C8', borderRadius: 12, padding: '13px 16px', fontSize: 15, fontFamily: "'DM Sans', sans-serif", color: '#1C1714', outline: 'none', boxSizing: 'border-box' as const },
+  error: { background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: 10, padding: '11px 14px', color: '#C53030', fontSize: 13.5, fontWeight: 500 },
+  cta: { width: '100%', background: '#5B8CFF', color: '#ffffff', border: 'none', borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", cursor: 'pointer', boxShadow: '0 2px 8px #5B8CFF35', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 4 },
+  back: { textAlign: 'center' as const, marginTop: 18, fontSize: 13.5, color: '#9E9188' },
+}
+
+export default function RegisterAdminPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#F5F2EE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid #E0D8D0', borderTopColor: '#5B8CFF', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   )
 }
