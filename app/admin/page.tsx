@@ -271,6 +271,7 @@ export default function AdminPage() {
 
       <style>{`
         @media (max-width: 768px) {
+          .stats-grid-dash { grid-template-columns: 1fr 1fr !important; }
           .mobile-topbar { display: flex !important; }
           .admin-sidebar { transform: translateX(-100%); position: fixed !important; z-index: 300; transition: transform .3s ease; }
           .admin-sidebar.open { transform: translateX(0); }
@@ -336,47 +337,168 @@ export default function AdminPage() {
       <main className='admin-main' style={{ overflowY: 'auto', background: '#ede0e2', flex: 1, minWidth: 0 }}>
 
         {/* DASHBOARD */}
-        {tab === 'dashboard' && (
-          <div style={{ padding: '32px 36px' }}>
-            <div style={{ marginBottom: '32px' }}>
-              <div className="page-eyebrow">Bienvenida</div>
-              <div className="page-title">Hola, {admin?.nombre} 👩‍💼</div>
+        {tab === 'dashboard' && (() => {
+          const sinPlan = alumnos.filter(a => !getPlanAlumno(a.id))
+          const conPlan = alumnos.filter(a => !!getPlanAlumno(a.id))
+          const accionPrioritaria = sinPlan[0] || null
+
+          // Insight dinámico
+          let insight = ''
+          if (sinPlan.length === 0 && alumnos.length === 0) insight = 'Todavía no tenés alumnos. Empezá creando el primero.'
+          else if (sinPlan.length === 0) insight = `Todos tus alumnos tienen plan activo. ¡Todo en orden!`
+          else if (sinPlan.length === 1) insight = `${sinPlan[0].nombre} todavía no tiene un plan asignado.`
+          else insight = `${sinPlan.length} alumnos sin plan. Asignales uno para que puedan entrenar.`
+
+          return (
+          <div style={{ padding: '32px 36px', maxWidth: '900px' }}>
+
+            {/* ── HEADER INSIGHT ── */}
+            <div style={{ marginBottom: '28px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </div>
+              <div style={{ fontSize: '26px', fontWeight: '700', color: '#111827', letterSpacing: '-0.4px', marginBottom: '6px', fontFamily: 'inherit' }}>
+                Hola, {admin?.nombre} 👋
+              </div>
+              <div style={{ fontSize: '15px', color: sinPlan.length > 0 ? '#b45309' : '#16a34a', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>{sinPlan.length > 0 ? '⚠️' : '✅'}</span>
+                {insight}
+              </div>
             </div>
-            <div className='stats-grid-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' }}>
-              {[[alumnos.length, 'Alumnos/as'], [planes.length, 'Planes'], [asignaciones.length, 'Con plan activo']].map(([n, l]) => (
-                <div key={l} style={{ background: '#fff', borderRadius: '16px', padding: '20px', border: '1px solid #d5c4c8', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', background: '#DBBABF', borderRadius: '50%', opacity: .5 }} />
-                  <div style={{ fontFamily: 'Georgia, serif', fontSize: '40px', fontWeight: '900', color: '#7D0531', lineHeight: 1, position: 'relative', zIndex: 1 }}>{n}</div>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: '6px', position: 'relative', zIndex: 1 }}>{l}</div>
+
+            {/* ── MÉTRICAS ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '28px' }} className="stats-grid-dash">
+              {[
+                { n: alumnos.length, label: 'Total alumnos', color: '#111827', bg: '#fff', action: () => setTab('alumnos'), dot: null },
+                { n: conPlan.length, label: 'Con plan activo', color: '#16a34a', bg: '#f0fdf4', action: () => setTab('alumnos'), dot: '#16a34a' },
+                { n: sinPlan.length, label: 'Sin plan', color: sinPlan.length > 0 ? '#dc2626' : '#9ca3af', bg: sinPlan.length > 0 ? '#fef2f2' : '#fff', action: () => setTab('alumnos'), dot: sinPlan.length > 0 ? '#dc2626' : null },
+                { n: planes.length, label: 'Planes creados', color: '#111827', bg: '#fff', action: () => setTab('planes'), dot: null },
+              ].map(({ n, label, color, bg, action, dot }) => (
+                <div key={label} onClick={action} style={{ background: bg, borderRadius: '14px', padding: '18px 16px', border: '1px solid #f3f4f6', cursor: 'pointer', transition: 'box-shadow .15s', position: 'relative' }}
+                  onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)')}
+                  onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>
+                  {dot && <div style={{ position: 'absolute', top: '14px', right: '14px', width: '7px', height: '7px', borderRadius: '50%', background: dot }} />}
+                  <div style={{ fontSize: '32px', fontWeight: '700', color, lineHeight: 1, marginBottom: '4px', letterSpacing: '-1px' }}>{n}</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
                 </div>
               ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: '#7D0531' }}>Alumnos/as</h2>
-              <button className="btn-wine" style={{ fontSize: '13px', padding: '8px 14px' }} onClick={() => setTab('alumnos')}>Ver todos →</button>
-            </div>
-            <div style={{ background: '#fff', borderRadius: '20px', padding: '8px', border: '1px solid #d5c4c8' }}>
-              {alumnos.slice(0, 5).map(a => {
-                const plan = getPlanAlumno(a.id)
-                return (
-                  <div key={a.id} onClick={() => { setAlumnoActivo(a); setTab('ficha'); const planA = asignaciones.find(x => x.alumno_id === a.id); if (planA) cargarConteosBloques(planA.plan_id) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderBottom: '1px solid #ede0e2', cursor: 'pointer', transition: '.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#ede0e2')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', color: '#fff', flexShrink: 0 }}>
-                      {`${a.nombre[0]}${a.apellido[0]}`.toUpperCase()}
+
+            {/* ── ACCIÓN PRIORITARIA ── */}
+            {sinPlan.length > 0 && (
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '16px', padding: '18px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>⚡</div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '2px' }}>Acción prioritaria</div>
+                    <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827' }}>
+                      Asignar plan a {accionPrioritaria?.nombre} {accionPrioritaria?.apellido}
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '600', fontSize: '15px' }}>{a.nombre} {a.apellido}</div>
-                      <div style={{ fontSize: '12px', color: '#8a7070', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>{a.objetivo || '—'}</div>
-                    </div>
-                    <span className={`badge ${plan ? 'badge-green' : 'badge-amber'}`}>{plan ? '✓ Plan' : 'Sin plan'}</span>
+                    {accionPrioritaria?.objetivo && (
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>{accionPrioritaria.objetivo}</div>
+                    )}
                   </div>
-                )
-              })}
+                </div>
+                <button
+                  onClick={() => { setAlumnoActivo(accionPrioritaria); setTab('ficha') }}
+                  style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  Ver perfil →
+                </button>
+              </div>
+            )}
+
+            {/* ── ACCESOS RÁPIDOS ── */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
+              <button onClick={() => setShowAddAlumno(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '9px 16px', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color .15s' }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = '#7D0531')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}>
+                <span>👤</span> Nuevo alumno
+              </button>
+              <button onClick={() => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: uid(), numero: 1, dias: [] }], asignados: [] }); setTab('builder') }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '9px 16px', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color .15s' }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = '#7D0531')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}>
+                <span>📋</span> Nuevo plan
+              </button>
+              <button onClick={() => setTab('planes')}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '9px 16px', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color .15s' }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = '#7D0531')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}>
+                <span>📊</span> Ver planes
+              </button>
             </div>
+
+            {/* ── ALUMNOS AGRUPADOS ── */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Alumnos</div>
+              <button onClick={() => setTab('alumnos')} style={{ fontSize: '12px', fontWeight: '600', color: '#7D0531', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Ver todos →</button>
+            </div>
+
+            {/* Sin plan primero */}
+            {sinPlan.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} />
+                  Sin plan ({sinPlan.length})
+                </div>
+                <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
+                  {sinPlan.map((a, i) => (
+                    <div key={a.id}
+                      onClick={() => { setAlumnoActivo(a); setTab('ficha') }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', borderBottom: i < sinPlan.length - 1 ? '1px solid #f9fafb' : 'none', cursor: 'pointer', transition: 'background .12s' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#dc2626', flexShrink: 0 }}>
+                        {`${a.nombre[0]}${a.apellido[0]}`.toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{a.nombre} {a.apellido}</div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.objetivo || '—'}</div>
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#dc2626', background: '#fef2f2', borderRadius: '20px', padding: '3px 10px', flexShrink: 0 }}>Sin plan</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Con plan */}
+            {conPlan.length > 0 && (
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#16a34a', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+                  Activos ({conPlan.length})
+                </div>
+                <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
+                  {conPlan.map((a, i) => {
+                    const plan = getPlanAlumno(a.id)
+                    return (
+                      <div key={a.id}
+                        onClick={() => { setAlumnoActivo(a); setTab('ficha'); const planA = asignaciones.find(x => x.alumno_id === a.id); if (planA) cargarConteosBloques(planA.plan_id) }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', borderBottom: i < conPlan.length - 1 ? '1px solid #f9fafb' : 'none', cursor: 'pointer', transition: 'background .12s' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#fff', flexShrink: 0 }}>
+                          {`${a.nombre[0]}${a.apellido[0]}`.toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{a.nombre} {a.apellido}</div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.objetivo || '—'}</div>
+                        </div>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: '#16a34a', background: '#f0fdf4', borderRadius: '20px', padding: '3px 10px', flexShrink: 0, maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          ✓ {plan?.nombre}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
           </div>
-        )}
+          )
+        })()}
 
         {/* ALUMNOS */}
         {tab === 'alumnos' && (
