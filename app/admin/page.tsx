@@ -359,7 +359,7 @@ export default function AdminPage() {
               {alumnos.slice(0, 5).map(a => {
                 const plan = getPlanAlumno(a.id)
                 return (
-                  <div key={a.id} onClick={() => { setAlumnoActivo(a); setTab('ficha') }}
+                  <div key={a.id} onClick={() => { setAlumnoActivo(a); setTab('ficha'); const planA = asignaciones.find(x => x.alumno_id === a.id); if (planA) cargarConteosBloques(planA.plan_id) }}
                     style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderBottom: '1px solid #ede0e2', cursor: 'pointer', transition: '.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#ede0e2')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
@@ -406,7 +406,7 @@ export default function AdminPage() {
                       <tr key={a.id} style={{ cursor: 'pointer' }}
                         onMouseEnter={e => { Array.from(e.currentTarget.children).forEach((td: any) => td.style.background = '#ede0e2') }}
                         onMouseLeave={e => { Array.from(e.currentTarget.children).forEach((td: any) => td.style.background = '') }}
-                        onClick={() => { setAlumnoActivo(a); setTab('ficha') }}>
+                        onClick={() => { setAlumnoActivo(a); setTab('ficha'); const planA = asignaciones.find(x => x.alumno_id === a.id); if (planA) cargarConteosBloques(planA.plan_id) }}>
                         <td style={{ padding: '14px 16px', borderBottom: '1px solid #ede0e2' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#fff', flexShrink: 0 }}>
@@ -440,48 +440,140 @@ export default function AdminPage() {
         )}
 
         {/* FICHA ALUMNO */}
-        {tab === 'ficha' && alumnoActivo && (
-          <div style={{ padding: '32px 36px' }}>
+        {tab === 'ficha' && alumnoActivo && (() => {
+          const planActivo = getPlanAlumno(alumnoActivo.id)
+          return (
+          <div style={{ padding: '28px 36px', maxWidth: '860px' }}>
+
+            {/* Header */}
             <button className="btn-ghost" style={{ marginBottom: '20px', fontSize: '13px' }} onClick={() => setTab('alumnos')}>← Volver</button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '28px' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '22px', color: '#fff', flexShrink: 0 }}>
-                {`${alumnoActivo.nombre[0]}${alumnoActivo.apellido[0]}`.toUpperCase()}
-              </div>
-              <div>
-                <div className="page-title" style={{ marginBottom: '4px' }}>{alumnoActivo.nombre} {alumnoActivo.apellido}</div>
-                <span className="badge badge-rose">{alumnoActivo.nivel || 'Sin nivel'}</span>
-              </div>
-            </div>
-            <div className='grid-2-col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              {[['DNI', alumnoActivo.dni], ['Edad', alumnoActivo.edad ? `${alumnoActivo.edad} años` : '—'], ['Teléfono', alumnoActivo.telefono || '—'], ['Sexo', alumnoActivo.sexo || '—']].map(([l, v]) => (
-                <div key={l} className="card">
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>{l}</div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: '#2a1520' }}>{v}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '20px', color: '#fff', flexShrink: 0 }}>
+                  {`${alumnoActivo.nombre[0]}${alumnoActivo.apellido[0]}`.toUpperCase()}
                 </div>
-              ))}
+                <div>
+                  <div className="page-title" style={{ marginBottom: '4px', fontSize: '24px' }}>{alumnoActivo.nombre} {alumnoActivo.apellido}</div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <span className="badge badge-rose">{alumnoActivo.nivel || 'Sin nivel'}</span>
+                    {planActivo && <span className="badge badge-green">✓ {planActivo.nombre}</span>}
+                    {!planActivo && <span className="badge badge-amber">Sin plan</span>}
+                  </div>
+                </div>
+              </div>
             </div>
-            {alumnoActivo.objetivo && (
-              <div className="card" style={{ marginTop: '16px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Objetivo</div>
-                <div style={{ fontSize: '14px', color: '#2a1520', lineHeight: '1.6' }}>{alumnoActivo.objetivo}</div>
+
+            {/* Datos compactos en una sola card */}
+            <div className="card" style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '12px' }}>Datos personales</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {[
+                  ['DNI', alumnoActivo.dni || '—'],
+                  ['Edad', alumnoActivo.edad ? `${alumnoActivo.edad} años` : '—'],
+                  ['Teléfono', alumnoActivo.telefono || '—'],
+                  ['Sexo', alumnoActivo.sexo || '—'],
+                ].map(([l, v]) => (
+                  <div key={l} style={{ background: '#faf8f7', borderRadius: '10px', padding: '10px 14px' }}>
+                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '3px' }}>{l}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#2a1520' }}>{v}</div>
+                  </div>
+                ))}
               </div>
-            )}
-            {alumnoActivo.restricciones && (
-              <div className="card" style={{ marginTop: '16px', borderLeft: '3px solid #f59e0b' }}>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>⚠️ Restricciones</div>
-                <div style={{ fontSize: '14px', color: '#2a1520' }}>{alumnoActivo.restricciones}</div>
+              {alumnoActivo.objetivo && (
+                <div style={{ background: '#faf8f7', borderRadius: '10px', padding: '10px 14px', marginTop: '12px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '3px' }}>Objetivo</div>
+                  <div style={{ fontSize: '14px', color: '#2a1520', lineHeight: '1.5' }}>{alumnoActivo.objetivo}</div>
+                </div>
+              )}
+              {alumnoActivo.restricciones && (
+                <div style={{ background: '#fff8f0', border: '1px solid #fde8c0', borderRadius: '10px', padding: '10px 14px', marginTop: '12px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#b45309', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '3px' }}>⚠️ Restricciones</div>
+                  <div style={{ fontSize: '14px', color: '#2a1520' }}>{alumnoActivo.restricciones}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Sección Plan */}
+            <div className="card" style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em' }}>Plan de entrenamiento</div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {planActivo && (
+                    <button className="btn-ghost" style={{ fontSize: '12px', padding: '6px 12px' }}
+                      onClick={e => {
+                        e.stopPropagation()
+                        const plan = planActivo as any
+                        const asigAlumnos = alumnos.filter(a => getPlanAlumno(a.id)?.id === plan.id)
+                        const semanas = (plan.semanas || []).map((s: any) => ({
+                          id: s.id, numero: s.numero,
+                          dias: (s.dias || []).map((d: any) => ({ id: d.id, dia: d.dia, tipo: d.tipo || '', orden: d.orden || 0, ejercicios: (d.ejercicios || []).map((e: any) => ({ id: e.id, nombre: e.nombre, series: e.series, repeticiones: e.repeticiones, carga: e.carga || '', descanso: e.descanso || '', rpe: e.rpe || '', rir: e.rir || '', observaciones: e.observaciones || '' })) }))
+                        }))
+                        setBp({ id: plan.id, nombre: plan.nombre, objetivo: plan.objetivo, semanas, asignados: asigAlumnos.map((a: any) => a.id) })
+                        cargarConteosBloques(plan.id)
+                        setTab('builder')
+                      }}>✏️ Editar plan</button>
+                  )}
+                  <button className="btn-wine" style={{ fontSize: '12px', padding: '6px 12px' }}
+                    onClick={() => {
+                      setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: uid(), numero: 1, dias: [] }], asignados: [alumnoActivo.id] })
+                      setTab('builder')
+                    }}>+ Nuevo plan</button>
+                </div>
               </div>
-            )}
-            <div className="card" style={{ marginTop: '16px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '10px' }}>Plan asignado</div>
-              <select value={getPlanAlumno(alumnoActivo.id)?.id || ''} onChange={e => asignarPlan(alumnoActivo.id, e.target.value || null)}
-                style={{ background: '#ede0e2', border: '1.5px solid #d5c4c8', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', color: '#2a1520', outline: 'none', width: '100%', fontFamily: 'inherit' }}>
+
+              {/* Selector de plan */}
+              <select value={planActivo?.id || ''} onChange={e => asignarPlan(alumnoActivo.id, e.target.value || null)}
+                style={{ background: '#ede0e2', border: '1.5px solid #d5c4c8', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', color: '#2a1520', outline: 'none', width: '100%', fontFamily: 'inherit', marginBottom: planActivo ? '14px' : '0' }}>
                 <option value="">Sin plan asignado</option>
                 {planes.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
               </select>
+
+              {/* Vista expandida del plan activo */}
+              {planActivo && (() => {
+                const p = planActivo as any
+                const totalDias = (p.semanas || []).reduce((a: number, s: any) => a + (s.dias?.length || 0), 0)
+                const totalEjs = (p.semanas || []).reduce((a: number, s: any) => a + (s.dias || []).reduce((b: number, d: any) => b + (d.ejercicios?.length || 0), 0), 0)
+                return (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                      <span className="badge badge-rose">🎯 {p.objetivo}</span>
+                      <span style={{ fontSize: '12px', color: '#8a7070' }}>{(p.semanas || []).length} semana{(p.semanas || []).length !== 1 ? 's' : ''} · {totalDias} días · {totalEjs} ejercicios</span>
+                    </div>
+                    {(p.semanas || []).map((sem: any) => (
+                      <div key={sem.id} style={{ marginBottom: '12px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '700', color: '#7D0531', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ background: '#7D0531', color: '#DBBABF', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '800', flexShrink: 0 }}>{sem.numero}</span>
+                          Semana {sem.numero}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '6px' }}>
+                          {(sem.dias || []).map((dia: any) => (
+                            <div key={dia.id}
+                              style={{ background: '#faf8f7', border: '1px solid #e8e2da', borderRadius: '10px', padding: '10px 12px', cursor: 'pointer', transition: '.15s' }}
+                              onClick={() => { cargarConteosBloques(p.id); setDiaEditorActivo({ id: dia.id, nombre: dia.tipo || dia.dia, numero: dia.orden + 1 }) }}
+                              onMouseEnter={e => (e.currentTarget.style.borderColor = '#7D0531')}
+                              onMouseLeave={e => (e.currentTarget.style.borderColor = '#e8e2da')}
+                            >
+                              <div style={{ fontWeight: '700', fontSize: '12px', color: '#7D0531', marginBottom: '2px' }}>{dia.dia}</div>
+                              {dia.tipo && <div style={{ fontSize: '11px', color: '#8a7070', marginBottom: '4px' }}>{dia.tipo}</div>}
+                              <div style={{ fontSize: '11px', color: '#8a7070' }}>
+                                {bloquesConteo[dia.id] > 0
+                                  ? `🧱 ${bloquesConteo[dia.id]} bloque${bloquesConteo[dia.id] !== 1 ? 's' : ''}`
+                                  : `${(dia.ejercicios || []).length} ejercicio${(dia.ejercicios || []).length !== 1 ? 's' : ''}`
+                                }
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
             </div>
+
           </div>
-        )}
+          )
+        })()}
 
         {/* PLANES */}
         {tab === 'planes' && !bp && (
