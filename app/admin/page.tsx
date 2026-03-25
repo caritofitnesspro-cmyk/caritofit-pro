@@ -25,19 +25,15 @@ export default function AdminPage() {
   const [searchQ, setSearchQ]       = useState('')
   const [toast, setToast]           = useState('')
 
-  // Builder state
   const [bp, setBp] = useState<any>(null)
 
-  // Modal add alumno
   const [showAddAlumno, setShowAddAlumno] = useState(false)
   const [newA, setNewA] = useState({ nombre:'', apellido:'', dni:'', email:'', telefono:'', edad:'', sexo:'', objetivo:'', nivel:'Principiante', restricciones:'', password:'' })
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [planExpandido, setPlanExpandido] = useState(null)
 
-  // Modal editor de bloques
   const [diaEditorActivo, setDiaEditorActivo] = useState<{id: string, nombre: string, numero: number} | null>(null)
-  // Conteo de bloques por día
   const [bloquesConteo, setBloquesConteo] = useState<Record<string, number>>({})
 
   useEffect(() => { loadData() }, [])
@@ -53,15 +49,12 @@ export default function AdminPage() {
     setAdmin(p)
     loadBrand(p.id)
 
-    // Cargar alumnos
     const { data: as } = await supabase.from('perfiles').select('*').eq('rol', 'alumno').eq('admin_id', p.id).order('nombre')
     setAlumnos(as || [])
 
-    // Cargar planes con semanas/días/ejercicios
     const { data: ps } = await supabase.from('planes').select(`*, semanas(*, dias(*, ejercicios(*)))`).eq('admin_id', p.id).order('created_at', { ascending: false })
     setPlanes(ps || [])
 
-    // Cargar asignaciones
     const { data: asigs } = await supabase.from('asignaciones').select('*').eq('activo', true)
     setAsignaciones(asigs || [])
 
@@ -74,7 +67,6 @@ export default function AdminPage() {
   }
 
   async function asignarPlan(alumnoId: string, planId: string | null) {
-    // Eliminar asignación existente
     await supabase.from('asignaciones').delete().eq('alumno_id', alumnoId)
     if (planId) {
       await supabase.from('asignaciones').insert({ alumno_id: alumnoId, plan_id: planId, activo: true })
@@ -83,37 +75,21 @@ export default function AdminPage() {
     showToast(planId ? '✅ Plan asignado' : '✅ Plan removido')
   }
 
-  // ── CREAR ALUMNO ──
+  // ── CREAR ALUMNO — via API Route para no cerrar sesión del admin ──
   async function crearAlumno() {
     if (!newA.nombre || !newA.apellido || !newA.dni || !newA.email) { showToast('⚠️ Completá nombre, apellido, DNI y email'); return }
     if (!/^\d{7,8}$/.test(newA.dni)) { showToast('⚠️ DNI inválido'); return }
     if (!newA.objetivo || newA.objetivo.length < 3) { showToast('⚠️ El objetivo es obligatorio'); return }
     if (!newA.password || newA.password.length < 6) { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return }
 
-    // Guardar sesión admin antes de crear alumno
-    const { data: { session: adminSession } } = await supabase.auth.getSession()
-
-    const { data: authData, error } = await supabase.auth.signUp({
-      email: newA.email,
-      password: newA.password,
-      options: { data: { nombre: newA.nombre, apellido: newA.apellido, dni: newA.dni, rol: 'alumno' } }
+    const res = await fetch('/api/admin/crear-alumno', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newA, adminId: admin!.id })
     })
 
-    // Restaurar sesión admin inmediatamente
-    if (adminSession) {
-      await supabase.auth.setSession({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token })
-    }
-
-    if (error) { showToast('⚠️ ' + error.message); return }
-
-    if (authData.user) {
-      await supabase.from('perfiles').update({
-        telefono: newA.telefono, edad: parseInt(newA.edad) || undefined,
-        sexo: newA.sexo, objetivo: newA.objetivo, nivel: newA.nivel as any,
-        restricciones: newA.restricciones, aprobado: true,
-        admin_id: admin!.id,
-      }).eq('id', authData.user.id)
-    }
+    const data = await res.json()
+    if (!res.ok) { showToast('⚠️ ' + data.error); return }
 
     setShowAddAlumno(false)
     setNewA({ nombre:'', apellido:'', dni:'', email:'', telefono:'', edad:'', sexo:'', objetivo:'', nivel:'Principiante', restricciones:'', password:'' })
@@ -130,15 +106,12 @@ export default function AdminPage() {
     let planId = bp.id
 
     if (planId) {
-      // Actualizar plan existente sin borrar días (preserva bloques)
       await supabase.from('planes').update({ nombre: bp.nombre, objetivo: bp.objetivo }).eq('id', planId)
 
-      // IDs que vienen del builder (los que queremos conservar)
       const semanaIds = bp.semanas.map((s: any) => s.id).filter((id: string) => id && !id.startsWith('tmp'))
       const diaIds = bp.semanas.flatMap((s: any) => s.dias.map((d: any) => d.id)).filter((id: string) => id && !id.startsWith('tmp'))
       const ejIds = bp.semanas.flatMap((s: any) => s.dias.flatMap((d: any) => d.ejercicios.map((e: any) => e.id))).filter((id: string) => id && !id.startsWith('tmp'))
 
-      // Borrar semanas que ya no existen
       const { data: semsActuales } = await supabase.from('semanas').select('id').eq('plan_id', planId)
       for (const sem of (semsActuales || [])) {
         if (!semanaIds.includes(sem.id)) {
@@ -146,7 +119,6 @@ export default function AdminPage() {
         }
       }
 
-      // Borrar días que ya no existen (preserva bloques de los días que sí existen)
       const { data: diasActuales } = await supabase.from('dias').select('id, semana_id').in('semana_id', semanaIds.length ? semanaIds : ['none'])
       for (const dia of (diasActuales || [])) {
         if (!diaIds.includes(dia.id)) {
@@ -154,7 +126,6 @@ export default function AdminPage() {
         }
       }
 
-      // Borrar ejercicios sin bloque que ya no existen
       if (diaIds.length > 0) {
         const { data: ejsActuales } = await supabase.from('ejercicios').select('id').in('dia_id', diaIds).is('bloque_id', null)
         for (const ej of (ejsActuales || [])) {
@@ -164,7 +135,6 @@ export default function AdminPage() {
         }
       }
 
-      // Actualizar/crear semanas y días
       for (const sem of bp.semanas) {
         let semId = sem.id
         if (semId && !semId.startsWith('tmp')) {
@@ -195,7 +165,6 @@ export default function AdminPage() {
       }
 
     } else {
-      // Plan nuevo — crear todo desde cero
       const { data: newPlan } = await supabase.from('planes').insert({ nombre: bp.nombre, objetivo: bp.objetivo, admin_id: admin!.id }).select().single()
       planId = newPlan!.id
 
@@ -211,7 +180,6 @@ export default function AdminPage() {
       }
     }
 
-    // Asignar a los alumnos seleccionados en el builder
     for (const alumnoId of bp.asignados || []) {
       await supabase.from('asignaciones').delete().eq('alumno_id', alumnoId)
       await supabase.from('asignaciones').insert({ alumno_id: alumnoId, plan_id: planId, activo: true })
@@ -262,16 +230,13 @@ export default function AdminPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-      {/* Mobile topbar */}
       <div style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: '#7D0531', padding: '14px 20px', alignItems: 'center', justifyContent: 'space-between', id: 'mobile-topbar' }} className="mobile-topbar">
         <div style={{ fontFamily: 'Georgia,serif', fontSize: '18px', fontWeight: '900', color: '#DBBABF' }}>{brand.brandName}</div>
         <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: '#DBBABF', fontSize: '24px', cursor: 'pointer', padding: '4px' }}>☰</button>
       </div>
-      {/* Overlay mobile */}
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 299 }} />}
       {toast && <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#7D0531', color: '#DBBABF', padding: '12px 22px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', zIndex: 600, whiteSpace: 'nowrap' }}>{toast}</div>}
 
-      {/* SIDEBAR */}
       <style>{`
         @media (max-width: 768px) {
           .mobile-topbar { display: flex !important; }
@@ -285,6 +250,7 @@ export default function AdminPage() {
           .builder-cols { grid-template-columns: 1fr 1fr !important; }
         }
       `}</style>
+
       <aside className={sidebarOpen ? 'admin-sidebar open' : 'admin-sidebar'} style={{ background: '#7D0531', color: '#DBBABF', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', width: '260px', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 16px 0' }}>
           <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(219,186,191,.5)', fontSize: '20px', cursor: 'pointer', display: 'none' }} className="close-sidebar">✕</button>
@@ -335,7 +301,6 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      {/* MAIN */}
       <main className='admin-main' style={{ overflowY: 'auto', background: '#ede0e2', flex: 1, minWidth: 0 }}>
 
         {/* DASHBOARD */}
@@ -550,7 +515,6 @@ export default function AdminPage() {
                       )) : <span style={{ color: '#8a7070', fontSize: '13px' }}>Ningún alumno/a</span>}
                     </div>
                   </div>
-                  {/* Detalle expandible del plan */}
                   {planExpandido === plan.id && (
                     <div style={{ borderTop: '1px solid #d5c4c8', marginTop: '14px', paddingTop: '14px' }} onClick={e => e.stopPropagation()}>
                       {((plan as any).semanas || []).map((sem: any) => (
@@ -605,7 +569,6 @@ export default function AdminPage() {
               <button className="btn-wine" style={{ fontSize: '15px', padding: '12px 24px' }} onClick={guardarPlan}>💾 Guardar plan</button>
             </div>
 
-            {/* Paso 1: Datos */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#7D0531', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DBBABF', fontWeight: '800', fontSize: '13px' }}>1</div>
               <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: '#7D0531' }}>Datos del plan</h3>
@@ -629,7 +592,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Paso 2: Semanas */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#7D0531', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DBBABF', fontWeight: '800', fontSize: '13px' }}>2</div>
               <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: '#7D0531' }}>Semanas y ejercicios</h3>
@@ -653,13 +615,11 @@ export default function AdminPage() {
                       return (
                         <button key={d} onClick={async () => {
                           if (ya) {
-                            // Si el día tiene un ID real, borrarlo de Supabase
                             if (ya.id && !ya.id.startsWith('tmp') && bp.id) {
                               await supabase.from('dias').delete().eq('id', ya.id)
                             }
                             setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.dia !== d) } : s) }))
                           } else {
-                            // Si el plan ya existe, crear el día en Supabase inmediatamente
                             if (bp.id && sem.id && !sem.id.startsWith('tmp')) {
                               const { data: newDia } = await supabase.from('dias').insert({ semana_id: sem.id, dia: d, tipo: '', orden: sem.dias.length }).select().single()
                               if (newDia) {
@@ -727,7 +687,6 @@ export default function AdminPage() {
                       + Agregar ejercicio
                     </button>
 
-                    {/* ── BOTÓN EDITAR BLOQUES ── */}
                     {bp.id && dia.id && (
                       <button
                         style={{ width: '100%', marginTop: '8px', padding: '10px', borderRadius: '10px', border: '1.5px dashed #B05276', background: 'transparent', color: '#7D0531', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
@@ -736,7 +695,6 @@ export default function AdminPage() {
                         🧱 Editar bloques de {dia.dia}
                       </button>
                     )}
-
                   </div>
                 ))}
               </div>
@@ -747,7 +705,6 @@ export default function AdminPage() {
               + Agregar semana {bp.semanas.length + 1}
             </button>
 
-            {/* Paso 3: Asignar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#7D0531', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DBBABF', fontWeight: '800', fontSize: '13px' }}>3</div>
               <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: '#7D0531' }}>Asignar alumnos/as</h3>
@@ -777,40 +734,20 @@ export default function AdminPage() {
 
       {/* MODAL EDITOR DE BLOQUES */}
       {diaEditorActivo && (
-        <div
-          onClick={() => setDiaEditorActivo(null)}
-          style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(2,6,23,0.7)', backdropFilter: 'blur(4px)' }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: '640px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', background: '#0F172A', borderRadius: '20px 20px 0 0', border: '1px solid rgba(51,65,85,0.8)', borderBottom: 'none', boxShadow: '0 -8px 48px rgba(0,0,0,0.6)' }}
-          >
-            {/* Header */}
+        <div onClick={() => setDiaEditorActivo(null)} style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(2,6,23,0.7)', backdropFilter: 'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '640px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', background: '#0F172A', borderRadius: '20px 20px 0 0', border: '1px solid rgba(51,65,85,0.8)', borderBottom: 'none', boxShadow: '0 -8px 48px rgba(0,0,0,0.6)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(51,65,85,0.5)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-                  🧱
-                </div>
+                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🧱</div>
                 <div>
                   <div style={{ color: '#F1F5F9', fontWeight: '700', fontSize: '15px', lineHeight: 1.2 }}>Bloques</div>
                   <div style={{ color: '#64748B', fontSize: '12px', marginTop: '2px' }}>{diaEditorActivo.nombre}</div>
                 </div>
               </div>
-              <button
-                onClick={() => { setDiaEditorActivo(null); if (bp?.id) cargarConteosBloques(bp.id) }}
-                style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(51,65,85,0.6)', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', color: '#64748B', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >✕</button>
+              <button onClick={() => { setDiaEditorActivo(null); if (bp?.id) cargarConteosBloques(bp.id) }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(51,65,85,0.6)', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', color: '#64748B', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-            {/* Contenido scrolleable */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 24px' }}>
-              <RoutineDayEditor
-                diaId={diaEditorActivo.id}
-                diaNombre={diaEditorActivo.nombre}
-                diaNumero={diaEditorActivo.numero}
-                onAgregarEjercicio={() => {
-                  showToast('💡 Guardá el plan primero, luego agregá ejercicios desde el bloque')
-                }}
-              />
+              <RoutineDayEditor diaId={diaEditorActivo.id} diaNombre={diaEditorActivo.nombre} diaNumero={diaEditorActivo.numero} onAgregarEjercicio={() => { showToast('💡 Guardá el plan primero, luego agregá ejercicios desde el bloque') }} />
             </div>
           </div>
         </div>
@@ -852,11 +789,10 @@ export default function AdminPage() {
             </div>
 
             <div style={{ marginBottom: '14px' }}>
-              <label className="field-label">Objetivo * <span style={{ textTransform: 'none', fontWeight: '400', letterSpacing: 0, fontSize: '11px', color: '#8a7070' }}>campo libre — la alumna/o escribe lo que realmente quiere</span></label>
+              <label className="field-label">Objetivo * <span style={{ textTransform: 'none', fontWeight: '400', letterSpacing: 0, fontSize: '11px', color: '#8a7070' }}>campo libre</span></label>
               <textarea value={newA.objetivo} onChange={e => setNewA(p => ({ ...p, objetivo: e.target.value }))}
-                placeholder="Ej: quiero bajar 5 kilos, tonificar piernas, mejorar mi resistencia..."
+                placeholder="Ej: quiero bajar 5 kilos, tonificar piernas..."
                 style={{ background: '#ede0e2', border: '2px solid #d5c4c8', borderRadius: '12px', padding: '14px', fontSize: '14px', color: '#2a1520', outline: 'none', width: '100%', fontFamily: 'inherit', resize: 'vertical', minHeight: '80px', lineHeight: '1.6' }} />
-              <div style={{ fontSize: '11px', color: '#8a7070', marginTop: '4px', fontStyle: 'italic' }}>💡 Este es el campo más importante. Armás el plan en base a esto.</div>
             </div>
 
             <div style={{ marginBottom: '14px' }}>
