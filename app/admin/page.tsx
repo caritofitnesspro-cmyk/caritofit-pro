@@ -527,13 +527,21 @@ export default function AdminPage() {
                             <div key={dia.id} style={{ background: '#ede0e2', borderRadius: '12px', padding: '12px 14px', marginBottom: '8px' }}>
                               <div style={{ fontWeight: '700', fontSize: '13px', color: '#2a1520', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span>{dia.dia} {dia.tipo && <span style={{ fontWeight: '400', color: '#8a7070' }}>— {dia.tipo}</span>}</span>
-                                {bloquesConteo[dia.id] > 0 && (
-                                  <span style={{ background: '#7D0531', color: '#DBBABF', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>
-                                    🧱 {bloquesConteo[dia.id]} bloque{bloquesConteo[dia.id] !== 1 ? 's' : ''}
-                                  </span>
-                                )}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  {bloquesConteo[dia.id] > 0 && (
+                                    <span style={{ background: '#7D0531', color: '#DBBABF', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>
+                                      🧱 {bloquesConteo[dia.id]} bloque{bloquesConteo[dia.id] !== 1 ? 's' : ''}
+                                    </span>
+                                  )}
+                                  <button
+                                    onClick={e => { e.stopPropagation(); setDiaEditorActivo({ id: dia.id, nombre: dia.tipo || dia.dia, numero: dia.orden + 1 }) }}
+                                    style={{ background: '#7D0531', color: '#DBBABF', border: 'none', borderRadius: '20px', padding: '2px 10px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
+                                  >
+                                    + Bloques
+                                  </button>
+                                </div>
                               </div>
-                              {(dia.ejercicios || []).length === 0 ? (
+                              {(dia.ejercicios || []).length === 0 && bloquesConteo[dia.id] === 0 ? (
                                 <div style={{ fontSize: '12px', color: '#8a7070', fontStyle: 'italic' }}>Sin ejercicios cargados</div>
                               ) : (dia.ejercicios || []).map((ej: any, i: number) => (
                                 <div key={ej.id} style={{ fontSize: '13px', padding: '6px 0', borderBottom: i < dia.ejercicios.length - 1 ? '1px solid rgba(0,0,0,.07)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
@@ -744,7 +752,7 @@ export default function AdminPage() {
                   <div style={{ color: '#64748B', fontSize: '12px', marginTop: '2px' }}>{diaEditorActivo.nombre}</div>
                 </div>
               </div>
-              <button onClick={() => { setDiaEditorActivo(null); if (bp?.id) cargarConteosBloques(bp.id) }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(51,65,85,0.6)', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', color: '#64748B', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <button onClick={() => { setDiaEditorActivo(null); cargarConteosBloques(planExpandido || bp?.id) }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(51,65,85,0.6)', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', color: '#64748B', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 24px' }}>
               <RoutineDayEditor diaId={diaEditorActivo.id} diaNombre={diaEditorActivo.nombre} diaNumero={diaEditorActivo.numero} onAgregarEjercicio={() => { showToast('💡 Guardá el plan primero, luego agregá ejercicios desde el bloque') }} />
