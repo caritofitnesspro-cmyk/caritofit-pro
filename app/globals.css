@@ -30,7 +30,7 @@
 
 body {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #ede0e2;
+  /* Sin background global â€” cada pÃ¡gina maneja el suyo */
   color: var(--text-dark);
   min-height: 100vh;
 }
