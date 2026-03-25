@@ -9,11 +9,12 @@ import './landing.css'
 export default function HomePage() {
   const router = useRouter()
   const supabase = createClient()
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     async function checkSession() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) { setChecking(false); return }
       const { data: perfil } = await supabase
         .from('perfiles').select('rol').eq('id', user.id).single()
       if (perfil?.rol === 'admin') router.push('/admin')
@@ -38,6 +39,8 @@ export default function HomePage() {
 
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  if (checking) return null
 
   return (
     <div className="landing-root">
@@ -252,7 +255,7 @@ export default function HomePage() {
           <div className="l-price-card pro l-reveal">
             <div className="l-pro-badge">MÁS ELEGIDO</div>
             <div className="l-price-card-label">Plan Pro</div>
-            <div className="l-price-amount"><span className="currency">$</span><span className="number">19</span><span className="period">USD / mes</span></div>
+            <div className="l-price-amount"><span className="currency">$</span><span className="number">9.990</span><span className="period">/ mes</span></div>
             <p className="l-price-desc">Para quien ya decidió que su negocio es serio.</p>
             <ul className="l-price-features">
               <li><span className="check">✓</span><span><strong>Alumnos ilimitados</strong></span></li>
