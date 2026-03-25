@@ -1,7 +1,7 @@
 // components/routines/RoutineBlockCard.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { Bloque, Ejercicio, TipoBloque, BloqueFormData } from '@/types/routines'
 import { TIPO_BLOQUE_CONFIG } from '@/types/routines'
 import { RoutineExerciseItem } from './RoutineExerciseItem'
@@ -142,6 +142,26 @@ export function RoutineBlockCard({
   const [editingNombre, setEditingNombre] = useState(false)
   const ejercicios = bloque.ejercicios ?? []
   const isCircuito = bloque.tipo === 'circuito' || bloque.tipo === 'superserie'
+
+  // Drag & drop state
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  const handleDragEnd = () => {
+    if (dragIndex !== null && dragOverIndex !== null && dragIndex !== dragOverIndex) {
+      // Reordenar: mover dragIndex a dragOverIndex
+      const steps = dragIndex < dragOverIndex ? dragOverIndex - dragIndex : dragIndex - dragOverIndex
+      const dir = dragIndex < dragOverIndex ? 'down' : 'up'
+      // Ejecutar movimientos secuenciales
+      let current = dragIndex
+      for (let i = 0; i < steps; i++) {
+        onMoveEjercicio(ejercicios[current].id, dir)
+        current = dir === 'down' ? current + 1 : current - 1
+      }
+    }
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
 
   const tipoActivo = TIPOS.find(t => t.value === bloque.tipo)
 
@@ -300,6 +320,11 @@ export function RoutineBlockCard({
                     onMoveDown={() => onMoveEjercicio(ej.id, 'down')}
                     onDelete={() => onDeleteEjercicio(ej.id)}
                     onUpdate={(data) => onUpdateEjercicio(ej.id, data)}
+                    onDragStart={(idx) => setDragIndex(idx)}
+                    onDragEnter={(idx) => setDragOverIndex(idx)}
+                    onDragEnd={handleDragEnd}
+                    isDragging={dragIndex === i}
+                    isDragOver={dragOverIndex === i}
                   />
                 ))}
               </div>
