@@ -1,13 +1,16 @@
 // @ts-nocheck
 'use client'
-// app/login/page.tsx — Premium refinement
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextUrl = searchParams.get('next')
+
   const supabase = createClient()
 
   const [mode, setMode] = useState<'alumno' | 'admin'>('alumno')
@@ -22,10 +25,15 @@ export default function LoginPage() {
   const [dniError, setDniError] = useState(false)
   const [passError, setPassError] = useState(false)
 
+  // Si viene con ?next= es flujo PRO — mostrar tab profesora por defecto
+  useEffect(() => {
+    if (nextUrl) setMode('admin')
+  }, [nextUrl])
+
   useEffect(() => {
     async function loadBrand() {
       try {
-        const { data } = await (supabase as any)
+        const { data } = await supabase
           .from('perfiles')
           .select('brand_image_url, brand_name, primary_color, secondary_color')
           .eq('rol', 'admin')
@@ -89,8 +97,14 @@ export default function LoginPage() {
         return
       }
 
-      if (perfil.rol === 'admin') router.push('/admin')
-      else router.push('/dashboard')
+      // Redirigir según ?next= o rol
+      if (nextUrl) {
+        router.push(nextUrl)
+      } else if (perfil.rol === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
 
     } catch {
       setError('Ocurrió un error. Intentá de nuevo.')
@@ -116,7 +130,6 @@ export default function LoginPage() {
           position: relative;
           overflow: hidden;
         }
-
         .l-root::before {
           content: '';
           position: fixed;
@@ -126,7 +139,6 @@ export default function LoginPage() {
           background: radial-gradient(circle, ${primaryColor}14 0%, transparent 70%);
           pointer-events: none;
         }
-
         .l-root::after {
           content: '';
           position: fixed;
@@ -136,7 +148,6 @@ export default function LoginPage() {
           background: radial-gradient(circle, ${secondaryColor}0e 0%, transparent 70%);
           pointer-events: none;
         }
-
         .l-card {
           background: #ffffff;
           border-radius: 24px;
@@ -144,20 +155,15 @@ export default function LoginPage() {
           width: 100%;
           max-width: 410px;
           border: 1px solid #E6E0DA;
-          box-shadow:
-            0 2px 4px rgba(0,0,0,.04),
-            0 8px 24px rgba(0,0,0,.06),
-            0 24px 48px rgba(0,0,0,.04);
+          box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06), 0 24px 48px rgba(0,0,0,.04);
           position: relative;
           z-index: 1;
           animation: slideUp .45s cubic-bezier(.22,.68,0,1.2) both;
         }
-
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-
         .l-card::before {
           content: '';
           position: absolute;
@@ -166,257 +172,106 @@ export default function LoginPage() {
           background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor});
           border-radius: 0 0 6px 6px;
         }
-
         @media (max-width: 480px) {
           .l-card { padding: 36px 24px 32px; border-radius: 20px; }
         }
-
-        /* ── BRAND HEADER ── */
-        .l-brand {
-          text-align: center;
-          margin-bottom: 36px;
-        }
-
+        .l-brand { text-align: center; margin-bottom: 36px; }
         .l-logo {
-          width: 76px;
-          height: 76px;
-          border-radius: 20px;
-          overflow: hidden;
-          margin: 0 auto 14px;
-          border: 1.5px solid #E6E0DA;
+          width: 76px; height: 76px; border-radius: 20px; overflow: hidden;
+          margin: 0 auto 14px; border: 1.5px solid #E6E0DA;
           box-shadow: 0 2px 8px rgba(0,0,0,.08), 0 0 0 4px ${primaryColor}10;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: ${primaryColor}12;
-          transition: box-shadow .2s;
+          display: flex; align-items: center; justify-content: center;
+          background: ${primaryColor}12; transition: box-shadow .2s;
         }
+        .l-logo:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 0 0 6px ${primaryColor}14; }
+        .l-logo img { width: 100%; height: 100%; object-fit: cover; }
+        .l-logo-emoji { font-size: 32px; line-height: 1; }
+        .l-brand-name { font-family: 'Fraunces', Georgia, serif; font-size: 24px; font-weight: 900; color: #1C1714; letter-spacing: -0.4px; margin-bottom: 5px; }
+        .l-brand-claim { font-size: 13.5px; color: #9E9188; font-weight: 400; }
 
-        .l-logo:hover {
-          box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 0 0 6px ${primaryColor}14;
-        }
-
-        .l-logo img {
-          width: 100%; height: 100%; object-fit: cover;
-        }
-
-        .l-logo-emoji {
-          font-size: 32px;
-          line-height: 1;
-        }
-
-        .l-brand-name {
-          font-family: 'Fraunces', Georgia, serif;
-          font-size: 24px;
-          font-weight: 900;
-          color: #1C1714;
-          letter-spacing: -0.4px;
-          margin-bottom: 5px;
-        }
-
-        .l-brand-claim {
-          font-size: 13.5px;
-          color: #9E9188;
-          font-weight: 400;
-          letter-spacing: 0.01em;
-        }
-
-        /* ── TOGGLE ── */
-        .l-toggle {
-          display: flex;
-          background: #F0EBE5;
-          border-radius: 14px;
-          padding: 4px;
-          gap: 4px;
-          margin-bottom: 28px;
-          border: 1px solid #E0D8D0;
-        }
-
-        .l-toggle-btn {
-          flex: 1;
-          padding: 10px 12px;
-          border: none;
+        .l-next-banner {
+          background: #EEF4FF;
+          border: 1px solid #C7D9FF;
           border-radius: 10px;
+          padding: 10px 14px;
+          margin-bottom: 20px;
+          font-size: 13px;
+          color: #3B5BDB;
+          text-align: center;
           font-weight: 500;
-          font-size: 13.5px;
-          cursor: pointer;
-          transition: all .2s cubic-bezier(.22,.68,0,1.1);
-          font-family: 'DM Sans', sans-serif;
-          letter-spacing: 0.01em;
-          outline: none;
-          -webkit-tap-highlight-color: transparent;
         }
 
+        .l-toggle {
+          display: flex; background: #F0EBE5; border-radius: 14px;
+          padding: 4px; gap: 4px; margin-bottom: 28px; border: 1px solid #E0D8D0;
+        }
+        .l-toggle-btn {
+          flex: 1; padding: 10px 12px; border: none; border-radius: 10px;
+          font-weight: 500; font-size: 13.5px; cursor: pointer;
+          transition: all .2s cubic-bezier(.22,.68,0,1.1);
+          font-family: 'DM Sans', sans-serif; outline: none;
+        }
         .l-toggle-btn.active {
-          background: ${primaryColor};
-          color: ${ctaTextColor};
-          box-shadow:
-            0 1px 3px rgba(0,0,0,.15),
-            0 4px 12px ${primaryColor}45;
+          background: ${primaryColor}; color: ${ctaTextColor};
+          box-shadow: 0 1px 3px rgba(0,0,0,.15), 0 4px 12px ${primaryColor}45;
           transform: translateY(-0.5px);
         }
+        .l-toggle-btn.inactive { background: transparent; color: #7A7068; }
+        .l-toggle-btn.inactive:hover { background: #E8E2DA; color: #3C3430; }
 
-        .l-toggle-btn.inactive {
-          background: transparent;
-          color: #7A7068;
-        }
-
-        .l-toggle-btn.inactive:hover {
-          background: #E8E2DA;
-          color: #3C3430;
-        }
-
-        /* ── INPUTS ── */
         .l-field { margin-bottom: 16px; }
-
-        .l-label {
-          display: block;
-          font-size: 11.5px;
-          font-weight: 600;
-          color: #6B6259;
-          text-transform: uppercase;
-          letter-spacing: .07em;
-          margin-bottom: 7px;
-        }
-
+        .l-label { display: block; font-size: 11.5px; font-weight: 600; color: #6B6259; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; }
         .l-input {
-          width: 100%;
-          background: #FFFFFF;
-          border: 1.5px solid #D8D0C8;
-          border-radius: 12px;
-          padding: 13px 16px;
-          font-size: 15px;
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 400;
-          color: #1C1714;
-          outline: none;
-          transition: border-color .15s ease, box-shadow .15s ease;
-          -webkit-appearance: none;
+          width: 100%; background: #FFFFFF; border: 1.5px solid #D8D0C8;
+          border-radius: 12px; padding: 13px 16px; font-size: 15px;
+          font-family: 'DM Sans', sans-serif; color: #1C1714; outline: none;
+          transition: border-color .15s, box-shadow .15s; -webkit-appearance: none;
         }
+        .l-input::placeholder { color: #BDB5AD; font-weight: 300; }
+        .l-input:focus { border-color: ${primaryColor}; box-shadow: 0 0 0 3.5px ${primaryColor}1C; }
+        .l-input.has-error { border-color: #E53E3E; box-shadow: 0 0 0 3px rgba(229,62,62,.12); }
 
-        .l-input::placeholder {
-          color: #BDB5AD;
-          font-weight: 300;
-        }
-
-        .l-input:focus {
-          border-color: ${primaryColor};
-          box-shadow: 0 0 0 3.5px ${primaryColor}1C;
-        }
-
-        .l-input.has-error {
-          border-color: #E53E3E;
-          box-shadow: 0 0 0 3px rgba(229,62,62,.12);
-        }
-
-        .l-input.has-error:focus {
-          border-color: #E53E3E;
-          box-shadow: 0 0 0 3.5px rgba(229,62,62,.15);
-        }
-
-        /* ── ERROR ── */
         .l-error {
-          background: #FFF5F5;
-          border: 1px solid #FED7D7;
-          border-radius: 10px;
-          padding: 11px 14px;
-          margin-bottom: 16px;
-          color: #C53030;
-          font-size: 13.5px;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 8px;
+          background: #FFF5F5; border: 1px solid #FED7D7; border-radius: 10px;
+          padding: 11px 14px; margin-bottom: 16px; color: #C53030; font-size: 13.5px;
+          font-weight: 500; display: flex; align-items: center; gap: 8px;
           animation: shake .35s ease;
         }
-
         @keyframes shake {
           0%,100% { transform: translateX(0); }
-          25%      { transform: translateX(-4px); }
-          75%      { transform: translateX(4px); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
         }
 
-        /* ── CTA ── */
         .l-cta {
-          width: 100%;
-          background: ${primaryColor};
-          color: ${ctaTextColor};
-          border: none;
-          border-radius: 13px;
-          padding: 15px;
-          font-size: 15px;
-          font-weight: 600;
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
+          width: 100%; background: ${primaryColor}; color: ${ctaTextColor};
+          border: none; border-radius: 13px; padding: 15px; font-size: 15px;
+          font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer;
           transition: opacity .15s, transform .12s, box-shadow .15s;
-          letter-spacing: 0.02em;
-          margin-top: 4px;
-          box-shadow: 0 2px 8px ${primaryColor}35;
-          -webkit-tap-highlight-color: transparent;
+          margin-top: 4px; box-shadow: 0 2px 8px ${primaryColor}35;
         }
-
-        .l-cta:hover:not(:disabled) {
-          opacity: .92;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 16px ${primaryColor}45;
-        }
-
-        .l-cta:active:not(:disabled) {
-          transform: translateY(0);
-          box-shadow: 0 2px 8px ${primaryColor}30;
-        }
-
-        .l-cta:disabled {
-          opacity: .62;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        /* Loading spinner */
-        .l-cta.loading {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
+        .l-cta:hover:not(:disabled) { opacity: .92; transform: translateY(-1px); box-shadow: 0 4px 16px ${primaryColor}45; }
+        .l-cta:disabled { opacity: .62; cursor: not-allowed; }
+        .l-cta.loading { display: flex; align-items: center; justify-content: center; gap: 10px; }
         .l-spinner {
           width: 16px; height: 16px;
-          border: 2.5px solid ${ctaTextColor}40;
-          border-top-color: ${ctaTextColor};
-          border-radius: 50%;
-          animation: spin .7s linear infinite;
-          flex-shrink: 0;
+          border: 2.5px solid ${ctaTextColor}40; border-top-color: ${ctaTextColor};
+          border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── LINK ── */
-        .l-register {
-          text-align: center;
-          margin-top: 20px;
-        }
-
+        .l-register { text-align: center; margin-top: 20px; }
         .l-register a {
-          color: ${primaryColor};
-          font-size: 13.5px;
-          font-weight: 500;
-          text-decoration: none;
-          border-bottom: 1px solid ${primaryColor}30;
-          padding-bottom: 1px;
-          transition: border-color .15s, opacity .15s;
+          color: ${primaryColor}; font-size: 13.5px; font-weight: 500;
+          text-decoration: none; border-bottom: 1px solid ${primaryColor}30;
+          padding-bottom: 1px; transition: border-color .15s, opacity .15s;
         }
-
-        .l-register a:hover {
-          border-color: ${primaryColor};
-          opacity: .85;
-        }
+        .l-register a:hover { border-color: ${primaryColor}; opacity: .85; }
       `}</style>
 
       <div className="l-root">
         <div className="l-card">
 
-          {/* Brand */}
           <div className="l-brand">
             <div className="l-logo">
               {brandImageUrl
@@ -428,7 +283,13 @@ export default function LoginPage() {
             <div className="l-brand-claim">Tu entrenamiento personalizado</div>
           </div>
 
-          {/* Toggle */}
+          {/* Banner cuando viene del flujo PRO */}
+          {nextUrl && (
+            <div className="l-next-banner">
+              🎉 Ingresá para activar tu plan PRO
+            </div>
+          )}
+
           <div className="l-toggle">
             {(['alumno', 'admin'] as const).map(m => (
               <button
@@ -441,14 +302,13 @@ export default function LoginPage() {
             ))}
           </div>
 
-          {/* Inputs */}
           <div className="l-field">
             <label className="l-label">DNI</label>
             <input
               className={`l-input${dniError ? ' has-error' : ''}`}
               type="text"
               placeholder="Sin puntos ni guiones"
-              maxLength={8}
+              maxLength={mode === 'admin' ? 12 : 8}
               value={dni}
               onChange={e => { setDni(e.target.value.replace(/\D/g, '')); setDniError(false); setError('') }}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
@@ -490,8 +350,26 @@ export default function LoginPage() {
             </div>
           )}
 
+          {mode === 'admin' && (
+            <div className="l-register">
+              <Link href="/register/admin">¿No tenés cuenta? Registrate →</Link>
+            </div>
+          )}
+
         </div>
       </div>
     </>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#F5F2EE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid #E0D8D0', borderTopColor: '#7D0531', borderRadius: '50%' }} />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
