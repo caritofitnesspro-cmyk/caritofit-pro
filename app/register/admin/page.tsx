@@ -9,29 +9,52 @@ function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planParam = searchParams.get('plan')
+  const isPro = planParam === 'pro'
   const supabase = createClient()
 
   const [form, setForm] = useState({ nombre: '', apellido: '', email: '', password: '', codigo: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [descuento, setDescuento] = useState<number | null>(null)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
+  async function validarCodigo(codigo: string) {
+    if (!codigo || codigo.length < 3) { setDescuento(null); return }
+    const { data } = await supabase
+      .from('codigos_invitacion')
+      .select('descuento_porcentaje, usado, tipo')
+      .eq('codigo', codigo.toUpperCase())
+      .eq('tipo', 'descuento')
+      .maybeSingle()
+    if (data && !data.usado && data.descuento_porcentaje) {
+      setDescuento(data.descuento_porcentaje)
+    } else {
+      setDescuento(null)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-    try {
-      const { data: codigo, error: codigoError } = await supabase
-        .from('codigos_invitacion')
-        .select('id, usado')
-        .eq('codigo', form.codigo.toUpperCase())
-        .maybeSingle()
 
-      if (codigoError) throw new Error('Error al verificar el código')
-      if (!codigo) throw new Error('Código de invitación inválido')
-      if (codigo.usado) throw new Error('Este código ya fue utilizado')
+    try {
+      let codigoId = null
+
+      if (isPro && form.codigo) {
+        const { data: codigoData } = await supabase
+          .from('codigos_invitacion')
+          .select('id, usado, descuento_porcentaje, tipo')
+          .eq('codigo', form.codigo.toUpperCase())
+          .eq('tipo', 'descuento')
+          .maybeSingle()
+
+        if (!codigoData) throw new Error('Código de descuento inválido')
+        if (codigoData.usado) throw new Error('Este código ya fue utilizado')
+        codigoId = codigoData.id
+      }
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
@@ -57,14 +80,21 @@ function RegisterForm() {
 
       if (profileError) throw new Error('Error al guardar el perfil')
 
-      await supabase
-        .from('codigos_invitacion')
-        .update({ usado: true, usado_por: authData.user.id })
-        .eq('id', codigo.id)
+      if (codigoId) {
+        await supabase
+          .from('codigos_invitacion')
+          .update({ usado: true, usado_por: authData.user.id })
+          .eq('id', codigoId)
+      }
 
       setSuccess(true)
       setTimeout(() => {
-        router.push(planParam === 'pro' ? '/login?next=/admin/upgrade' : '/login')
+        if (isPro) {
+          const params = descuento ? `?descuento=${descuento}` : ''
+          router.push(`/login?next=/admin/upgrade${params}`)
+        } else {
+          router.push('/login')
+        }
       }, 2500)
 
     } catch (err) {
@@ -73,8 +103,6 @@ function RegisterForm() {
       setLoading(false)
     }
   }
-
-  const isPro = planParam === 'pro'
 
   if (success) {
     return (
@@ -88,9 +116,12 @@ function RegisterForm() {
     )
   }
 
+  const precioBase = 19
+  const precioFinal = descuento ? (precioBase * (1 - descuento / 100)).toFixed(0) : precioBase
+
   return (
     <div style={styles.root}>
-      <div style={{ ...styles.card, borderTop: `3px solid ${isPro ? '#5B8CFF' : '#5B8CFF'}` }}>
+      <div style={styles.card}>
 
         <div style={styles.brand}>
           <div style={styles.logo}>
@@ -99,11 +130,9 @@ function RegisterForm() {
               <text x="16" y="22" textAnchor="middle" fontFamily="Georgia,serif" fontSize="20" fontWeight="700" fill="#000000">P</text>
             </svg>
           </div>
-          {isPro && (
-            <div style={styles.proBadge}>Plan PRO</div>
-          )}
+          {isPro && <div style={styles.proBadge}>Plan PRO</div>}
           <div style={styles.title}>{isPro ? 'Crear cuenta PRO' : 'Registro de profesora'}</div>
-          <div style={styles.sub}>{isPro ? 'Después del registro activamos tu suscripción' : 'Usá tu código de invitación'}</div>
+          <div style={styles.sub}>{isPro ? 'Empezá a profesionalizar tu negocio' : 'Gratis para siempre, hasta 3 alumnos'}</div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -129,29 +158,56 @@ function RegisterForm() {
             <input style={styles.input} name="password" type="password" placeholder="Mínimo 6 caracteres" value={form.password} onChange={handleChange} required minLength={6} />
           </div>
 
-          <hr style={{ border: 'none', borderTop: '1px dashed #E0D8D0', margin: '4px 0' }} />
-
-          <div>
-            <label style={styles.label}>Código de invitación</label>
-            <input
-              style={{ ...styles.input, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}
-              name="codigo"
-              placeholder="Ej: PULSE2026"
-              value={form.codigo}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {error && (
-            <div style={styles.error}>⚠️ {error}</div>
+          {isPro && (
+            <>
+              <hr style={{ border: 'none', borderTop: '1px dashed #E0D8D0', margin: '4px 0' }} />
+              <div>
+                <label style={styles.label}>
+                  Código de descuento{' '}
+                  <span style={{ textTransform: 'none', fontWeight: 400, fontSize: 11, color: '#9E9188' }}>(opcional)</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    style={{ ...styles.input, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500, paddingRight: descuento ? 120 : 16 }}
+                    name="codigo"
+                    placeholder="Ej: PROMO20"
+                    value={form.codigo}
+                    onChange={e => { handleChange(e); validarCodigo(e.target.value) }}
+                  />
+                  {descuento && (
+                    <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: '#dcfce7', color: '#15803d', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>
+                      {descuento}% OFF ✓
+                    </div>
+                  )}
+                </div>
+                {descuento && (
+                  <div style={{ marginTop: 10, background: '#EEF4FF', border: '1px solid #C7D9FF', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 13, color: '#3B5BDB' }}>Precio con descuento</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                      <span style={{ fontSize: 13, color: '#9E9188', textDecoration: 'line-through' }}>${precioBase} USD</span>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: '#3B5BDB' }}>${precioFinal} USD</span>
+                      <span style={{ fontSize: 11, color: '#9E9188' }}>/mes</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
+          {error && <div style={styles.error}>⚠️ {error}</div>}
+
           <button type="submit" disabled={loading} style={{ ...styles.cta, opacity: loading ? 0.7 : 1 }}>
-            {loading ? 'Creando cuenta...' : isPro ? 'Crear cuenta y activar PRO →' : 'Crear cuenta →'}
+            {loading ? 'Creando cuenta...' : isPro ? 'Crear cuenta y activar PRO →' : 'Crear cuenta gratis →'}
           </button>
 
         </form>
+
+        {!isPro && (
+          <div style={{ marginTop: 16, background: '#F5F2EE', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#9E9188', textAlign: 'center' }}>
+            Plan FREE incluye hasta 3 alumnos ·{' '}
+            <a href="/register/admin?plan=pro" style={{ color: '#5B8CFF', textDecoration: 'none', fontWeight: 500 }}>Ver plan PRO →</a>
+          </div>
+        )}
 
         <div style={styles.back}>
           ¿Ya tenés cuenta? <a href="/login" style={{ color: '#5B8CFF', fontWeight: 500, textDecoration: 'none' }}>Iniciá sesión</a>
@@ -163,25 +219,8 @@ function RegisterForm() {
 }
 
 const styles = {
-  root: {
-    minHeight: '100vh',
-    background: '#F5F2EE',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '24px 16px',
-    fontFamily: "'DM Sans', sans-serif",
-  },
-  card: {
-    background: '#ffffff',
-    borderRadius: 24,
-    padding: '48px 40px 40px',
-    width: '100%',
-    maxWidth: 420,
-    border: '1px solid #E6E0DA',
-    boxShadow: '0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06)',
-    position: 'relative' as const,
-  },
+  root: { minHeight: '100vh', background: '#F5F2EE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', fontFamily: "'DM Sans', sans-serif" },
+  card: { background: '#ffffff', borderRadius: 24, padding: '48px 40px 40px', width: '100%', maxWidth: 420, border: '1px solid #E6E0DA', boxShadow: '0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06)', position: 'relative' as const },
   brand: { textAlign: 'center' as const, marginBottom: 28 },
   logo: { width: 56, height: 56, borderRadius: 16, background: '#5B8CFF18', border: '1.5px solid #E6E0DA', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' },
   proBadge: { display: 'inline-block', background: '#5B8CFF', color: 'white', fontSize: 11, fontWeight: 600, padding: '3px 12px', borderRadius: 20, letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' as const },
@@ -198,7 +237,7 @@ export default function RegisterAdminPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', background: '#F5F2EE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '3px solid #E0D8D0', borderTopColor: '#5B8CFF', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+        <div style={{ width: 32, height: 32, border: '3px solid #E0D8D0', borderTopColor: '#5B8CFF', borderRadius: '50%' }} />
       </div>
     }>
       <RegisterForm />
