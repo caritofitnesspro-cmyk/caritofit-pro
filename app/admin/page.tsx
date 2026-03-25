@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 // app/admin/page.tsx — Panel de la profesora
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Perfil, Plan, Asignacion } from '@/types/database'
@@ -36,9 +36,41 @@ export default function AdminPage() {
   const [diaEditorActivo, setDiaEditorActivo] = useState<{id: string, nombre: string, numero: number} | null>(null)
   const [bloquesConteo, setBloquesConteo] = useState<Record<string, number>>({})
 
+  // Autosave
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const autosaveTimer = useRef<any>(null)
+
   useEffect(() => { loadData() }, [])
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  // ── AUTOSAVE ──
+  const autosavePlan = useCallback(async (planData: any) => {
+    if (!planData.nombre || planData.nombre.trim().length < 2) return
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current)
+    autosaveTimer.current = setTimeout(async () => {
+      setSaveStatus("saving")
+      try {
+        if (planData.id) {
+          await supabase.from("planes").update({ nombre: planData.nombre, objetivo: planData.objetivo }).eq("id", planData.id)
+        } else {
+          const { data: newPlan } = await supabase.from("planes").insert({ nombre: planData.nombre, objetivo: planData.objetivo, admin_id: admin!.id }).select().single()
+          if (newPlan) {
+            const semanaPromises = planData.semanas.map(async (sem: any) => {
+              const { data: semData } = await supabase.from("semanas").insert({ plan_id: newPlan.id, numero: sem.numero }).select().single()
+              return { ...sem, id: semData!.id }
+            })
+            const semsConId = await Promise.all(semanaPromises)
+            setBp((prev: any) => ({ ...prev, id: newPlan.id, semanas: semsConId }))
+          }
+        }
+        setSaveStatus("saved")
+        setTimeout(() => setSaveStatus("idle"), 2000)
+      } catch (e) {
+        setSaveStatus("idle")
+      }
+    }, 1000)
+  }, [admin, supabase])
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -566,7 +598,14 @@ export default function AdminPage() {
                 <button className="btn-ghost" style={{ marginBottom: '12px', fontSize: '13px' }} onClick={() => { setBp(null); setTab('planes') }}>← Volver</button>
                 <div className="page-title">{bp.id ? 'Editar plan' : 'Nuevo plan'}</div>
               </div>
-              <button className="btn-wine" style={{ fontSize: '15px', padding: '12px 24px' }} onClick={guardarPlan}>💾 Guardar plan</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {saveStatus !== 'idle' && (
+                  <span style={{ fontSize: '12px', color: saveStatus === 'saving' ? '#8a7070' : '#2d7a4f', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {saveStatus === 'saving' ? '⏳ Guardando...' : '✓ Guardado'}
+                  </span>
+                )}
+                <button className="btn-wine" style={{ fontSize: '15px', padding: '12px 24px' }} onClick={guardarPlan}>💾 Guardar</button>
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -577,12 +616,20 @@ export default function AdminPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label className="field-label">Nombre del plan *</label>
-                  <input className="input-field" type="text" placeholder="Ej: Plan Fuerza 8 semanas" value={bp.nombre} onChange={e => setBp((p: any) => ({ ...p, nombre: e.target.value }))} />
+                  <input className="input-field" type="text" placeholder="Ej: Plan Fuerza 8 semanas" value={bp.nombre} onChange={e => {
+                    const newBp = { ...bp, nombre: e.target.value }
+                    setBp(newBp)
+                    autosavePlan(newBp)
+                  }} />
                 </div>
                 <div>
                   <label className="field-label">Objetivo</label>
                   <select className="input-field" value={['Bajar de peso','Ganar masa muscular','Salud general','Rendimiento deportivo','Rehabilitación','Flexibilidad'].includes(bp.objetivo) ? bp.objetivo : 'Otro'}
-                    onChange={e => setBp((p: any) => ({ ...p, objetivo: e.target.value === 'Otro' ? '' : e.target.value }))}>
+                    onChange={e => {
+                      const newBp = { ...bp, objetivo: e.target.value === 'Otro' ? '' : e.target.value }
+                      setBp(newBp)
+                      autosavePlan(newBp)
+                    }}>
                     {['Bajar de peso','Ganar masa muscular','Salud general','Rendimiento deportivo','Rehabilitación','Flexibilidad','Otro'].map(o => <option key={o}>{o}</option>)}
                   </select>
                   {!['Bajar de peso','Ganar masa muscular','Salud general','Rendimiento deportivo','Rehabilitación','Flexibilidad'].includes(bp.objetivo) && (
@@ -652,34 +699,49 @@ export default function AdminPage() {
                         onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, tipo: e.target.value } : x) } : s) }))} />
                     </div>
 
-                    {/* Resumen de ejercicios cargados via bloques */}
-                    {bloquesConteo[dia.id] > 0 ? (
-                      <div style={{ background: 'rgba(125,5,49,.06)', border: '1px solid #d5c4c8', borderRadius: '10px', padding: '10px 14px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '13px', color: '#7D0531', fontWeight: '600' }}>
-                          🧱 {bloquesConteo[dia.id]} bloque{bloquesConteo[dia.id] !== 1 ? 's' : ''} cargado{bloquesConteo[dia.id] !== 1 ? 's' : ''}
-                        </span>
-                        <span style={{ fontSize: '11px', color: '#8a7070' }}>Tocá para editar →</span>
-                      </div>
-                    ) : (
-                      <div style={{ background: '#f5f2ee', border: '1px dashed #d5c4c8', borderRadius: '10px', padding: '10px 14px', marginBottom: '10px', textAlign: 'center' }}>
-                        <span style={{ fontSize: '12px', color: '#8a7070' }}>Sin ejercicios. Usá el botón de abajo para agregar bloques.</span>
+                    {dia.ejercicios.length > 0 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 55px 65px 70px 70px 55px 55px 32px', gap: '6px', marginBottom: '6px' }}>
+                        {['Ejercicio', 'Series', 'Reps', 'Carga', 'Descanso', 'RPE', 'RIR', ''].map(l => (
+                          <span key={l} style={{ fontSize: '10px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.05em', textAlign: l !== 'Ejercicio' ? 'center' : 'left' }}>{l}</span>
+                        ))}
                       </div>
                     )}
 
-                    <button
-                      style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: '#7D0531', color: '#DBBABF', fontSize: '14px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'opacity .15s' }}
-                      onClick={async () => {
-                        // Si el plan y el día ya existen en DB, abrir editor directo
-                        if (bp.id && dia.id && !dia.id.startsWith('tmp')) {
-                          await cargarConteosBloques(bp.id)
-                          setDiaEditorActivo({ id: dia.id, nombre: dia.tipo || dia.dia, numero: dia.orden + 1 })
-                        } else {
-                          showToast('💡 Guardá el plan primero para agregar bloques')
-                        }
-                      }}
-                    >
-                      🧱 {bloquesConteo[dia.id] > 0 ? `Editar bloques de ${dia.dia}` : `Agregar bloques a ${dia.dia}`}
+                    {dia.ejercicios.map((ej: any, ei: number) => (
+                      <div key={ej.id}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 55px 65px 70px 70px 55px 55px 32px', gap: '6px', marginBottom: '6px' }}>
+                          {[
+                            { k: 'nombre', ph: 'Nombre del ejercicio' },
+                            { k: 'series', ph: '3', type: 'number' },
+                            { k: 'repeticiones', ph: '12' },
+                            { k: 'carga', ph: 'kg/PC' },
+                            { k: 'descanso', ph: '60s' },
+                            { k: 'rpe', ph: '1-10' },
+                            { k: 'rir', ph: '0-5' },
+                          ].map(({ k, ph, type }) => (
+                            <input key={k} type={type || 'text'} placeholder={ph} value={(ej as any)[k] || ''} style={{ background: '#fff', border: '1.5px solid #d5c4c8', borderRadius: '9px', padding: '8px 6px', fontSize: '13px', color: '#2a1520', outline: 'none', width: '100%', fontFamily: 'inherit', textAlign: k !== 'nombre' ? 'center' : 'left' }}
+                              onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: k === 'series' ? parseInt(e.target.value) || 1 : e.target.value } : ex) } : x) } : s) }))} />
+                          ))}
+                          <button className="btn-danger" style={{ padding: '8px', fontSize: '12px', borderRadius: '9px' }} onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.filter((ex: any) => ex.id !== ej.id) } : x) } : s) }))}>✕</button>
+                        </div>
+                        <input type="text" placeholder="Observaciones (opcional)" value={ej.observaciones} style={{ background: '#fff', border: '1.5px solid #d5c4c8', borderRadius: '9px', padding: '7px 11px', fontSize: '12px', color: '#8a7070', outline: 'none', width: '100%', fontFamily: 'inherit', marginBottom: '8px' }}
+                          onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, observaciones: e.target.value } : ex) } : x) } : s) }))} />
+                      </div>
+                    ))}
+
+                    <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: '13px', marginTop: '4px' }}
+                      onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: [...x.ejercicios, { id: uid(), nombre: '', series: 3, repeticiones: '12', carga: '', descanso: '60 seg', rpe: '', rir: '', observaciones: '' }] } : x) } : s) }))}>
+                      + Agregar ejercicio
                     </button>
+
+                    {bp.id && dia.id && (
+                      <button
+                        style={{ width: '100%', marginTop: '8px', padding: '10px', borderRadius: '10px', border: '1.5px dashed #B05276', background: 'transparent', color: '#7D0531', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        onClick={() => setDiaEditorActivo({ id: dia.id, nombre: dia.tipo || dia.dia, numero: dia.orden + 1 })}
+                      >
+                        🧱 Editar bloques de {dia.dia}
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
