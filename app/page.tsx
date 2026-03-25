@@ -47,7 +47,14 @@ export default function HomePage() {
 
       <nav id="l-navbar" className="l-nav">
         <div className="l-nav-logo">PULSE<span>.</span></div>
-        <a href="/register/admin" className="l-nav-cta">Empezar gratis</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <a href="/login" style={{ color: 'var(--muted)', fontSize: '14px', textDecoration: 'none', fontWeight: '500', transition: 'color 0.2s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--white)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}>
+            Iniciar sesión
+          </a>
+          <a href="/register/admin" className="l-nav-cta">Empezar gratis</a>
+        </div>
       </nav>
 
       <section className="l-hero">
