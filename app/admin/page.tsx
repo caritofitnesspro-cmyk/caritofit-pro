@@ -262,9 +262,9 @@ export default function AdminPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-      <div style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: '#7D0531', padding: '14px 20px', alignItems: 'center', justifyContent: 'space-between', id: 'mobile-topbar' }} className="mobile-topbar">
-        <div style={{ fontFamily: 'Georgia,serif', fontSize: '18px', fontWeight: '900', color: '#DBBABF' }}>{brand.brandName}</div>
-        <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: '#DBBABF', fontSize: '24px', cursor: 'pointer', padding: '4px' }}>☰</button>
+      <div style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: '#ffffff', borderBottom: '1px solid #f3f4f6', padding: '12px 20px', alignItems: 'center', justifyContent: 'space-between' }} className="mobile-topbar">
+        <div style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>{brand.brandName}</div>
+        <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '22px', cursor: 'pointer', padding: '4px' }}>☰</button>
       </div>
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 299 }} />}
       {toast && <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#7D0531', color: '#DBBABF', padding: '12px 22px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', zIndex: 600, whiteSpace: 'nowrap' }}>{toast}</div>}
@@ -284,52 +284,71 @@ export default function AdminPage() {
         }
       `}</style>
 
-      <aside className={sidebarOpen ? 'admin-sidebar open' : 'admin-sidebar'} style={{ background: '#7D0531', color: '#DBBABF', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', width: '260px', flexShrink: 0 }}>
+      <aside className={sidebarOpen ? 'admin-sidebar open' : 'admin-sidebar'} style={{ background: '#ffffff', borderRight: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', width: '240px', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 16px 0' }}>
-          <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(219,186,191,.5)', fontSize: '20px', cursor: 'pointer', display: 'none' }} className="close-sidebar">✕</button>
+          <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: '20px', cursor: 'pointer', display: 'none' }} className="close-sidebar">✕</button>
         </div>
-        <div style={{ padding: '32px 28px 24px', borderBottom: '1px solid rgba(219,186,191,.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-            <div style={{ width: '40px', height: '40px', background: brand.secondaryColor, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', overflow: 'hidden', flexShrink: 0 }}>
+
+        {/* Brand */}
+        <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, border: '1px solid #f3f4f6', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
               {brand.brandImageUrl
                 ? <img src={brand.brandImageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <span>🏋️</span>
               }
             </div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: '900', lineHeight: '1.1' }}>{brand.brandName}</div>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827', lineHeight: '1.2' }}>{brand.brandName}</div>
+              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '1px' }}>Panel de entrenamiento</div>
+            </div>
           </div>
-          <div style={{ fontSize: '11px', color: 'rgba(219,186,191,.5)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: '4px' }}>Panel de entrenamiento</div>
         </div>
 
-        <div style={{ padding: '20px 16px 8px' }}>
-          <div style={{ fontSize: '10px', fontWeight: '600', color: 'rgba(219,186,191,.4)', textTransform: 'uppercase', letterSpacing: '.1em', padding: '0 12px', marginBottom: '8px' }}>Gestión</div>
+        {/* Nav */}
+        <div style={{ padding: '12px 12px 8px', flex: 1 }}>
+          <div style={{ fontSize: '10px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.08em', padding: '0 8px', marginBottom: '4px' }}>Gestión</div>
           {[
-            { key: 'dashboard', icon: '🏠', label: 'Dashboard' },
-            { key: 'alumnos',   icon: '👥', label: 'Alumnos/as' },
-            { key: 'planes',    icon: '📋', label: 'Planes' },
-            { key: 'branding',  icon: '🎨', label: 'Mi marca' },
+            { key: 'dashboard', icon: '▦', label: 'Dashboard' },
+            { key: 'alumnos',   icon: '◉', label: 'Alumnos/as' },
+            { key: 'planes',    icon: '☰', label: 'Planes' },
+            { key: 'branding',  icon: '◈', label: 'Mi marca' },
           ].map(({ key, icon, label }) => (
-            <button key={key} onClick={() => { if (key === 'branding') { router.push('/admin/branding'); return } setTab(key as Tab); setSidebarOpen(false) }}
-              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 14px', borderRadius: '12px', cursor: 'pointer', transition: '.2s', fontSize: '14px', fontWeight: '500', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit',
-                background: tab === key ? '#9a0840' : 'transparent',
-                color: tab === key ? '#DBBABF' : 'rgba(219,186,191,.7)',
-                boxShadow: tab === key ? '0 4px 12px rgba(77,0,17,.4)' : 'none',
-              }}>
-              <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>{icon}</span>{label}
+            <button key={key}
+              onClick={() => { if (key === 'branding') { router.push('/admin/branding'); return } setTab(key as Tab); setSidebarOpen(false) }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '9px 12px', borderRadius: '9px', cursor: 'pointer',
+                transition: 'all .15s', fontSize: '14px', fontWeight: tab === key ? '600' : '500',
+                border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit',
+                marginBottom: '2px',
+                background: tab === key ? '#fdf2f5' : 'transparent',
+                color: tab === key ? '#7D0531' : '#6b7280',
+              }}
+              onMouseEnter={e => { if (tab !== key) e.currentTarget.style.background = '#f9fafb' }}
+              onMouseLeave={e => { if (tab !== key) e.currentTarget.style.background = 'transparent' }}
+            >
+              <span style={{ fontSize: '14px', width: '18px', textAlign: 'center', opacity: tab === key ? 1 : 0.6 }}>{icon}</span>
+              {label}
+              {tab === key && <span style={{ marginLeft: 'auto', width: '4px', height: '4px', borderRadius: '50%', background: '#7D0531', flexShrink: 0 }} />}
             </button>
           ))}
         </div>
 
-        <div style={{ marginTop: 'auto', padding: '20px 16px', borderTop: '1px solid rgba(219,186,191,.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(219,186,191,.06)', borderRadius: '12px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#B05276', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px', flexShrink: 0 }}>
+        {/* User */}
+        <div style={{ padding: '16px 12px', borderTop: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '10px', background: '#f9fafb' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#7D0531', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#fff', flexShrink: 0 }}>
               {`${admin?.nombre?.[0] || ''}${admin?.apellido?.[0] || ''}`.toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#DBBABF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{admin?.nombre} {admin?.apellido}</div>
-              <div style={{ fontSize: '11px', color: 'rgba(219,186,191,.5)' }}>Profesora</div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{admin?.nombre} {admin?.apellido}</div>
+              <div style={{ fontSize: '11px', color: '#9ca3af' }}>Profesora</div>
             </div>
-            <button onClick={logout} style={{ background: 'none', border: 'none', color: 'rgba(219,186,191,.4)', cursor: 'pointer', fontSize: '16px', padding: '4px', borderRadius: '6px' }} title="Cerrar sesión">⏏</button>
+            <button onClick={logout} style={{ background: 'none', border: 'none', color: '#d1d5db', cursor: 'pointer', fontSize: '15px', padding: '4px', borderRadius: '6px', flexShrink: 0 }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#7D0531')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}
+              title="Cerrar sesión">⏏</button>
           </div>
         </div>
       </aside>
