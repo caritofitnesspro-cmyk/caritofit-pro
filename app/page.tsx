@@ -252,7 +252,7 @@ export default function HomePage() {
           <div className="l-price-card pro l-reveal">
             <div className="l-pro-badge">MÁS ELEGIDO</div>
             <div className="l-price-card-label">Plan Pro</div>
-            <div className="l-price-amount"><span className="currency">$</span><span className="number">9.990</span><span className="period">/ mes</span></div>
+            <div className="l-price-amount"><span className="currency">$</span><span className="number">19</span><span className="period">USD / mes</span></div>
             <p className="l-price-desc">Para quien ya decidió que su negocio es serio.</p>
             <ul className="l-price-features">
               <li><span className="check">✓</span><span><strong>Alumnos ilimitados</strong></span></li>
