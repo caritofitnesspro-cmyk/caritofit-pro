@@ -12,7 +12,7 @@ function RegisterForm() {
   const isPro = planParam === 'pro'
   const supabase = createClient()
 
-  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', password: '', codigo: '' })
+  const [form, setForm] = useState({ nombre: '', apellido: '', dni: '', email: '', password: '', codigo: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -41,8 +41,20 @@ function RegisterForm() {
     setError('')
 
     try {
-      let codigoId = null
+      if (!form.dni || !/^\d{7,12}$/.test(form.dni)) {
+        throw new Error('DNI inválido — solo números, sin puntos')
+      }
 
+      // Verificar que el DNI no esté en uso
+      const { data: dniExiste } = await supabase
+        .from('perfiles')
+        .select('id')
+        .eq('dni', form.dni)
+        .maybeSingle()
+
+      if (dniExiste) throw new Error('Ya existe una cuenta con ese DNI')
+
+      let codigoId = null
       if (isPro && form.codigo) {
         const { data: codigoData } = await supabase
           .from('codigos_invitacion')
@@ -71,6 +83,7 @@ function RegisterForm() {
           id: authData.user.id,
           nombre: form.nombre,
           apellido: form.apellido,
+          dni: form.dni,
           email: form.email,
           rol: 'admin',
           plan: 'free',
@@ -146,6 +159,19 @@ function RegisterForm() {
               <label style={styles.label}>Apellido</label>
               <input style={styles.input} name="apellido" placeholder="García" value={form.apellido} onChange={handleChange} required />
             </div>
+          </div>
+
+          <div>
+            <label style={styles.label}>DNI</label>
+            <input
+              style={styles.input}
+              name="dni"
+              placeholder="Sin puntos ni guiones"
+              value={form.dni}
+              onChange={e => setForm({ ...form, dni: e.target.value.replace(/\D/g, '') })}
+              required
+              maxLength={12}
+            />
           </div>
 
           <div>
