@@ -727,6 +727,7 @@ export default function DashboardPage() {
             { key: 'inicio', icon: '⊞', label: 'Inicio' },
             { key: 'plan',   icon: '▤',  label: 'Mi Plan' },
             { key: 'progreso', icon: '↑', label: 'Progreso' },
+            { key: 'ayuda',  icon: '?',   label: 'Ayuda' },
             { key: 'perfil', icon: '◉',  label: 'Perfil' },
           ].map(({ key, icon, label }) => (
             <button key={key} onClick={() => { setTab(key as any); if (key === 'plan') setDiaActivo(null) }}
