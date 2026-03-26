@@ -37,6 +37,8 @@ export default function DashboardPage() {
   const [diaTerminado, setDiaTerminado] = useState(null)
   const lastTap                       = useRef({})
   const [bloquesActivos, setBloquesActivos] = useState<any[]>([])
+  const [ultimoPago, setUltimoPago] = useState<any>(null)
+  const [loadingPago, setLoadingPago] = useState(false)
   // Branding del admin
   const [brand, setBrand] = useState({
     name: 'Pulse',
@@ -90,6 +92,16 @@ export default function DashboardPage() {
     setCheckins((chkData || []).map(c => c.ejercicio_id).filter(Boolean))
     setLoading(false)
     cargarFotosProgreso()
+
+    // Cargar último pago
+    const { data: pagoData } = await supabase
+      .from('pagos')
+      .select('*')
+      .eq('alumno_id', user.id)
+      .order('fecha', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    setUltimoPago(pagoData)
   }
 
   async function cargarFotosProgreso() {
@@ -183,6 +195,28 @@ export default function DashboardPage() {
   }
 
   async function logout() { await supabase.auth.signOut(); router.push('/login') }
+
+  async function handlePagar() {
+    setLoadingPago(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: p } = await supabase.from('perfiles').select('admin_id').eq('id', user.id).single()
+      if (!p?.admin_id) { showToast('⚠️ No tenés profe asignado'); setLoadingPago(false); return }
+
+      const res = await fetch('/api/mp/crear-pago', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alumnoId: user.id, adminId: p.admin_id }),
+      })
+      const data = await res.json()
+      if (!res.ok) { showToast('⚠️ ' + (data.error || 'Error al procesar')); setLoadingPago(false); return }
+      window.location.href = data.init_point
+    } catch {
+      showToast('⚠️ Error inesperado')
+      setLoadingPago(false)
+    }
+  }
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
@@ -337,6 +371,46 @@ export default function DashboardPage() {
                   <div>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Observación médica</div>
                     <div style={{ fontSize: 13, color: '#78350f' }}>{perfil.restricciones}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botón pagar mes — solo si el profe tiene cobros activos */}
+              {perfil?.precio_mensual && (
+                <div style={{ marginTop: 16, background: '#fff', border: '1px solid #f3f4f6', borderRadius: 16, padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 2 }}>
+                        Cuota mensual
+                      </div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: '#111827', fontFamily: 'Fraunces, Georgia, serif' }}>
+                        ${Number(perfil.precio_mensual).toLocaleString('es-AR')} ARS
+                      </div>
+                      {ultimoPago?.estado === 'aprobado' && (
+                        <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, marginTop: 2 }}>
+                          ✓ Pago confirmado — {new Date(ultimoPago.fecha).toLocaleDateString('es-AR')}
+                        </div>
+                      )}
+                      {ultimoPago?.estado === 'pendiente' && (
+                        <div style={{ fontSize: 11, color: '#d97706', fontWeight: 600, marginTop: 2 }}>
+                          ⏳ Pago pendiente
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={handlePagar}
+                      disabled={loadingPago || ultimoPago?.estado === 'aprobado'}
+                      style={{
+                        background: ultimoPago?.estado === 'aprobado' ? '#f0fdf4' : wine,
+                        color: ultimoPago?.estado === 'aprobado' ? '#16a34a' : '#fff',
+                        border: ultimoPago?.estado === 'aprobado' ? '1px solid #bbf7d0' : 'none',
+                        borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 700,
+                        cursor: ultimoPago?.estado === 'aprobado' ? 'default' : 'pointer',
+                        fontFamily: 'DM Sans, sans-serif', opacity: loadingPago ? 0.7 : 1,
+                        flexShrink: 0,
+                      }}>
+                      {loadingPago ? 'Procesando...' : ultimoPago?.estado === 'aprobado' ? '✓ Pagado' : 'Pagar mes →'}
+                    </button>
                   </div>
                 </div>
               )}
