@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://getpulseapp.lat'
 
     // Precio base en ARS
-    const precioBase = 19000
+    const precioBase = 25000
     const precioFinal = descuento ? Math.round(precioBase * (1 - descuento / 100)) : precioBase
 
     const reason = descuento
