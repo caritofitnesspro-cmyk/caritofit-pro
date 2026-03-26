@@ -71,8 +71,8 @@ function UpgradeContent() {
     )
   }
 
-  const precioBase = 19
-  const precioFinal = descuento ? (precioBase * (1 - descuento / 100)).toFixed(0) : precioBase
+  const precioBase = 25000
+  const precioFinal = descuento ? Math.round(precioBase * (1 - descuento / 100)) : precioBase
 
   return (
     <>
@@ -161,9 +161,9 @@ function UpgradeContent() {
               </div>
               <div className="u-plan-name">Pro</div>
               {descuento > 0 && (
-                <div className="u-price-original">${precioBase} USD</div>
+                <div className="u-price-original">${precioBase.toLocaleString('es-AR')} ARS</div>
               )}
-              <div className="u-price">${precioFinal} <span style={{ fontSize: 16, fontWeight: 400, color: '#9E9188' }}>USD</span></div>
+              <div className="u-price">${Number(precioFinal).toLocaleString('es-AR')} <span style={{ fontSize: 16, fontWeight: 400, color: '#9E9188' }}>ARS</span></div>
               <div className="u-price-sub">por mes · se renueva automáticamente</div>
               <hr className="u-divider" />
               {['Todo lo de Free', 'Alumnos ilimitados', 'Branding 100% tuyo', 'Logo y colores propios', 'Gestión de pagos', 'Soporte prioritario'].map(f => (
