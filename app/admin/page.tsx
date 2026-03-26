@@ -749,10 +749,11 @@ export default function AdminPage() {
                   </div>
                   <button
                     onClick={async () => {
-                      // Redirigir a OAuth de MP para conectar cuenta
                       const clientId = process.env.NEXT_PUBLIC_MP_CLIENT_ID || ''
                       const redirectUri = encodeURIComponent(`${window.location.origin}/api/mp/oauth-callback`)
-                      window.location.href = `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&redirect_uri=${redirectUri}`
+                      // Usamos state para identificar al admin al volver
+                      const state = btoa(JSON.stringify({ adminId: admin!.id, ts: Date.now() }))
+                      window.location.href = `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${state}&redirect_uri=${redirectUri}`
                     }}
                     style={{ background: '#009ee3', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>💳</span> Conectar Mercado Pago
