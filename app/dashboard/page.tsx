@@ -37,6 +37,13 @@ export default function DashboardPage() {
   const [diaTerminado, setDiaTerminado] = useState(null)
   const lastTap                       = useRef({})
   const [bloquesActivos, setBloquesActivos] = useState<any[]>([])
+  // Branding del admin
+  const [brand, setBrand] = useState({
+    name: 'Pulse',
+    imageUrl: null as string | null,
+    primaryColor: '#5B8CFF',
+    isPro: false,
+  })
 
   useEffect(() => { loadData() }, [])
 
@@ -49,6 +56,24 @@ export default function DashboardPage() {
     if (!p) { router.push('/login'); return }
     if (p.rol === 'admin') { router.push('/admin'); return }
     setPerfil(p)
+
+    // Cargar branding del admin
+    if (p.admin_id) {
+      const { data: adminPerfil } = await supabase
+        .from('perfiles')
+        .select('plan, brand_name, brand_image_url, primary_color')
+        .eq('id', p.admin_id)
+        .single()
+      if (adminPerfil) {
+        const isPro = adminPerfil.plan === 'pro'
+        setBrand({
+          name: isPro && adminPerfil.brand_name ? adminPerfil.brand_name : 'Pulse',
+          imageUrl: isPro && adminPerfil.brand_image_url ? adminPerfil.brand_image_url : null,
+          primaryColor: isPro && adminPerfil.primary_color ? adminPerfil.primary_color : '#5B8CFF',
+          isPro,
+        })
+      }
+    }
     const { data: asig } = await supabase.from('asignaciones').select('plan_id').eq('alumno_id', user.id).eq('activo', true).single()
     if (asig) {
       const { data: planData } = await supabase.from('planes').select('*').eq('id', asig.plan_id).single()
@@ -175,8 +200,8 @@ export default function DashboardPage() {
   const ini = `${perfil?.nombre?.[0] || ''}${perfil?.apellido?.[0] || ''}`.toUpperCase()
   const pesoActual = pesos.length > 0 ? pesos[pesos.length - 1].valor : null
 
-  // Colores del brand (se usan en acentos)
-  const wine = '#7D0531'
+  // Color dinámico del brand
+  const wine = brand.primaryColor
 
   return (
     <>
@@ -221,12 +246,20 @@ export default function DashboardPage() {
                   <div style={{ fontSize: '13px', color: '#9ca3af', fontWeight: '500', marginBottom: '2px' }}>
                     {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: wine, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>
+                    {brand.name}
+                  </div>
                   <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '26px', fontWeight: '900', color: '#111827', letterSpacing: '-0.3px' }}>
                     Hola, {perfil?.nombre} 👋
                   </div>
                 </div>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>
-                  {ini}
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0, overflow: 'hidden', border: `2px solid ${wine}30` }}>
+                  {brand.imageUrl
+                    ? <img src={brand.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : !brand.isPro
+                      ? <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#5B8CFF"/><text x="14" y="20" textAnchor="middle" fontFamily="Georgia,serif" fontSize="17" fontWeight="700" fill="#000">P</text></svg>
+                      : <span style={{ fontSize: 15 }}>{ini}</span>
+                  }
                 </div>
               </div>
 
