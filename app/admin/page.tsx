@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Perfil, Plan, Asignacion } from '@/types/database'
 import { RoutineDayEditor } from '@/components/routines/RoutineDayEditor'
+import { SoporteChat } from '@/components/SoporteChat'
 import { useBrand, applyBrandCSS } from '@/hooks/useBrand'
 
-type Tab = 'dashboard' | 'alumnos' | 'ficha' | 'planes' | 'builder'
+type Tab = 'dashboard' | 'alumnos' | 'ficha' | 'planes' | 'builder' | 'ayuda'
 
 export default function AdminPage() {
   const router = useRouter()
@@ -317,6 +318,7 @@ export default function AdminPage() {
             { key: 'alumnos',   icon: '◉', label: 'Alumnos/as' },
             { key: 'planes',    icon: '☰', label: 'Planes' },
             { key: 'branding',  icon: '◈', label: 'Mi marca' },
+            { key: 'ayuda',     icon: '?', label: 'Ayuda' },
           ].map(({ key, icon, label }) => (
             <button key={key}
               onClick={() => { if (key === 'branding') { router.push('/admin/branding'); return } setTab(key as Tab); setSidebarOpen(false) }}
@@ -1089,6 +1091,23 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+
+        {/* AYUDA */}
+        {tab === 'ayuda' && (
+          <div style={{ height: 'calc(100vh - 0px)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '20px 36px 16px', borderBottom: '1px solid #f3f4f6', background: '#fff' }}>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>Soporte</div>
+              <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '22px', fontWeight: '900', color: '#111827' }}>Ayuda</div>
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <SoporteChat
+                userType="admin"
+                userName={admin?.nombre}
+                primaryColor={brand.primaryColor}
+              />
+            </div>
+          </div>
+        )}
 
       {/* MODAL EDITOR DE BLOQUES */}
       {diaEditorActivo && (
