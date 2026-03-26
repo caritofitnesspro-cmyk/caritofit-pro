@@ -261,9 +261,10 @@ export default function HomePage() {
               <li><span className="check">✓</span><span>Constructor de rutinas básico</span></li>
               <li><span className="check">✓</span><span>Ficha de cada alumno</span></li>
               <li><span className="check">✓</span><span>App para el alumno (marca Pulse)</span></li>
+              <li><span className="check">✓</span><span>Cobros desde la app (comisión 8%)</span></li>
               <li><span className="check">✓</span><span>Sin vencimiento</span></li>
               <li><span className="check muted">—</span><span className="muted">Personalización de marca</span></li>
-              <li><span className="check muted">—</span><span className="muted">Soporte prioritario</span></li>
+              <li><span className="check muted">—</span><span className="muted">Comisión reducida al 5%</span></li>
             </ul>
             <a href="/register/admin" className="l-btn-outline">Empezar gratis</a>
           </div>
@@ -275,9 +276,10 @@ export default function HomePage() {
             <ul className="l-price-features">
               <li><span className="check">✓</span><span><strong>Alumnos ilimitados</strong></span></li>
               <li><span className="check">✓</span><span>Constructor de rutinas completo</span></li>
-              <li><span className="check">✓</span><span>Gestión de pagos y estado de cuenta</span></li>
               <li><span className="check">✓</span><span>App para el alumno con <strong>tu marca</strong></span></li>
               <li><span className="check">✓</span><span>Logo y colores propios</span></li>
+              <li><span className="check">✓</span><span><strong>Cobrá a tus alumnos desde la app</strong></span></li>
+              <li><span className="check">✓</span><span>Comisión 5% vs 8% en Free</span></li>
               <li><span className="check">✓</span><span>Soporte prioritario</span></li>
             </ul>
             <a href="/register/admin?plan=pro" className="l-btn-pro">Empezar con Pro</a>
