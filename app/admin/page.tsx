@@ -255,7 +255,16 @@ export default function AdminPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ede0e2' }}>
-      <div style={{ textAlign: 'center' }}><div style={{ fontSize: '48px', marginBottom: '12px' }}>🏋️</div><div style={{ color: '#7D0531', fontWeight: '600' }}>Cargando panel...</div></div>
+      <div style={{ textAlign: 'center' }}>
+        <svg width="36" height="36" viewBox="0 0 32 32" fill="none" style={{ marginBottom: '20px', display: 'block', margin: '0 auto 20px' }}>
+          <circle cx="16" cy="16" r="16" fill="#5B8CFF"/>
+          <text x="16" y="22" textAnchor="middle" fontFamily="Georgia,serif" fontSize="20" fontWeight="700" fill="#000">P</text>
+        </svg>
+        <div style={{ width: '48px', height: '2px', background: '#f3f4f6', borderRadius: '2px', margin: '0 auto', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 0, left: '-40%', height: '100%', width: '40%', background: '#5B8CFF', borderRadius: '2px', animation: 'pload 1.2s ease-in-out infinite' }} />
+        </div>
+        <style>{'@keyframes pload { 0% { left: -40%; } 100% { left: 110%; } }'}</style>
+      </div>
     </div>
   )
 
