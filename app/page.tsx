@@ -26,19 +26,27 @@ export default function HomePage() {
     const onScroll = () => navbar?.classList.toggle('scrolled', window.scrollY > 40)
     window.addEventListener('scroll', onScroll)
 
-    const reveals = document.querySelectorAll('.l-reveal')
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry, i) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => entry.target.classList.add('visible'), i * 80)
-          observer.unobserve(entry.target)
-        }
-      })
-    }, { threshold: 0.12 })
-    reveals.forEach(el => observer.observe(el))
-
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Observer separado — espera que el DOM esté listo
+  useEffect(() => {
+    if (checking) return
+    const timer = setTimeout(() => {
+      const reveals = document.querySelectorAll('.l-reveal')
+      if (!reveals.length) return
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => entry.target.classList.add('visible'), i * 80)
+            observer.unobserve(entry.target)
+          }
+        })
+      }, { threshold: 0.08 })
+      reveals.forEach(el => observer.observe(el))
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [checking])
 
   if (checking) return null
 
@@ -262,8 +270,8 @@ export default function HomePage() {
           <div className="l-price-card pro l-reveal">
             <div className="l-pro-badge">MÁS ELEGIDO</div>
             <div className="l-price-card-label">Plan Pro</div>
-            <div className="l-price-amount"><span className="currency">$</span><span className="number">9.990</span><span className="period">/ mes</span></div>
-            <p className="l-price-desc">Para quien ya decidió que su negocio es serio.</p>
+            <div className="l-price-amount"><span className="currency">$</span><span className="number">25.000</span><span className="period">ARS / mes</span></div>
+            <p className="l-price-desc">Para quien ya decidió que su negocio es serio. Menos de lo que ganás con un alumno más.</p>
             <ul className="l-price-features">
               <li><span className="check">✓</span><span><strong>Alumnos ilimitados</strong></span></li>
               <li><span className="check">✓</span><span>Constructor de rutinas completo</span></li>
