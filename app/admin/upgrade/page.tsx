@@ -145,7 +145,7 @@ function UpgradeContent() {
               {['Hasta 3 alumnos', 'Rutinas básicas', 'App del alumno', 'Seguimiento de asistencia'].map(f => (
                 <div key={f} className="u-feature"><div className="u-check">✓</div><span>{f}</span></div>
               ))}
-              {['Branding propio', 'Alumnos ilimitados', 'Gestión de pagos'].map(f => (
+              {['Branding propio', 'Alumnos ilimitados', 'Comisión reducida en cobros'].map(f => (
                 <div key={f} className="u-feature" style={{ opacity: 0.4 }}><div className="u-check gray">✕</div><span>{f}</span></div>
               ))}
               <button className="u-cta-free" onClick={() => router.push('/admin')}>
@@ -166,7 +166,14 @@ function UpgradeContent() {
               <div className="u-price">${Number(precioFinal).toLocaleString('es-AR')} <span style={{ fontSize: 16, fontWeight: 400, color: '#9E9188' }}>ARS</span></div>
               <div className="u-price-sub">por mes · se renueva automáticamente</div>
               <hr className="u-divider" />
-              {['Todo lo de Free', 'Alumnos ilimitados', 'Branding 100% tuyo', 'Logo y colores propios', 'Gestión de pagos', 'Soporte prioritario'].map(f => (
+              {[
+                'Todo lo de Free',
+                'Alumnos ilimitados',
+                'Branding 100% tuyo — logo y colores',
+                'Cobrá a tus alumnos desde la app',
+                'Comisión reducida 5% (vs 8% en Free)',
+                'Soporte prioritario',
+              ].map(f => (
                 <div key={f} className="u-feature"><div className="u-check">✓</div><span>{f}</span></div>
               ))}
               <button className="u-cta" onClick={handleUpgrade} disabled={loading}>
