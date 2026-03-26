@@ -131,12 +131,15 @@ interface Props {
   onUpdateEjercicio: (ejercicioId: string, data: any) => void
   onDeleteEjercicio: (ejercicioId: string) => void
   onMoveEjercicio: (ejercicioId: string, direccion: 'up' | 'down') => void
+  onMoveEjercicioABloque?: (ejercicioId: string, bloqueDestinoId: string) => void
+  otrosBloques?: { id: string; nombre: string }[]
 }
 
 export function RoutineBlockCard({
   bloque, index, total,
   onMoveUp, onMoveDown, onDelete, onDuplicate,
-  onUpdate, onAddEjercicio, onUpdateEjercicio, onDeleteEjercicio, onMoveEjercicio
+  onUpdate, onAddEjercicio, onUpdateEjercicio, onDeleteEjercicio, onMoveEjercicio,
+  onMoveEjercicioABloque, otrosBloques = []
 }: Props) {
   const [expanded, setExpanded] = useState(true)
   const [editingNombre, setEditingNombre] = useState(false)
@@ -311,21 +314,39 @@ export function RoutineBlockCard({
             ) : (
               <div className="divide-y divide-slate-800/60">
                 {ejercicios.map((ej, i) => (
-                  <RoutineExerciseItem
-                    key={ej.id}
-                    ejercicio={ej}
-                    index={i}
-                    total={ejercicios.length}
-                    onMoveUp={() => onMoveEjercicio(ej.id, 'up')}
-                    onMoveDown={() => onMoveEjercicio(ej.id, 'down')}
-                    onDelete={() => onDeleteEjercicio(ej.id)}
-                    onUpdate={(data) => onUpdateEjercicio(ej.id, data)}
-                    onDragStart={(idx) => setDragIndex(idx)}
-                    onDragEnter={(idx) => setDragOverIndex(idx)}
-                    onDragEnd={handleDragEnd}
-                    isDragging={dragIndex === i}
-                    isDragOver={dragOverIndex === i}
-                  />
+                  <div key={ej.id}>
+                    <RoutineExerciseItem
+                      ejercicio={ej}
+                      index={i}
+                      total={ejercicios.length}
+                      onMoveUp={() => onMoveEjercicio(ej.id, 'up')}
+                      onMoveDown={() => onMoveEjercicio(ej.id, 'down')}
+                      onDelete={() => onDeleteEjercicio(ej.id)}
+                      onUpdate={(data) => onUpdateEjercicio(ej.id, data)}
+                      onDragStart={(idx) => setDragIndex(idx)}
+                      onDragEnter={(idx) => setDragOverIndex(idx)}
+                      onDragEnd={handleDragEnd}
+                      isDragging={dragIndex === i}
+                      isDragOver={dragOverIndex === i}
+                    />
+                    {/* Mover a otro bloque — solo si hay más de un bloque */}
+                    {otrosBloques.length > 0 && onMoveEjercicioABloque && (
+                      <div className="flex items-center gap-1 px-3 pb-1">
+                        <span className="text-[10px] text-slate-600">Mover a:</span>
+                        {otrosBloques.map(ob => (
+                          <button
+                            key={ob.id}
+                            onClick={() => onMoveEjercicioABloque(ej.id, ob.id)}
+                            className="text-[10px] px-2 py-0.5 rounded-md border border-slate-700
+                              text-slate-500 hover:text-green-400 hover:border-green-500/50
+                              hover:bg-green-500/5 transition-all"
+                          >
+                            → {ob.nombre}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
