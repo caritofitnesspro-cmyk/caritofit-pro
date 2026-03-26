@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Perfil, Plan, Semana, Dia, Ejercicio, Peso } from '@/types/database'
+import { SoporteChat } from '@/components/SoporteChat'
 
 // ── Colores por tipo de bloque ──
 const TIPO_EMOJI: any  = { normal: '💪', circuito: '🔁', superserie: '⚡', entrada_en_calor: '🔥', vuelta_a_la_calma: '🧘' }
@@ -21,7 +22,7 @@ export default function DashboardPage() {
   const [pesos, setPesos]             = useState<Peso[]>([])
   const [checkins, setCheckins]       = useState<string[]>([])
   const [loading, setLoading]         = useState(true)
-  const [tab, setTab]                 = useState<'inicio' | 'plan' | 'progreso' | 'perfil'>('inicio')
+  const [tab, setTab]                 = useState<'inicio' | 'plan' | 'progreso' | 'perfil' | 'ayuda'>('inicio')
   const [nuevoPeso, setNuevoPeso]     = useState('')
   const [showPesoModal, setShowPesoModal] = useState(false)
   const [diaActivo, setDiaActivo]     = useState<Dia | null>(null)
@@ -699,6 +700,23 @@ export default function DashboardPage() {
               <button onClick={logout} style={{ width: '100%', background: 'transparent', border: '1px solid #e5e7eb', borderRadius: 12, padding: 14, fontSize: 14, fontWeight: 500, color: '#6b7280', fontFamily: 'inherit', cursor: 'pointer' }}>
                 Cerrar sesión
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB AYUDA ── */}
+        {tab === 'ayuda' && (
+          <div className="d-section d-animate" style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', paddingBottom: 0 }}>
+            <div className="d-header">
+              <div className="d-eyebrow">Soporte</div>
+              <div className="d-title">Ayuda</div>
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <SoporteChat
+                userType="alumno"
+                userName={perfil?.nombre}
+                primaryColor={brand.primaryColor}
+              />
             </div>
           </div>
         )}
