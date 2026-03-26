@@ -68,6 +68,21 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
     await load()
   }
 
+  // ── MOVER EJERCICIO A OTRO BLOQUE ──
+  const handleMoverABloque = async (ejercicioId: string, bloqueDestinoId: string) => {
+    const client = supabase as any
+    // Calcular el orden dentro del bloque destino
+    const bloqueDestino = bloques.find(b => b.id === bloqueDestinoId)
+    const ordenDestino = bloqueDestino?.ejercicios?.length ?? 0
+
+    await client
+      .from('ejercicios')
+      .update({ bloque_id: bloqueDestinoId, orden: ordenDestino })
+      .eq('id', ejercicioId)
+
+    await load()
+  }
+
   return (
     <div className="space-y-3">
 
@@ -102,6 +117,7 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
               bloque={bloque}
               index={i}
               total={bloques.length}
+              otrosBloques={bloques.filter(b => b.id !== bloque.id).map(b => ({ id: b.id, nombre: b.nombre }))}
               onMoveUp={() => moverBloque(bloque.id, 'up')}
               onMoveDown={() => moverBloque(bloque.id, 'down')}
               onDelete={() => eliminarBloque(bloque.id)}
@@ -111,6 +127,7 @@ export function RoutineDayEditor({ diaId, diaNombre, diaNumero, onAgregarEjercic
               onUpdateEjercicio={handleUpdateEjercicio}
               onDeleteEjercicio={handleDeleteEjercicio}
               onMoveEjercicio={(ejId, dir) => handleMoverEjercicio(bloque.id, ejId, dir)}
+              onMoveEjercicioABloque={handleMoverABloque}
             />
           ))}
 
