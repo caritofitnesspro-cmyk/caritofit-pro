@@ -71,6 +71,27 @@ export function SoporteChat({ userType, userName, primaryColor = '#5B8CFF' }: Pr
   const isEscalado = (text: string) =>
     text.toLowerCase().includes('hola@getpulseapp.lat')
 
+  async function sendDirect(text: string) {
+    if (loading) return
+    const newMessages: Message[] = [...messages, { role: 'user', content: text }]
+    setMessages(newMessages)
+    setLoading(true)
+    try {
+      const res = await fetch('/api/soporte', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages, userType }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Hubo un error. Intentá de nuevo o escribinos a hola@getpulseapp.lat' }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'DM Sans, sans-serif' }}>
 
@@ -140,7 +161,7 @@ export function SoporteChat({ userType, userName, primaryColor = '#5B8CFF' }: Pr
             '¿Cómo pago mi cuota?',
             '¿Qué es RPE?',
           ]).map(q => (
-            <button key={q} onClick={() => { setInput(q); setTimeout(() => sendMessage(), 0) }}
+            <button key={q} onClick={() => sendDirect(q)}
               style={{ background: '#fff', border: `1px solid ${primaryColor}30`, borderRadius: '20px', padding: '6px 14px', fontSize: '12px', fontWeight: '500', color: primaryColor, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
               onMouseEnter={e => (e.currentTarget.style.background = `${primaryColor}10`)}
               onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
