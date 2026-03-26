@@ -11,12 +11,15 @@ export interface BrandConfig {
   secondaryColor: string
 }
 
-const DEFAULTS: BrandConfig = {
-  brandName: 'Mi Equipo',
+// Branding Pulse (FREE)
+const PULSE_BRAND: BrandConfig = {
+  brandName: 'Pulse',
   brandImageUrl: null,
-  primaryColor: '#7D0531',
-  secondaryColor: '#B05276',
+  primaryColor: '#5B8CFF',
+  secondaryColor: '#4A74D9',
 }
+
+const DEFAULTS: BrandConfig = PULSE_BRAND
 
 export function useBrand() {
   const [brand, setBrand] = useState<BrandConfig>(DEFAULTS)
@@ -25,17 +28,22 @@ export function useBrand() {
   async function loadBrand(id: string) {
     const { data } = await (supabase as any)
       .from('perfiles')
-      .select('brand_name, brand_image_url, primary_color, secondary_color')
+      .select('plan, brand_name, brand_image_url, primary_color, secondary_color')
       .eq('id', id)
       .single()
 
     if (data) {
-      const config: BrandConfig = {
-        brandName:      data.brand_name      || DEFAULTS.brandName,
+      const isPro = data.plan === 'pro'
+
+      // FREE → siempre branding Pulse
+      // PRO  → branding personalizado del admin
+      const config: BrandConfig = isPro ? {
+        brandName:      data.brand_name      || PULSE_BRAND.brandName,
         brandImageUrl:  data.brand_image_url || null,
-        primaryColor:   data.primary_color   || DEFAULTS.primaryColor,
-        secondaryColor: data.secondary_color || DEFAULTS.secondaryColor,
-      }
+        primaryColor:   data.primary_color   || PULSE_BRAND.primaryColor,
+        secondaryColor: data.secondary_color || PULSE_BRAND.secondaryColor,
+      } : PULSE_BRAND
+
       setBrand(config)
       applyBrandCSS(config)
     }
