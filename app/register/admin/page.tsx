@@ -129,8 +129,8 @@ function RegisterForm() {
     )
   }
 
-  const precioBase = 19
-  const precioFinal = descuento ? (precioBase * (1 - descuento / 100)).toFixed(0) : precioBase
+  const precioBase = 25000
+  const precioFinal = descuento ? Math.round(precioBase * (1 - descuento / 100)) : precioBase
 
   return (
     <div style={styles.root}>
@@ -210,8 +210,8 @@ function RegisterForm() {
                   <div style={{ marginTop: 10, background: '#EEF4FF', border: '1px solid #C7D9FF', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 13, color: '#3B5BDB' }}>Precio con descuento</span>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                      <span style={{ fontSize: 13, color: '#9E9188', textDecoration: 'line-through' }}>${precioBase} USD</span>
-                      <span style={{ fontSize: 18, fontWeight: 700, color: '#3B5BDB' }}>${precioFinal} USD</span>
+                      <span style={{ fontSize: 13, color: '#9E9188', textDecoration: 'line-through' }}>${precioBase.toLocaleString('es-AR')} ARS</span>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: '#3B5BDB' }}>${Number(precioFinal).toLocaleString('es-AR')} ARS</span>
                       <span style={{ fontSize: 11, color: '#9E9188' }}>/mes</span>
                     </div>
                   </div>
