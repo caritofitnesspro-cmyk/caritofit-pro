@@ -6,14 +6,27 @@ import { createClient } from '@/lib/supabase'
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const code = searchParams.get('code')
+  const state = searchParams.get('state')
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://getpulseapp.lat'
 
-  if (!code) {
+  if (!code || !state) {
     return NextResponse.redirect(`${appUrl}/admin?cobros=error`)
   }
 
   try {
-    // Intercambiar code por access token
+    let adminId: string
+    try {
+      const decoded = JSON.parse(atob(state))
+      adminId = decoded.adminId
+      if (Date.now() - decoded.ts > 30 * 60 * 1000) {
+        return NextResponse.redirect(`${appUrl}/admin?cobros=expired`)
+      }
+    } catch {
+      return NextResponse.redirect(`${appUrl}/admin?cobros=error`)
+    }
+
+    if (!adminId) return NextResponse.redirect(`${appUrl}/admin?cobros=error`)
+
     const res = await fetch('https://api.mercadopago.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -27,38 +40,26 @@ export async function GET(req: NextRequest) {
     })
 
     const data = await res.json()
+
     if (!res.ok || !data.access_token) {
       console.error('OAuth error:', data)
       return NextResponse.redirect(`${appUrl}/admin?cobros=error`)
     }
 
-    // Guardar en Supabase — necesitamos saber quién es el admin
-    // Usamos el user_id de MP para identificarlo
     const supabase = createClient()
-
-    // Buscar el admin por mp_user_id si ya existe, o actualizarlo
-    // Por ahora actualizamos el admin que inició el flujo
-    // En producción deberías usar el state parameter de OAuth
-    const { data: admins } = await supabase
+    await supabase
       .from('perfiles')
-      .select('id')
+      .update({
+        mp_cobros_access_token: data.access_token,
+        mp_cobros_user_id: String(data.user_id),
+        cobros_activos: true,
+      })
+      .eq('id', adminId)
       .eq('rol', 'admin')
-      .is('mp_cobros_user_id', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
 
-    if (admins && admins.length > 0) {
-      await supabase
-        .from('perfiles')
-        .update({
-          mp_cobros_access_token: data.access_token,
-          mp_cobros_user_id: String(data.user_id),
-          cobros_activos: true,
-        })
-        .eq('id', admins[0].id)
-    }
-
+    console.log(`MP conectado para admin: ${adminId}`)
     return NextResponse.redirect(`${appUrl}/admin?cobros=ok`)
+
   } catch (error) {
     console.error('OAuth callback error:', error)
     return NextResponse.redirect(`${appUrl}/admin?cobros=error`)
