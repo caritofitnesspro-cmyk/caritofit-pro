@@ -36,6 +36,10 @@ export default function AdminPage() {
   const [diaEditorActivo, setDiaEditorActivo] = useState<{id: string, nombre: string, numero: number} | null>(null)
   const [bloquesConteo, setBloquesConteo] = useState<Record<string, number>>({})
 
+  // Cobros
+  const [savingPrecio, setSavingPrecio] = useState(false)
+  const [precioInput, setPrecioInput] = useState<Record<string, string>>({})
+
   // Autosave
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const autosaveTimer = useRef<any>(null)
@@ -710,6 +714,80 @@ export default function AdminPage() {
                   </div>
                 )
               })()}
+            </div>
+
+            {/* ── COBROS ── */}
+            <div className="card" style={{ marginTop: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#8a7070', textTransform: 'uppercase', letterSpacing: '.06em' }}>💳 Cobros</div>
+                {!admin?.cobros_activos && (
+                  <span style={{ fontSize: '11px', color: '#9ca3af', background: '#f9fafb', borderRadius: '20px', padding: '2px 10px', border: '1px solid #f3f4f6' }}>Opcional</span>
+                )}
+              </div>
+
+              {!admin?.cobros_activos ? (
+                // Cobros no activados — mostrar info y botón
+                <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px', border: '1px dashed #e5e7eb' }}>
+                  <div style={{ fontSize: '13px', color: '#374151', fontWeight: '600', marginBottom: '6px' }}>Cobrá desde la app del alumno</div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px', lineHeight: '1.5' }}>
+                    Tu alumno verá un botón "Pagar mes" en su app y pagará directo a vos via Mercado Pago.
+                  </div>
+                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: '#92400e' }}>
+                    <strong>Comisiones:</strong> MP cobra 4.99% + Pulse {admin?.plan === 'pro' ? '5%' : '8%'} = <strong>{admin?.plan === 'pro' ? '9.99%' : '12.99%'} por cobro</strong>
+                    {admin?.plan !== 'pro' && <span style={{ display: 'block', marginTop: '4px', color: '#6b7280' }}>Con plan PRO la comisión de Pulse baja al 5%.</span>}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      // Redirigir a OAuth de MP para conectar cuenta
+                      const clientId = process.env.NEXT_PUBLIC_MP_CLIENT_ID || ''
+                      const redirectUri = encodeURIComponent(`${window.location.origin}/api/mp/oauth-callback`)
+                      window.location.href = `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&redirect_uri=${redirectUri}`
+                    }}
+                    style={{ background: '#009ee3', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>💳</span> Conectar Mercado Pago
+                  </button>
+                </div>
+              ) : (
+                // Cobros activados — mostrar precio del alumno
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
+                    <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: '600' }}>MP conectado</span>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>· comisión {admin?.plan === 'pro' ? '5%' : '8%'}</span>
+                  </div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>
+                    Precio mensual (ARS)
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="number"
+                      placeholder="Ej: 15000"
+                      value={precioInput[alumnoActivo.id] ?? (alumnoActivo as any).precio_mensual ?? ''}
+                      onChange={e => setPrecioInput(p => ({ ...p, [alumnoActivo.id]: e.target.value }))}
+                      style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', color: '#111827', outline: 'none', fontFamily: 'inherit' }}
+                    />
+                    <button
+                      disabled={savingPrecio}
+                      onClick={async () => {
+                        const precio = parseFloat(precioInput[alumnoActivo.id])
+                        if (!precio || precio < 100) { showToast('⚠️ Ingresá un precio válido'); return }
+                        setSavingPrecio(true)
+                        await supabase.from('perfiles').update({ precio_mensual: precio }).eq('id', alumnoActivo.id)
+                        setSavingPrecio(false)
+                        showToast('✅ Precio guardado')
+                      }}
+                      style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', opacity: savingPrecio ? 0.6 : 1 }}>
+                      {savingPrecio ? '...' : 'Guardar'}
+                    </button>
+                  </div>
+                  {(alumnoActivo as any).precio_mensual && (
+                    <div style={{ marginTop: '10px', fontSize: '12px', color: '#9ca3af' }}>
+                      El alumno ve: <strong style={{ color: '#111827' }}>${Number((alumnoActivo as any).precio_mensual).toLocaleString('es-AR')} ARS/mes</strong>
+                      {' · '}Vos recibís: <strong style={{ color: '#16a34a' }}>${Math.round((alumnoActivo as any).precio_mensual * (1 - (admin?.plan === 'pro' ? 0.0999 : 0.1299))).toLocaleString('es-AR')} ARS</strong>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
           </div>
