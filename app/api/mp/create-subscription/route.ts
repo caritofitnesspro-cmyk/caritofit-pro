@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   try {
     const { adminId, email, nombre, descuento } = await req.json()
 
-    if (!adminId || !email) {
+    if (!adminId) {
       return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
     }
 
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://getpulseapp.lat'
 
-    // Precio base en ARS — $19 USD aprox $19.000 ARS (ajustá según cotización)
+    // Precio base en ARS
     const precioBase = 19000
     const precioFinal = descuento ? Math.round(precioBase * (1 - descuento / 100)) : precioBase
 
@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
       ? `Pulse PRO — Plan mensual (${descuento}% OFF)`
       : 'Pulse PRO — Plan mensual'
 
+    // No mandamos payer_email — MP lo pide en el checkout directamente
+    // Evita el error "Cannot operate between different countries"
     const subscriptionData = {
       reason,
       auto_recurring: {
@@ -33,10 +35,11 @@ export async function POST(req: NextRequest) {
         transaction_amount: precioFinal,
         currency_id: 'ARS',
       },
-      payer_email: email,
       back_url: `${appUrl}/admin/upgrade/success`,
       external_reference: adminId,
     }
+
+    console.log('Creando suscripción MP:', JSON.stringify(subscriptionData))
 
     const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
       method: 'POST',
@@ -48,6 +51,7 @@ export async function POST(req: NextRequest) {
     })
 
     const mpData = await mpResponse.json()
+    console.log('MP Response:', JSON.stringify(mpData))
 
     if (!mpResponse.ok) {
       console.error('MP Error:', mpData)
