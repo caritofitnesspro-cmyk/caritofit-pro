@@ -15,8 +15,7 @@ export default function HomePage() {
     async function checkSession() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setChecking(false); return }
-      const { data: perfil } = await supabase
-        .from('perfiles').select('rol').eq('id', user.id).single()
+      const { data: perfil } = await supabase.from('perfiles').select('rol').eq('id', user.id).single()
       if (perfil?.rol === 'admin') router.push('/admin')
       else router.push('/dashboard')
     }
@@ -48,481 +47,310 @@ export default function HomePage() {
   if (checking) return null
 
   return (
-    <div className="landing-root">
+    <div className="lp">
 
       {/* NAV */}
-      <nav id="l-navbar" className="l-nav">
-        <div className="l-nav-logo">PULSE<span>.</span></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <a href="/login" className="l-nav-login">Iniciar sesión</a>
-          <a href="/register/admin" className="l-nav-cta">Empezar gratis</a>
+      <nav id="l-navbar" className="lp-nav">
+        <div className="lp-logo">PULSE<span>.</span></div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <a href="/login" className="lp-nav-login">Iniciar sesión</a>
+          <a href="/register/admin" className="lp-nav-cta">Empezar gratis</a>
         </div>
       </nav>
 
-      {/* ── 1. HERO ── */}
-      <section className="l-hero">
-        <div className="l-hero-bg">
-          <img
-            src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1800&q=85&auto=format&fit=crop"
-            alt="Entrenador personal en acción"
-            className="l-hero-img"
-          />
-          <div className="l-hero-overlay" />
-        </div>
-        <div className="l-hero-content">
-          <div className="l-hero-eyebrow">Para entrenadores personales</div>
-          <h1>Tu negocio<br />al ritmo que<br /><em>entrenás.</em></h1>
-          <p className="l-hero-sub">
-            Alumnos, rutinas y cobros en un lugar.<br />
-            <strong>Menos administración. Más cancha.</strong>
-          </p>
-          <div className="l-hero-actions">
-            <a href="/register/admin" className="l-btn-hero">
-              Crear mi cuenta gratis
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{marginLeft:'8px'}}>
-                <path d="M3 9h12M10 4l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </a>
-            <span className="l-hero-note">Gratis para siempre · 3 alumnos incluidos</span>
+      {/* HERO */}
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div className="lp-hero">
+          <div>
+            <div className="lp-hero-eyebrow">Para entrenadores personales</div>
+            <h1>Tu negocio<br />al ritmo que<br /><em>entrenás.</em></h1>
+            <p className="lp-hero-sub">
+              Alumnos, rutinas y cobros <strong>en una sola app</strong>.<br />
+              Menos administración. Más tiempo para entrenar.
+            </p>
+            <div className="lp-cta-group">
+              <a href="/register/admin" className="lp-btn-main">Crear mi app gratis →</a>
+              <a href="#producto" className="lp-btn-ghost">Ver cómo funciona</a>
+            </div>
+            <div className="lp-hero-note">Gratis para tus primeros 2 alumnos · Sin tarjeta</div>
           </div>
-          <div className="l-hero-stats">
-            <div className="l-hero-stat">
-              <span className="l-hero-stat-n">10 min</span>
-              <span className="l-hero-stat-l">para estar operativo</span>
-            </div>
-            <div className="l-hero-stat-div" />
-            <div className="l-hero-stat">
-              <span className="l-hero-stat-n">3 hs</span>
-              <span className="l-hero-stat-l">recuperadas por semana</span>
-            </div>
-            <div className="l-hero-stat-div" />
-            <div className="l-hero-stat">
-              <span className="l-hero-stat-n">$0</span>
-              <span className="l-hero-stat-l">para empezar</span>
-            </div>
-          </div>
-        </div>
-        <div className="l-hero-scroll"><div className="l-scroll-line" /><span>SCROLL</span></div>
-      </section>
 
-      {/* ── 2. BARRA DE CREDIBILIDAD ── */}
-      <section className="l-cred">
-        <div className="l-cred-inner">
-          <span className="l-cred-label">Usado por entrenadores en Argentina</span>
-          <div className="l-cred-divider" />
-          <div className="l-cred-items">
+          {/* PHONE HERO — Dashboard real con datos premium */}
+          <div className="lp-phone">
+            <div className="lp-phone-screen">
+              <div className="lp-phone-header">
+                <div className="lp-ph-date">Viernes, 27 de marzo</div>
+                <div className="lp-ph-brand">Caro Team</div>
+                <div className="lp-ph-greeting">Hola, Carolina 👋</div>
+              </div>
+              <div className="lp-phone-body">
+                {/* Stats grid */}
+                <div className="lp-ph-grid">
+                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-pink">24</div><div className="lp-ph-stat-l">Alumnos</div></div>
+                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-green">21</div><div className="lp-ph-stat-l">Con plan</div></div>
+                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-red">3</div><div className="lp-ph-stat-l">Sin plan</div></div>
+                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-pink">8</div><div className="lp-ph-stat-l">Planes</div></div>
+                </div>
+                {/* Revenue box */}
+                <div className="lp-rev-box">
+                  <div className="lp-rev-label">Ingresos del mes</div>
+                  <div className="lp-rev-amount">$480.000</div>
+                  <div className="lp-rev-sub">+12% vs mes anterior</div>
+                </div>
+                {/* Alumnos list */}
+                <div className="lp-ph-list-title">Activos <span>Ver todos →</span></div>
+                {[
+                  { ini: 'SM', c: 'lp-ava-pink', name: 'Sofía Martínez', sub: 'Hipertrofia · Sem 4', st: 'ok', badge: '✓ Pagó' },
+                  { ini: 'MG', c: 'lp-ava-blue', name: 'Martín García', sub: 'Rendimiento · Sem 2', st: 'ok', badge: '✓ Pagó' },
+                  { ini: 'LR', c: 'lp-ava-teal', name: 'Laura Rodríguez', sub: 'Rehabilitación', st: 'warn', badge: 'Pendiente' },
+                ].map(({ ini, c, name, sub, st, badge }) => (
+                  <div key={name} className="lp-ph-row">
+                    <div className={`lp-ph-ava ${c}`}>{ini}</div>
+                    <div><div className="lp-ph-name">{name}</div><div className="lp-ph-goal">{sub}</div></div>
+                    <span className={`lp-ph-badge ${st}`}>{badge}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="lp-phone-nav">
+                {[['▦','Inicio',true],['◉','Alumnos'],['☰','Planes'],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
+                  <div key={label} className={`lp-pn-item${active?' active':''}`}>
+                    <span className="lp-pn-icon">{icon}</span>{label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* STATS BAR */}
+      <div className="lp-stats">
+        <div className="lp-stat-item"><div className="lp-stat-n">10 min</div><div className="lp-stat-l">para estar operativo</div></div>
+        <div className="lp-stat-item"><div className="lp-stat-n">3 hs</div><div className="lp-stat-l">recuperadas por semana</div></div>
+        <div className="lp-stat-item"><div className="lp-stat-n">$0</div><div className="lp-stat-l">para empezar hoy</div></div>
+      </div>
+
+      {/* FEATURES */}
+      <div className="lp-features" id="producto">
+        <div className="lp-section-label">El producto</div>
+        <div className="lp-section-title">Así se ve<br /><em>por dentro.</em></div>
+        <div className="lp-section-sub">Tres herramientas. Un solo lugar. En 10 minutos ya estás trabajando, no configurando.</div>
+
+        {/* FEATURE 1: Alumnos — mockup premium 24 alumnos */}
+        <div className="lp-feat-block l-reveal">
+          <div>
+            <div className="lp-feat-tag">Gestión de alumnos</div>
+            <div className="lp-feat-h">Todo sobre cada alumno, siempre a mano</div>
+            <p className="lp-feat-p">Objetivo, nivel, restricciones, plan activo y estado de pago. Sin WhatsApp, sin papel, sin tu cabeza como base de datos.</p>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Ficha completa con historial y notas</span></div>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Estado del plan en tiempo real</span></div>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Alerta cuando alguien no tiene plan</span></div>
+          </div>
+          <div className="lp-mini-screen">
+            <div className="lp-mini-header">
+              <div className="lp-mini-title">Alumnos/as</div>
+              <div className="lp-mini-sub">24 alumnos · 21 con plan activo</div>
+            </div>
+            {/* Activos */}
+            <div className="lp-ph-list-label lp-green-label">Activos (21)</div>
             {[
-              { n: '100%', l: 'digital desde el día 1' },
-              { n: 'Sin app', l: 'que instalar — corre en el celular' },
-              { n: 'MP', l: 'para cobros directos' },
-              { n: 'Gratis', l: 'para empezar hoy' },
-            ].map(({ n, l }) => (
-              <div key={n} className="l-cred-item">
-                <span className="l-cred-n">{n}</span>
-                <span className="l-cred-l">{l}</span>
+              { ini: 'SM', c: 'lp-ava-pink', name: 'Sofía Martínez', sub: 'Hipertrofia · Sem 4/8' },
+              { ini: 'MG', c: 'lp-ava-blue', name: 'Martín García', sub: 'Rendimiento deportivo' },
+              { ini: 'LR', c: 'lp-ava-teal', name: 'Laura Rodríguez', sub: 'Rehabilitación rodilla' },
+              { ini: 'JP', c: 'lp-ava-amber', name: 'Juliana Pérez', sub: 'Pérdida de peso' },
+              { ini: 'NF', c: 'lp-ava-purple', name: 'Nicolás Ferreyra', sub: 'Hipertrofia · Sem 2/6' },
+            ].map(({ ini, c, name, sub }) => (
+              <div key={name} className="lp-ph-row" style={{ marginBottom: '4px' }}>
+                <div className={`lp-ph-ava ${c}`} style={{ width: '28px', height: '28px', fontSize: '9px' }}>{ini}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                  <div style={{ fontSize: '9px', color: '#9ca3af' }}>{sub}</div>
+                </div>
+                <span className="lp-ph-badge ok">✓ Plan</span>
+              </div>
+            ))}
+            {/* Sin plan */}
+            <div className="lp-ph-list-label lp-warn-label" style={{ marginTop: '8px' }}>Sin plan (3)</div>
+            <div className="lp-ph-row">
+              <div className="lp-ph-ava lp-ava-red" style={{ width: '28px', height: '28px', fontSize: '9px' }}>VR</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#111827' }}>Valentina Ruiz</div>
+                <div style={{ fontSize: '9px', color: '#9ca3af' }}>Tonificación · Nueva</div>
+              </div>
+              <span className="lp-ph-badge warn">Sin plan</span>
+            </div>
+          </div>
+        </div>
+
+        {/* FEATURE 2: Planes — mockup premium 8 planes */}
+        <div className="lp-feat-block reverse l-reveal">
+          <div>
+            <div className="lp-feat-tag">Constructor de rutinas</div>
+            <div className="lp-feat-h">Armá un plan en minutos, no en horas</div>
+            <p className="lp-feat-p">Creá semanas, días y ejercicios. Asignás con un clic y tu alumno lo ve al instante en su app. Sin PDFs, sin archivos.</p>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Series, reps, carga, RPE, RIR y descanso</span></div>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Bloques: circuito, superserie, calentamiento</span></div>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>El alumno marca cada ejercicio completado</span></div>
+          </div>
+          <div className="lp-mini-screen">
+            <div className="lp-mini-header">
+              <div className="lp-mini-title">Planes</div>
+              <div className="lp-mini-sub">8 planes activos · 24 asignaciones</div>
+            </div>
+            {[
+              { name: 'Hipertrofia Avanzada', tag: 'Hipertrofia', tagBg: '#fce7f3', tagC: '#be185d', color: '#e260a5', sems: '8', dias: '5', ejs: '42', avs: ['SM','NF','AG','+4'] },
+              { name: 'Rendimiento Deportivo', tag: 'Rendimiento', tagBg: '#eff3ff', tagC: '#3b5bdb', color: '#5B8CFF', sems: '6', dias: '4', ejs: '36', avs: ['MG','BO','+2'] },
+              { name: 'Rehabilitación Activa', tag: 'Rehabilitación', tagBg: '#f0fdf4', tagC: '#15803d', color: '#16a34a', sems: '4', dias: '3', ejs: '18', avs: ['LR','EP','+1'] },
+              { name: 'Pérdida de Peso', tag: 'Salud general', tagBg: '#fef3c7', tagC: '#92400e', color: '#d97706', sems: '12', dias: '4', ejs: '28', avs: ['JP','CA','+5'] },
+            ].map(({ name, tag, tagBg, tagC, color, sems, dias, ejs, avs }) => (
+              <div key={name} className="lp-plan-card">
+                <div className="lp-plan-name" style={{ color }}>{name}</div>
+                <span style={{ display: 'inline-block', fontSize: '8px', fontWeight: '700', background: tagBg, color: tagC, padding: '2px 8px', borderRadius: '20px', marginBottom: '7px' }}>{tag}</span>
+                <div className="lp-plan-stats">
+                  {[[sems,'Semanas'],[dias,'Días/sem'],[ejs,'Ejercicios']].map(([n,l]) => (
+                    <div key={l} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '16px', fontWeight: '800', color, lineHeight: '1' }}>{n}</div>
+                      <div style={{ fontSize: '7px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.04em' }}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="lp-plan-assigned">
+                  {avs.map(a => a.startsWith('+')
+                    ? <span key={a} style={{ fontSize: '8px', color: '#9ca3af' }}>{a} más</span>
+                    : <div key={a} className="lp-plan-ava" style={{ background: color }}>{a}</div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* ── 3. EL DOLOR ── */}
-      <section className="l-section l-problems">
-        <div className="l-problems-grid">
-          <div className="l-problems-intro l-reveal">
-            <div className="l-section-label">El problema</div>
-            <h2 className="l-section-title">¿Cuántas horas<br /><em>perdés</em> por semana?</h2>
-            <p className="l-section-sub">No es falta de organización. Es que nadie te dio una herramienta hecha para entrenadores.</p>
-            <a href="/register/admin" className="l-btn-outline-blue" style={{ marginTop: '32px', display: 'inline-block' }}>Lo resuelvo con Pulse →</a>
+        {/* FEATURE 3: Cobros — mockup premium $480k */}
+        <div className="lp-feat-block l-reveal">
+          <div>
+            <div className="lp-feat-tag">Cobros automáticos</div>
+            <div className="lp-feat-h">Tu alumno paga. Vos recibís. Sin perseguir a nadie.</div>
+            <p className="lp-feat-p">Activás los cobros, definís el precio por alumno y el dinero va directo a tu Mercado Pago. Sin transferencias pendientes, sin vergüenza.</p>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>El alumno paga desde su app con un botón</span></div>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Recibís en tu cuenta MP instantáneamente</span></div>
+            <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Comisión 5% con PRO · 8% con FREE</span></div>
           </div>
-          <div className="l-problem-list">
-            {[
-              { n: '01', h: 'Rutinas que nadie entiende', p: 'Mandás un PDF, te preguntan qué ejercicio es, mandás otro, se confunden. Todo por WhatsApp, a las 11 de la noche.' },
-              { n: '02', h: 'Consultas que se pierden', p: 'La pregunta de Martina quedó enterrada entre memes. Respondés tarde, perdés profesionalismo, perdés alumnos.' },
-              { n: '03', h: 'Cobros que no llegan', p: '¿Sofía pagó este mes? ¿Carlos debe dos? Sin datos claros, cobrás con vergüenza. O directamente no cobrás.' },
-            ].map(({ n, h, p }) => (
-              <div key={n} className="l-problem-item l-reveal">
-                <span className="l-problem-num">{n}</span>
-                <div className="l-problem-content"><h3>{h}</h3><p>{p}</p></div>
+          <div className="lp-mini-screen">
+            <div className="lp-mini-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+                <div className="lp-mini-title" style={{ margin: '0' }}>MP conectado</div>
+                <span style={{ fontSize: '10px', color: '#9ca3af', marginLeft: '4px' }}>· comisión 5%</span>
+              </div>
+            </div>
+            {/* Revenue box */}
+            <div className="lp-rev-box" style={{ marginBottom: '10px' }}>
+              <div className="lp-rev-label">Ingresos del mes</div>
+              <div className="lp-rev-amount">$480.000</div>
+              <div className="lp-rev-sub">18 cobros aprobados · 4 pendientes</div>
+            </div>
+            <div style={{ fontSize: '9px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '7px' }}>Aprobados</div>
+            {[['SM','lp-ava-pink','Sofía Martínez','Hipertrofia','$27.000'],['MG','lp-ava-blue','Martín García','Rendimiento','$27.000'],['LR','lp-ava-teal','Laura Rodríguez','Rehabilitación','$22.000']].map(([ini,c,name,plan,amount]) => (
+              <div key={name} className="lp-cobro-item" style={{ padding: '8px 10px' }}>
+                <div className={`lp-ph-ava ${c}`} style={{ width: '24px', height: '24px', fontSize: '7px', flexShrink: 0 }}>{ini}</div>
+                <div style={{ flex: 1, minWidth: 0, marginLeft: '7px' }}>
+                  <div className="lp-cobro-name" style={{ fontSize: '11px' }}>{name}</div>
+                  <div style={{ fontSize: '9px', color: '#9ca3af' }}>{plan}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="lp-cobro-amount" style={{ fontSize: '12px' }}>{amount}</div>
+                  <div className="lp-cobro-status" style={{ fontSize: '8px' }}>Aprobado</div>
+                </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. FEATURE CARDS ── */}
-      <section className="l-features-section">
-        <div className="l-features-section-header l-reveal">
-          <div className="l-section-label">Lo que cambia</div>
-          <h2 className="l-section-title">Una herramienta.<br /><em>Todo resuelto.</em></h2>
-          <p className="l-section-sub">Diseñada para que en 10 minutos ya estés trabajando, no configurando.</p>
-        </div>
-        <div className="l-feat-grid">
-          {[
-            {
-              icon: '⚡',
-              tag: 'Sin Excel',
-              title: 'Rutinas en minutos',
-              desc: 'Armá, duplicá y asigná planes de entrenamiento. Tu alumno los ve en su celular al instante. Vos seguís el progreso en tiempo real.',
-              accent: '#5B8CFF',
-            },
-            {
-              icon: '◎',
-              tag: 'Sin WhatsApp',
-              title: 'Todo sobre tu alumno',
-              desc: 'Objetivo, restricciones, historial y checkins en un solo lugar. Sabés exactamente en qué punto está cada uno, sin preguntar.',
-              accent: '#5B8CFF',
-            },
-            {
-              icon: '💳',
-              tag: 'Sin perseguir',
-              title: 'Cobrás sin vergüenza',
-              desc: 'Tu alumno paga desde la app con un botón. Vos recibís directo en tu Mercado Pago. Sin transferencias pendientes.',
-              accent: '#5B8CFF',
-            },
-            {
-              icon: '◈',
-              tag: 'Solo PRO',
-              title: 'Tu marca, no la nuestra',
-              desc: 'Logo, colores y nombre propios. Tus alumnos ven tu identidad, no Pulse. Una app con tu imagen que te diferencia de cualquier colega.',
-              accent: '#5B8CFF',
-            },
-          ].map(({ icon, tag, title, desc }) => (
-            <div key={title} className="l-feat-card l-reveal">
-              <div className="l-feat-card-top">
-                <div className="l-feat-icon">{icon}</div>
-                <span className="l-feat-tag">{tag}</span>
-              </div>
-              <h3 className="l-feat-title">{title}</h3>
-              <p className="l-feat-desc">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 5. MOCKUPS PREMIUM ── */}
-      <section className="l-section l-screens">
-        <div className="l-screens-header l-reveal">
-          <div className="l-section-label">El producto</div>
-          <h2 className="l-section-title">Así se ve<br /><em>un negocio real.</em></h2>
-          <p className="l-section-sub">No un demo. Una entrenadora con 24 alumnos, 8 planes activos y $480.000 ARS en cobros este mes.</p>
-        </div>
-        <div className="l-mockups-grid">
-
-          {/* Dashboard */}
-          <div className="l-mockup-wrap l-reveal">
-            <div className="l-mockup-label">Dashboard</div>
-            <div className="l-phone-frame">
-              <div className="l-phone-screen">
-                <div className="l-ph-head">
-                  <div className="l-ph-date">Viernes, 27 de marzo</div>
-                  <div className="l-ph-brand">Caro Team</div>
-                  <div className="l-ph-greeting">Hola, Carolina 👋</div>
-                </div>
-                <div className="l-ph-body">
-                  <div className="l-ph-stat-grid">
-                    {[['24','pink','Alumnos'],['21','green','Con plan'],['3','amber','Sin plan'],['8','pink','Planes']].map(([n,c,l]) => (
-                      <div key={l} className="l-ph-stat-card">
-                        <div className={`l-ph-stat-n ${c}`}>{n}</div>
-                        <div className="l-ph-stat-l">{l}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="l-rev-box">
-                    <div className="l-rev-label">Ingresos del mes</div>
-                    <div className="l-rev-amount">$480.000</div>
-                    <div className="l-rev-sub">+12% vs mes anterior</div>
-                    <div className="l-rev-row">
-                      {[['18','#16a34a','Cobrados'],['4','#d97706','Pendientes'],['2','#9ca3af','Sin cobro']].map(([n,c,l]) => (
-                        <div key={l} style={{textAlign:'center'}}>
-                          <div style={{fontSize:'13px',fontWeight:'800',color:c}}>{n}</div>
-                          <div style={{fontSize:'8px',color:'#6b7280'}}>{l}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="l-ph-insight">
-                    <div className="l-ph-insight-icon">⚡</div>
-                    <div className="l-ph-insight-text"><strong>Acción:</strong> Valentina Ruiz sin plan.</div>
-                  </div>
-                  {[['SM','pink','Sofía Martínez','Hipertrofia · Sem 4','ok','✓ Pagó'],['MG','blue','Martín García','Rendimiento · Sem 2','ok','✓ Pagó'],['LR','teal','Laura Rodríguez','Rehabilitación','warn','Pendiente']].map(([ini,c,name,sub,st,badge]) => (
-                    <div key={name} className="l-ph-row">
-                      <div className={`l-ph-ava ${c}`}>{ini}</div>
-                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{sub}</div></div>
-                      <span className={`l-ph-badge ${st}`}>{badge}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="l-ph-nav">
-                  {[['▦','Inicio',true],['◉','Alumnos'],['☰','Planes'],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
-                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
-                      <span className="l-ph-nav-icon">{icon}</span>{label}
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#6b7280' }}>Total recibido</span>
+              <span style={{ fontSize: '15px', fontWeight: '900', color: '#16a34a' }}>$432.000</span>
             </div>
           </div>
-
-          {/* Alumnos */}
-          <div className="l-mockup-wrap l-reveal">
-            <div className="l-mockup-label">Alumnos</div>
-            <div className="l-phone-frame">
-              <div className="l-phone-screen">
-                <div className="l-ph-head">
-                  <div className="l-ph-date">Gestión</div>
-                  <div className="l-ph-greeting" style={{fontSize:'16px'}}>Alumnos/as</div>
-                  <div className="l-ph-date" style={{marginTop:'2px'}}>24 alumnos · 21 con plan</div>
-                </div>
-                <div className="l-ph-body">
-                  <div className="l-ph-search">🔍 Buscar por nombre o DNI...</div>
-                  <div className="l-ph-list-label green-label">Activos (21)</div>
-                  {[['SM','pink','Sofía Martínez','Hipertrofia · Sem 4/8'],['MG','blue','Martín García','Rendimiento deportivo'],['LR','teal','Laura Rodríguez','Rehabilitación rodilla'],['JP','amber','Juliana Pérez','Pérdida de peso'],['NF','purple','Nicolás Ferreyra','Hipertrofia · Sem 2/6'],['CA','cyan','Camila Acosta','Salud general']].map(([ini,c,name,sub]) => (
-                    <div key={name} className="l-ph-row">
-                      <div className={`l-ph-ava ${c}`}>{ini}</div>
-                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{sub}</div></div>
-                      <span className="l-ph-badge ok">✓ Plan</span>
-                    </div>
-                  ))}
-                  <div className="l-ph-list-label warn-label">Sin plan (3)</div>
-                  {[['VR','red','Valentina Ruiz','Tonificación · Nueva'],['BO','red2','Bruno Ortega','Rendimiento']].map(([ini,c,name,sub]) => (
-                    <div key={name} className="l-ph-row">
-                      <div className={`l-ph-ava ${c}`}>{ini}</div>
-                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{sub}</div></div>
-                      <span className="l-ph-badge warn">Sin plan</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="l-ph-nav">
-                  {[['▦','Inicio'],['◉','Alumnos',true],['☰','Planes'],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
-                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
-                      <span className="l-ph-nav-icon">{icon}</span>{label}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Planes */}
-          <div className="l-mockup-wrap l-reveal">
-            <div className="l-mockup-label">Planes</div>
-            <div className="l-phone-frame">
-              <div className="l-phone-screen">
-                <div className="l-ph-head">
-                  <div className="l-ph-date">Gestión</div>
-                  <div className="l-ph-greeting" style={{fontSize:'16px'}}>Planes</div>
-                  <div className="l-ph-date" style={{marginTop:'2px'}}>8 planes · 24 asignaciones</div>
-                </div>
-                <div className="l-ph-body">
-                  {[
-                    {name:'Hipertrofia Avanzada',tag:'Hipertrofia',tagColor:'#fce7f3',tagText:'#be185d',color:'#e260a5',sems:'8',dias:'5',ejs:'42',alumnos:['SM','NF','AG','+4']},
-                    {name:'Rendimiento Deportivo',tag:'Rendimiento',tagColor:'#eff3ff',tagText:'#3b5bdb',color:'#5B8CFF',sems:'6',dias:'4',ejs:'36',alumnos:['MG','BO','+2']},
-                    {name:'Rehabilitación Activa',tag:'Rehabilitación',tagColor:'#f0fdf4',tagText:'#15803d',color:'#16a34a',sems:'4',dias:'3',ejs:'18',alumnos:['LR','EP','+1']},
-                    {name:'Pérdida de Peso',tag:'Salud general',tagColor:'#fef3c7',tagText:'#92400e',color:'#d97706',sems:'12',dias:'4',ejs:'28',alumnos:['JP','CA','+5']},
-                  ].map(({name,tag,tagColor,tagText,color,sems,dias,ejs,alumnos}) => (
-                    <div key={name} className="l-plan-card">
-                      <div className="l-plan-name" style={{color}}>{name}</div>
-                      <span className="l-plan-tag" style={{background:tagColor,color:tagText}}>{tag}</span>
-                      <div className="l-plan-stats">
-                        {[[sems,'Semanas'],[dias,'Días/sem'],[ejs,'Ejercicios']].map(([n,l]) => (
-                          <div key={l} style={{textAlign:'center'}}>
-                            <div style={{fontSize:'16px',fontWeight:'800',color,lineHeight:'1'}}>{n}</div>
-                            <div style={{fontSize:'7px',color:'#9ca3af',textTransform:'uppercase',letterSpacing:'.04em'}}>{l}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="l-plan-assigned">
-                        {alumnos.map(a => a.startsWith('+')
-                          ? <span key={a} style={{fontSize:'8px',color:'#9ca3af'}}>{a} más</span>
-                          : <div key={a} className="l-plan-ava-sm" style={{background:color}}>{a}</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="l-ph-nav">
-                  {[['▦','Inicio'],['◉','Alumnos'],['☰','Planes',true],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
-                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
-                      <span className="l-ph-nav-icon">{icon}</span>{label}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Cobros */}
-          <div className="l-mockup-wrap l-reveal">
-            <div className="l-mockup-label">Cobros</div>
-            <div className="l-phone-frame">
-              <div className="l-phone-screen">
-                <div className="l-ph-head">
-                  <div className="l-ph-date">Marzo 2026</div>
-                  <div className="l-ph-greeting" style={{fontSize:'16px'}}>Cobros</div>
-                  <div style={{display:'flex',alignItems:'center',gap:'4px',marginTop:'2px'}}>
-                    <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>
-                    <span style={{fontSize:'9px',color:'#9ca3af'}}>MP conectado · comisión 5%</span>
-                  </div>
-                </div>
-                <div className="l-ph-body">
-                  <div className="l-rev-box">
-                    <div className="l-rev-label">Ingresos del mes</div>
-                    <div className="l-rev-amount">$480.000</div>
-                    <div className="l-rev-sub">18 cobros aprobados · 4 pendientes</div>
-                    <div className="l-rev-row">
-                      {[['$432k','#16a34a','Recibido'],['$96k','#d97706','Pendiente']].map(([n,c,l]) => (
-                        <div key={l} style={{textAlign:'center'}}>
-                          <div style={{fontSize:'13px',fontWeight:'800',color:c}}>{n}</div>
-                          <div style={{fontSize:'8px',color:'#6b7280'}}>{l}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="l-ph-list-label green-label">Aprobados</div>
-                  {[['SM','pink','Sofía Martínez','Hipertrofia','$27.000'],['MG','blue','Martín García','Rendimiento','$27.000'],['LR','teal','Laura Rodríguez','Rehabilitación','$22.000']].map(([ini,c,name,plan,amount]) => (
-                    <div key={name} className="l-cobro-row">
-                      <div className={`l-ph-ava ${c}`} style={{width:'26px',height:'26px',fontSize:'8px'}}>{ini}</div>
-                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{plan}</div></div>
-                      <div style={{textAlign:'right'}}>
-                        <div style={{fontSize:'12px',fontWeight:'800',color:'#16a34a'}}>{amount}</div>
-                        <span className="l-ph-badge ok" style={{fontSize:'7px'}}>Aprobado</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="l-ph-list-label warn-label">Pendientes</div>
-                  {[['JP','amber','Juliana Pérez','Pérdida de peso','$24.000'],['NF','purple','Nicolás Ferreyra','Hipertrofia','$27.000']].map(([ini,c,name,plan,amount]) => (
-                    <div key={name} className="l-cobro-row">
-                      <div className={`l-ph-ava ${c}`} style={{width:'26px',height:'26px',fontSize:'8px'}}>{ini}</div>
-                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{plan}</div></div>
-                      <div style={{textAlign:'right'}}>
-                        <div style={{fontSize:'12px',fontWeight:'800',color:'#d97706'}}>{amount}</div>
-                        <span className="l-ph-badge warn" style={{fontSize:'7px'}}>Pendiente</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{marginTop:'10px',paddingTop:'8px',borderTop:'1px solid #f3f4f6',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontSize:'10px',color:'#6b7280'}}>Total recibido</span>
-                    <span style={{fontSize:'15px',fontWeight:'900',color:'#16a34a'}}>$432.000</span>
-                  </div>
-                </div>
-                <div className="l-ph-nav">
-                  {[['▦','Inicio'],['◉','Alumnos'],['☰','Planes'],['?','Ayuda'],['◈','Marca',true]].map(([icon,label,active]) => (
-                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
-                      <span className="l-ph-nav-icon">{icon}</span>{label}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
-      </section>
+      </div>
 
-      {/* ── 6. TESTIMONIO editorial ── */}
-      <section className="l-testimonial">
-        <div className="l-testimonial-inner l-reveal">
-          <div className="l-testimonial-left">
-            <div className="l-testimonial-tag">Caso real</div>
-            <blockquote className="l-testimonial-quote">
-              "Pulse me ayudó a ordenar cada alumno de forma personalizada. Puedo armar rutinas a distancia, unificar los pagos y automatizar el trabajo — para enfocarme en lo que importa: la evolución de cada alumno."
-            </blockquote>
-            <div className="l-testimonial-author">
-              <div className="l-testimonial-avatar">CL</div>
-              <div>
-                <div className="l-testimonial-name">Carolina Lell</div>
-                <div className="l-testimonial-role">Entrenadora personal · Buenos Aires</div>
-              </div>
+      {/* TESTIMONIAL */}
+      <div className="lp-testimonial">
+        <div className="lp-testi-inner l-reveal">
+          <div className="lp-testi-tag">Caso real</div>
+          <div className="lp-testi-quote">
+            "Pulse me ayudó a ordenar cada alumno de forma personalizada. Puedo armar rutinas a distancia, unificar los pagos y automatizar el trabajo — para enfocarme en lo que importa: la evolución de cada alumno."
+          </div>
+          <div className="lp-testi-author">
+            <div className="lp-testi-ava">CL</div>
+            <div>
+              <div className="lp-testi-name">Entrenadora personal · Buenos Aires</div>
+              <div className="lp-testi-role">Usuaria desde el lanzamiento</div>
             </div>
           </div>
-          <div className="l-testimonial-right">
-            <div className="l-tm-item">
-              <div className="l-tm-n">100%</div>
-              <div className="l-tm-l">Digital desde el día 1</div>
+          <div className="lp-testi-metrics">
+            <div><div className="lp-tm-n">100%</div><div className="lp-tm-l">Digital desde el día 1</div></div>
+            <div><div className="lp-tm-n">0</div><div className="lp-tm-l">PDFs ni Excel</div></div>
+            <div><div className="lp-tm-n">3 hs</div><div className="lp-tm-l">Recuperadas por semana</div></div>
+          </div>
+          <a href="/register/admin" className="lp-btn-main" style={{ fontSize: '15px', padding: '14px 28px', display: 'inline-block', textDecoration: 'none' }}>Quiero lo mismo →</a>
+        </div>
+      </div>
+
+      {/* PRICING */}
+      <div className="lp-pricing">
+        <div className="lp-pricing-inner">
+          <div className="lp-section-label" style={{ textAlign: 'center' }}>Planes</div>
+          <div className="lp-section-title" style={{ textAlign: 'center' }}>Empezá gratis.<br /><em>Crecé cuando estés listo.</em></div>
+          <div style={{ fontSize: '14px', color: '#6b7280', textAlign: 'center' }}>Sin contratos. Sin letras chicas. Sin sorpresas.</div>
+          <div className="lp-pricing-grid">
+            {/* FREE */}
+            <div className="lp-price-card">
+              <div className="lp-price-label">Plan Free</div>
+              <div className="lp-price-n">$0</div>
+              <div className="lp-price-period">Para siempre</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Hasta <strong>2 alumnos</strong></div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Constructor de rutinas</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>App del alumno (marca Pulse)</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Cobros (comisión 8%)</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot muted">—</span><span style={{ color: '#9ca3af' }}>Branding propio</span></div>
+              <div className="lp-price-feat"><span className="lp-pf-dot muted">—</span><span style={{ color: '#9ca3af' }}>Comisión reducida</span></div>
+              <a href="/register/admin" className="lp-price-cta free" style={{ textDecoration: 'none', display: 'block' }}>Empezar gratis</a>
             </div>
-            <div className="l-tm-sep" />
-            <div className="l-tm-item">
-              <div className="l-tm-n">0</div>
-              <div className="l-tm-l">PDFs ni Excel</div>
+            {/* PRO */}
+            <div className="lp-price-card pro">
+              <div style={{ display: 'inline-block', background: '#5B8CFF', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 12px', borderRadius: '20px', marginBottom: '12px', letterSpacing: '0.06em' }}>MÁS ELEGIDO</div>
+              <div className="lp-price-label">Plan Pro</div>
+              <div className="lp-price-n">$25.000</div>
+              <div className="lp-price-period">ARS / mes</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><strong>Alumnos ilimitados</strong></div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>App con tu logo y colores</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Nombre de marca propio</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Cobrá a tus alumnos desde la app</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Comisión reducida 5%</div>
+              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Soporte prioritario</div>
+              <div style={{ fontSize: '12px', color: '#3b5bdb', marginTop: '8px', fontWeight: '600' }}>Menos de lo que ganás con una clase extra.</div>
+              <a href="/register/admin?plan=pro" className="lp-price-cta pro" style={{ textDecoration: 'none', display: 'block' }}>Activar Pro →</a>
             </div>
-            <div className="l-tm-sep" />
-            <div className="l-tm-item">
-              <div className="l-tm-n">3 hs</div>
-              <div className="l-tm-l">Recuperadas por semana</div>
-            </div>
-            <a href="/register/admin" className="l-btn-primary" style={{marginTop:'32px', display:'inline-block'}}>
-              Quiero lo mismo →
-            </a>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ── 7. PRICING ── */}
-      <section className="l-section l-pricing" id="pricing">
-        <div className="l-pricing-header l-reveal">
-          <div className="l-section-label">Planes</div>
-          <h2 className="l-section-title">Empezá gratis.<br /><em>Crecé cuando estés listo.</em></h2>
-          <p className="l-section-sub">Sin contratos. Sin letras chicas. Sin sorpresas.</p>
-        </div>
-        <div className="l-pricing-grid">
-          <div className="l-price-card l-reveal">
-            <div className="l-price-card-label">Plan Free</div>
-            <div className="l-price-amount"><span className="currency">$</span><span className="number">0</span><span className="period">/ siempre</span></div>
-            <p className="l-price-desc">Para probar sin compromiso.</p>
-            <ul className="l-price-features">
-              <li><span className="check">✓</span><span>Hasta <strong>2 alumnos</strong></span></li>
-              <li><span className="check">✓</span><span>Constructor de rutinas</span></li>
-              <li><span className="check">✓</span><span>App del alumno (marca Pulse)</span></li>
-              <li><span className="check">✓</span><span>Cobros desde la app (comisión 8%)</span></li>
-              <li><span className="check">✓</span><span>Sin vencimiento</span></li>
-              <li><span className="check muted">—</span><span className="muted">Personalización de marca</span></li>
-              <li><span className="check muted">—</span><span className="muted">Comisión reducida al 5%</span></li>
-            </ul>
-            <a href="/register/admin" className="l-btn-outline">Empezar gratis</a>
-          </div>
-          <div className="l-price-card pro l-reveal">
-            <div className="l-pro-badge">El que eligen los que probaron los dos</div>
-            <div className="l-price-card-label">Plan Pro</div>
-            <div className="l-price-amount"><span className="currency">$</span><span className="number">25.000</span><span className="period">ARS / mes</span></div>
-            <p className="l-price-desc">Para quien ya decidió que su negocio es serio.</p><p className="l-price-anchor">Menos de lo que ganás con una clase extra.</p>
-            <ul className="l-price-features">
-              <li><span className="check">✓</span><span><strong>Alumnos ilimitados</strong></span></li>
-              <li><span className="check">✓</span><span>Constructor de rutinas completo</span></li>
-              <li><span className="check">✓</span><span>App del alumno con <strong>tu marca</strong></span></li>
-              <li><span className="check">✓</span><span>Logo y colores propios</span></li>
-              <li><span className="check">✓</span><span>Cobrá a tus alumnos desde la app</span></li>
-              <li><span className="check">✓</span><span>Comisión reducida 5%</span></li>
-              <li><span className="check">✓</span><span>Soporte prioritario</span></li>
-            </ul>
-            <a href="/register/admin?plan=pro" className="l-btn-pro">Activar Pro →</a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 8. CTA FINAL ── */}
-      <section className="l-final-cta">
-        <div className="l-final-cta-inner l-reveal">
-          <div className="l-section-label" style={{color:'rgba(255,255,255,0.5)'}}>Una decisión</div>
-          <h2 className="l-final-cta-title">Dejá de administrar.<br /><em>Empezá a entrenar.</em></h2>
-          <p className="l-final-cta-sub">En 10 minutos tenés tu primera rutina cargada y tu primer alumno adentro.</p>
-          <a href="/register/admin" className="l-btn-primary l-btn-xl">Crear mi cuenta gratis →</a>
-          <div className="l-final-cta-note">Creá tu cuenta en 2 minutos · Sin instalar nada · Sin tarjeta</div>
-        </div>
-      </section>
+      {/* FINAL CTA */}
+      <div className="lp-final">
+        <h2>Dejá de administrar.<br /><em>Empezá a entrenar.</em></h2>
+        <div className="lp-final-sub">En 10 minutos tenés tu primera rutina cargada y tu primer alumno adentro.</div>
+        <a href="/register/admin" className="lp-btn-main" style={{ fontSize: '16px', padding: '16px 40px', display: 'inline-block', textDecoration: 'none' }}>Crear mi app gratis →</a>
+        <div className="lp-final-note">Gratis para tus primeros 2 alumnos · Sin tarjeta · Sin contrato</div>
+      </div>
 
       {/* FOOTER */}
-      <footer className="l-footer">
-        <div className="l-footer-logo">PULSE</div>
-        <p className="l-footer-quote">"La constancia necesita claridad."</p>
-        <div className="l-footer-divider"></div>
-        <p className="l-footer-kairo">Un producto de <strong>KAIRO</strong> — <em>Make it simple.</em></p>
-        <div className="l-footer-links">
+      <div className="lp-footer">
+        <div className="lp-footer-logo">PULSE</div>
+        <div className="lp-footer-quote">"La constancia necesita claridad."</div>
+        <div className="lp-footer-links">
           <a href="/terminos">Términos</a>
           <a href="/privacidad">Privacidad</a>
           <a href="mailto:hola@getpulseapp.lat">Contacto</a>
         </div>
-      </footer>
+      </div>
 
     </div>
   )
