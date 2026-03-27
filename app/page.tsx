@@ -78,9 +78,7 @@ export default function HomePage() {
           <div className="lp-phone">
             <div className="lp-phone-screen">
               <div className="lp-phone-header">
-                <div className="lp-ph-date">Viernes, 27 de marzo</div>
-                <div className="lp-ph-brand">Caro Team</div>
-                <div className="lp-ph-greeting">Hola, Carolina 👋</div>
+                <div className="lp-ph-greeting">Hola, Caro 👋</div>
               </div>
               <div className="lp-phone-body">
                 <div className="lp-ph-grid">
@@ -89,28 +87,20 @@ export default function HomePage() {
                   <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-red">3</div><div className="lp-ph-stat-l">Sin plan</div></div>
                   <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-pink">8</div><div className="lp-ph-stat-l">Planes</div></div>
                 </div>
-                {/* Revenue box — nuevo */}
                 <div className="lp-rev-box">
                   <div className="lp-rev-label">Ingresos del mes</div>
-                  <div className="lp-rev-amount">$480.000</div>
-                  <div className="lp-rev-sub">+12% vs mes anterior</div>
+                  <div className="lp-rev-amount">$820.000</div>
+                  <div className="lp-rev-sub">+15% vs mes anterior</div>
                 </div>
                 <div className="lp-ph-list-title">Activos <span>Ver todos →</span></div>
-                {[['SM','lp-ava-pink','Sofía Martínez','Hipertrofia · Sem 4','ok','✓ Pagó'],
-                  ['MG','lp-ava-blue','Martín García','Rendimiento · Sem 2','ok','✓ Pagó'],
-                  ['LR','lp-ava-teal','Laura Rodríguez','Rehabilitación','warn','Pendiente']
+                {[['VC','lp-ava-pink','Valentina Cruz','Hipertrofia · Sem 4','ok','✓ Pagó'],
+                  ['AM','lp-ava-blue','Andrés Molina','Rendimiento · Sem 2','ok','✓ Pagó'],
+                  ['CH','lp-ava-teal','Camila Herrera','Rehabilitación','warn','Pendiente']
                 ].map(([ini,c,name,sub,st,badge]) => (
                   <div key={name} className="lp-ph-row">
                     <div className={`lp-ph-ava ${c}`}>{ini}</div>
                     <div><div className="lp-ph-name">{name}</div><div className="lp-ph-goal">{sub}</div></div>
                     <span className={`lp-ph-badge ${st}`}>{badge}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="lp-phone-nav">
-                {[['▦','Inicio',true],['◉','Alumnos'],['☰','Planes'],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
-                  <div key={label} className={`lp-pn-item${active?' active':''}`}>
-                    <span className="lp-pn-icon">{icon}</span>{label}
                   </div>
                 ))}
               </div>
@@ -240,13 +230,13 @@ export default function HomePage() {
             {/* Revenue box */}
             <div className="lp-rev-box">
               <div className="lp-rev-label">Ingresos del mes</div>
-              <div className="lp-rev-amount">$480.000</div>
-              <div className="lp-rev-sub">18 cobros aprobados · 4 pendientes</div>
+              <div className="lp-rev-amount">$820.000</div>
+              <div className="lp-rev-sub">+15% vs mes anterior</div>
             </div>
             <div style={{ fontSize:'10px', fontWeight:'700', color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'8px' }}>Aprobados</div>
-            {[['SM','lp-ava-pink','Sofía Martínez','Hipertrofia','$27.000'],
-              ['MG','lp-ava-blue','Martín García','Rendimiento','$27.000'],
-              ['LR','lp-ava-teal','Laura Rodríguez','Rehabilitación','$22.000'],
+            {[['VC','lp-ava-pink','Valentina Cruz','Hipertrofia','$38.000'],
+              ['AM','lp-ava-blue','Andrés Molina','Rendimiento','$38.000'],
+              ['CH','lp-ava-teal','Camila Herrera','Rehabilitación','$38.000'],
             ].map(([ini,c,name,plan,amount]) => (
               <div key={name} className="lp-cobro-item" style={{ padding:'8px 10px' }}>
                 <div className={`lp-ph-ava ${c}`} style={{ width:'24px', height:'24px', fontSize:'7px', flexShrink:0 }}>{ini}</div>
@@ -262,7 +252,7 @@ export default function HomePage() {
             ))}
             <div style={{ marginTop:'12px', paddingTop:'10px', borderTop:'1px solid #f3f4f6', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div style={{ fontSize:'11px', color:'#6b7280' }}>Total recibido</div>
-              <div style={{ fontSize:'16px', fontWeight:'800', color:'#16a34a' }}>$432.000</div>
+              <div style={{ fontSize:'16px', fontWeight:'800', color:'#16a34a' }}>$779.000</div>
             </div>
           </div>
         </div>
@@ -337,14 +327,20 @@ export default function HomePage() {
         <div className="lp-final-note">Gratis para tus primeros 2 alumnos · Sin tarjeta · Sin contrato</div>
       </div>
 
-      {/* ── FOOTER — idéntico al original ── */}
-      <div className="lp-footer">
-        <div className="lp-footer-logo">PULSE</div>
-        <div className="lp-footer-quote">"La constancia necesita claridad."</div>
-        <div className="lp-footer-links">
-          <a href="/terminos">Términos</a>
-          <a href="/privacidad">Privacidad</a>
-          <a href="mailto:hola@getpulseapp.lat">hola@getpulseapp.lat</a>
+      {/* ── FOOTER — ecosistema KAIRO ── */}
+      <div className="lp-footer-eco">
+        <div className="lp-footer-eco-in">
+          <div className="lp-eco-mark">
+            <a href="#" className="lp-eco-item lp-eco-pulse">PULSE<span className="lp-eco-dot lp-eco-dot-pulse">.</span></a>
+            <a href="#" className="lp-eco-item lp-eco-crece">CRECE<span className="lp-eco-dot lp-eco-dot-crece">.</span></a>
+            <a href="#" className="lp-eco-item lp-eco-closer">CLOSER<span className="lp-eco-dot lp-eco-dot-closer">.</span></a>
+            <a href="https://getsignalatam.lat/" target="_blank" rel="noopener" className="lp-eco-item lp-eco-signal">SIGNAL<span className="lp-eco-dot lp-eco-dot-signal">.</span></a>
+          </div>
+          <div className="lp-foot-links">
+            <a href="https://kairo.lat/" target="_blank" rel="noopener" className="lp-foot-kairo"><strong>KAIRO</strong> — Make it simple</a>
+            <a href="/privacidad">Privacidad</a>
+            <a href="mailto:hola@getpulseapp.lat">Contacto</a>
+          </div>
         </div>
       </div>
 
