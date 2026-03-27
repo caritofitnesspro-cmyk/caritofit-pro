@@ -21,15 +21,12 @@ export default function HomePage() {
       else router.push('/dashboard')
     }
     checkSession()
-
     const navbar = document.getElementById('l-navbar')
     const onScroll = () => navbar?.classList.toggle('scrolled', window.scrollY > 40)
     window.addEventListener('scroll', onScroll)
-
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Observer separado — espera que el DOM esté listo
   useEffect(() => {
     if (checking) return
     const timer = setTimeout(() => {
@@ -53,61 +50,93 @@ export default function HomePage() {
   return (
     <div className="landing-root">
 
+      {/* NAV */}
       <nav id="l-navbar" className="l-nav">
         <div className="l-nav-logo">PULSE<span>.</span></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <a href="/login" style={{ color: 'var(--muted)', fontSize: '14px', textDecoration: 'none', fontWeight: '500', transition: 'color 0.2s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--white)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}>
-            Iniciar sesión
-          </a>
+          <a href="/login" className="l-nav-login">Iniciar sesión</a>
           <a href="/register/admin" className="l-nav-cta">Empezar gratis</a>
         </div>
       </nav>
 
+      {/* ── 1. HERO ── */}
       <section className="l-hero">
-        {/* Imagen deportiva de fondo */}
         <div className="l-hero-bg">
           <img
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80&auto=format&fit=crop"
-            alt=""
+            src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1800&q=85&auto=format&fit=crop"
+            alt="Entrenador personal en acción"
             className="l-hero-img"
           />
           <div className="l-hero-overlay" />
         </div>
         <div className="l-hero-content">
           <div className="l-hero-eyebrow">Para entrenadores personales</div>
-          <h1>Tu negocio.<br /><em>En movimiento.</em></h1>
+          <h1>Tu negocio<br />al ritmo que<br /><em>entrenás.</em></h1>
           <p className="l-hero-sub">
-            Gestioná alumnos, rutinas y cobros <strong>mientras entrenás</strong>. Sin Excel, sin PDFs, sin caos.
+            Alumnos, rutinas y cobros en un lugar.<br />
+            <strong>Menos administración. Más cancha.</strong>
           </p>
           <div className="l-hero-actions">
             <a href="/register/admin" className="l-btn-primary">Empezar gratis →</a>
             <span className="l-hero-note">3 alumnos incluidos · Sin tarjeta</span>
           </div>
           <div className="l-hero-stats">
-            <div className="l-hero-stat"><span className="l-hero-stat-n">10 min</span><span className="l-hero-stat-l">para estar operativo</span></div>
+            <div className="l-hero-stat">
+              <span className="l-hero-stat-n">10 min</span>
+              <span className="l-hero-stat-l">para estar operativo</span>
+            </div>
             <div className="l-hero-stat-div" />
-            <div className="l-hero-stat"><span className="l-hero-stat-n">3 hs</span><span className="l-hero-stat-l">recuperadas por semana</span></div>
+            <div className="l-hero-stat">
+              <span className="l-hero-stat-n">3 hs</span>
+              <span className="l-hero-stat-l">recuperadas por semana</span>
+            </div>
             <div className="l-hero-stat-div" />
-            <div className="l-hero-stat"><span className="l-hero-stat-n">$0</span><span className="l-hero-stat-l">para empezar</span></div>
+            <div className="l-hero-stat">
+              <span className="l-hero-stat-n">$0</span>
+              <span className="l-hero-stat-l">para empezar</span>
+            </div>
           </div>
         </div>
-        <div className="l-hero-scroll"><div className="l-scroll-line"></div><span>SCROLL</span></div>
+        <div className="l-hero-scroll"><div className="l-scroll-line" /><span>SCROLL</span></div>
       </section>
 
+      {/* ── 2. BARRA DE CREDIBILIDAD ── */}
+      <section className="l-cred">
+        <div className="l-cred-inner">
+          <span className="l-cred-label">Usado por entrenadores en Argentina</span>
+          <div className="l-cred-divider" />
+          <div className="l-cred-items">
+            {[
+              { n: '100%', l: 'digital desde el día 1' },
+              { n: 'Sin app', l: 'que instalar — corre en el celular' },
+              { n: 'MP', l: 'para cobros directos' },
+              { n: 'Gratis', l: 'para empezar hoy' },
+            ].map(({ n, l }) => (
+              <div key={n} className="l-cred-item">
+                <span className="l-cred-n">{n}</span>
+                <span className="l-cred-l">{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. EL DOLOR ── */}
       <section className="l-section l-problems">
         <div className="l-problems-grid">
           <div className="l-problems-intro l-reveal">
             <div className="l-section-label">El problema</div>
-            <h2 className="l-section-title">¿Te suena <em>familiar</em>?</h2>
-            <p className="l-section-sub">No sos desorganizado. Es que nadie te dio una herramienta que encaje con tu forma de trabajar.</p>
+            <h2 className="l-section-title">¿Cuántas horas<br /><em>perdés</em> por semana?</h2>
+            <p className="l-section-sub">No es falta de organización. Es que nadie te dio una herramienta hecha para entrenadores.</p>
+            <a href="/register/admin" className="l-btn-outline-blue" style={{ marginTop: '32px', display: 'inline-block' }}>
+              Resolver esto gratis →
+            </a>
           </div>
           <div className="l-problem-list">
             {[
-              { n: '01', h: 'Rutinas que nadie entiende', p: 'Cambiás un ejercicio y tenés que editar cinco archivos. Tu alumno recibe el PDF equivocado. Arrancás a disculparte por WhatsApp a las 10 de la noche.' },
-              { n: '02', h: 'Mensajes perdidos en el chat', p: 'La consulta de Martina quedó enterrada entre memes y el pedido de turno de Juan. Respondés tarde, te sentís mal, perdés la imagen profesional que tanto te costó construir.' },
-              { n: '03', h: 'Cobrás con vergüenza o no cobrás', p: '¿Sofía abonó este mes? ¿Carlos debe dos? Sin datos claros, pedís plata con vergüenza. O directamente no cobrás. Y eso te cuesta más que tiempo.' },
+              { n: '01', h: 'Rutinas que nadie entiende', p: 'Mandás un PDF, te preguntan qué ejercicio es, mandás otro, se confunden. Todo por WhatsApp, a las 11 de la noche.' },
+              { n: '02', h: 'Consultas que se pierden', p: 'La pregunta de Martina quedó enterrada entre memes. Respondés tarde, perdés profesionalismo, perdés alumnos.' },
+              { n: '03', h: 'Cobros que no llegan', p: '¿Sofía pagó este mes? ¿Carlos debe dos? Sin datos claros, cobrás con vergüenza. O directamente no cobrás.' },
             ].map(({ n, h, p }) => (
               <div key={n} className="l-problem-item l-reveal">
                 <span className="l-problem-num">{n}</span>
@@ -118,28 +147,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="l-section l-solution">
-        <div className="l-solution-header l-reveal">
-          <div className="l-section-label">La solución</div>
-          <h2 className="l-section-title">Menos administración.<br /><em>Más entrenamiento.</em></h2>
-          <p className="l-section-sub">Diseñadas para que en diez minutos ya estés trabajando, no configurando.</p>
+      {/* ── 4. ANTES / DESPUÉS ── */}
+      <section className="l-transform">
+        <div className="l-transform-header l-reveal">
+          <div className="l-section-label">La transformación</div>
+          <h2 className="l-section-title">Lo que cambia<br /><em>con Pulse.</em></h2>
         </div>
-        <div className="l-features-grid">
+        <div className="l-transform-grid">
           {[
-            { icon: '⚡', h: 'Rutinas en minutos', p: 'Armá, duplicá y asigná planes de entrenamiento sin abrir un Excel. Tu alumno lo ve en su celular al instante. Vos seguís el progreso en tiempo real.', tag: 'Sin Excel. Sin PDFs.' },
-            { icon: '◎', h: 'Todo sobre tu alumno', p: 'Objetivo, restricciones, historial, checkins y peso en un solo lugar. Sabés exactamente en qué punto está cada uno, sin preguntar ni adivinar.', tag: 'Datos que importan' },
-            { icon: '◻', h: 'Cobrás sin perseguir', p: 'Tu alumno paga desde la app con un botón. Vos recibís la plata directo en tu cuenta de Mercado Pago. Sin transferencias pendientes, sin vergüenza.', tag: 'Cobros automáticos' },
-          ].map(({ icon, h, p, tag }) => (
-            <div key={h} className="l-feature-card l-reveal">
-              <div className="l-feature-icon">{icon}</div>
-              <h3>{h}</h3>
-              <p>{p}</p>
-              <span className="l-feature-tag">{tag}</span>
+            { antes: 'Rutinas en PDF por WhatsApp', despues: 'Rutinas digitales asignadas en 1 clic' },
+            { antes: 'Consultas enterradas en el chat', despues: 'Todo centralizado, nada en tu cabeza' },
+            { antes: 'No sabés quién pagó ni cuándo', despues: 'El alumno paga desde la app, vos recibís en MP' },
+            { antes: 'Tu marca no existe digitalmente', despues: 'App con tu logo, tus colores, tu nombre' },
+          ].map(({ antes, despues }, i) => (
+            <div key={i} className="l-transform-row l-reveal">
+              <div className="l-transform-antes">
+                <span className="l-transform-x">✕</span>
+                <span>{antes}</span>
+              </div>
+              <div className="l-transform-arrow">→</div>
+              <div className="l-transform-despues">
+                <span className="l-transform-check">✓</span>
+                <span>{despues}</span>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
+      {/* ── 5. DEMO VISUAL (PANTALLAS) ── */}
       <section className="l-section l-screens">
         <div className="l-screens-header l-reveal">
           <div className="l-section-label">El producto</div>
@@ -158,33 +194,33 @@ export default function HomePage() {
                 <div className="lm-field-label">DNI</div>
                 <div className="lm-input">Sin puntos ni guiones</div>
                 <div className="lm-field-label">CONTRASEÑA</div>
-                <div className="lm-input pw">········</div>
-                <div className="lm-btn">Ingresar →</div>
-                <div className="lm-register">¿No tenés cuenta? Registrate →</div>
+                <div className="lm-input pw">••••••••</div>
+                <div className="lm-btn">Ingresar</div>
+                <div className="lm-register">¿Primera vez? Registrate acá</div>
               </div>
             </div>
           </div>
           <div className="l-screen-item l-reveal">
-            <div className="l-screen-label">Vista del entrenador</div>
+            <div className="l-screen-label">Panel del entrenador</div>
             <div className="l-screen-mock l-dash-mock">
               <div className="dm-sidebar">
                 <div className="dm-sidebar-brand">
                   <div className="dm-brand-icon">P</div>
-                  <div><div className="dm-brand-name">Mi Equipo</div><div className="dm-brand-role">PANEL DE ENTRENAMIENTO</div></div>
+                  <div><div className="dm-brand-name">Mi Equipo</div><div className="dm-brand-role">PANEL</div></div>
                 </div>
                 <div className="dm-nav-label">GESTIÓN</div>
-                <div className="dm-nav-item active">🏠 Dashboard</div>
-                <div className="dm-nav-item">👥 Alumnos/as</div>
-                <div className="dm-nav-item">📋 Planes</div>
-                <div className="dm-nav-item">🎨 Mi marca</div>
+                <div className="dm-nav-item active">Dashboard</div>
+                <div className="dm-nav-item">Alumnos/as</div>
+                <div className="dm-nav-item">Planes</div>
+                <div className="dm-nav-item">Mi marca</div>
               </div>
               <div className="dm-main">
-                <div className="dm-eyebrow">BIENVENIDO/A</div>
-                <div className="dm-greeting">Hola, Marcos 👋</div>
+                <div className="dm-eyebrow">PULSE</div>
+                <div className="dm-greeting">Hola, Carolina 👋</div>
                 <div className="dm-stats">
-                  <div className="dm-stat"><span className="dm-stat-n">8</span><span className="dm-stat-l">ALUMNOS/AS</span></div>
-                  <div className="dm-stat"><span className="dm-stat-n">5</span><span className="dm-stat-l">PLANES</span></div>
-                  <div className="dm-stat"><span className="dm-stat-n">6</span><span className="dm-stat-l">CON PLAN ACTIVO</span></div>
+                  <div className="dm-stat"><span className="dm-stat-n">3</span><span className="dm-stat-l">ALUMNOS</span></div>
+                  <div className="dm-stat"><span className="dm-stat-n">2</span><span className="dm-stat-l">ACTIVOS HOY</span></div>
+                  <div className="dm-stat"><span className="dm-stat-n">1</span><span className="dm-stat-l">PLAN NUEVO</span></div>
                 </div>
                 <div className="dm-section-title">Alumnos/as <span className="dm-ver-todos">Ver todos →</span></div>
                 <div className="dm-student"><div className="dm-ava">LR</div><div className="dm-sinfo"><div className="dm-sname">Laura Rodríguez</div><div className="dm-sgoal">Tonificación</div></div><div className="dm-badge green">✓ Plan</div></div>
@@ -199,7 +235,7 @@ export default function HomePage() {
               <div className="bm-inner">
                 <div className="bm-back">← Volver</div>
                 <div className="bm-title">Personalizar marca</div>
-                <div className="bm-subtitle">Configurá cómo se ve tu app para vos y tus alumnos</div>
+                <div className="bm-subtitle">Configurá cómo te ven tus alumnos</div>
                 <div className="bm-row">
                   <div className="bm-col">
                     <div className="bm-field-label">NOMBRE DE MARCA</div>
@@ -234,35 +270,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="l-section l-plan">
-        <div className="l-plan-header l-reveal">
-          <div className="l-section-label">El plan de 30 días</div>
-          <h2 className="l-section-title">De cero a<br /><em>100% digital.</em></h2>
-          <p className="l-section-sub">Sin curva de aprendizaje empinada. Un paso a la vez.</p>
-        </div>
-        <div className="l-weeks-track">
-          {[
-            { week: 'Semana 1', title: 'Base digital', tasks: ['Creás tu cuenta y configurás tu perfil', 'Cargás tus primeros 3 alumnos', 'Armás tu primera rutina en Pulse'] },
-            { week: 'Semana 2', title: 'Todo adentro', tasks: ['Migrás todos tus alumnos activos', 'Reemplazás los PDFs por rutinas digitales', 'Dejás de mandar archivos por WhatsApp'] },
-            { week: 'Semana 3', title: 'Sin fricciones', tasks: ['Tus alumnos usan la app sin que los ayudes', 'Ves el progreso en tiempo real', 'Cobrás con datos claros frente a vos'] },
-            { week: 'Semana 4', title: 'Operación limpia', tasks: ['Gestión 100% digital, cero papel', 'Marca personal coherente y profesional', 'Tiempo recuperado para entrenar más alumnos'], highlight: true },
-          ].map(({ week, title, tasks, highlight }) => (
-            <div key={week} className={`l-week-card l-reveal${highlight ? ' highlight' : ''}`}>
-              <div className="l-week-badge">{week}</div>
-              <h3>{title}</h3>
-              <ul className="l-week-tasks">{tasks.map(t => <li key={t}>{t}</li>)}</ul>
+      {/* ── 6. TESTIMONIO ── */}
+      <section className="l-testimonial">
+        <div className="l-testimonial-inner l-reveal">
+          <div className="l-testimonial-quote">
+            "Pulse me ayudó a ordenar cada alumno de forma personalizada. Puedo armar rutinas a distancia, unificar los pagos y automatizar el trabajo — para enfocarme en lo que importa: la evolución de cada alumno."
+          </div>
+          <div className="l-testimonial-author">
+            <div className="l-testimonial-avatar">CL</div>
+            <div>
+              <div className="l-testimonial-name">Carolina Lell</div>
+              <div className="l-testimonial-role">Entrenadora personal · Buenos Aires</div>
             </div>
-          ))}
-        </div>
-        <div className="l-success-banner l-reveal">
-          <div className="l-success-icon">✦</div>
-          <div className="l-success-text">
-            <h4>Señal de éxito al día 30</h4>
-            <p>Tu operación es 100% digital. Tus alumnos tienen una app con tu imagen. Vos sabés exactamente quién entrenó, qué hizo y quién pagó. Sin hojas de cálculo, sin caos.</p>
+          </div>
+          <div className="l-testimonial-cta">
+            <a href="/register/admin" className="l-btn-primary">Quiero lo mismo →</a>
           </div>
         </div>
       </section>
 
+      {/* ── 7. PRICING ── */}
       <section className="l-section l-pricing" id="pricing">
         <div className="l-pricing-header l-reveal">
           <div className="l-section-label">Planes</div>
@@ -276,9 +303,8 @@ export default function HomePage() {
             <p className="l-price-desc">Para arrancar y ver si Pulse es para vos.</p>
             <ul className="l-price-features">
               <li><span className="check">✓</span><span>Hasta <strong>3 alumnos</strong></span></li>
-              <li><span className="check">✓</span><span>Constructor de rutinas básico</span></li>
-              <li><span className="check">✓</span><span>Ficha de cada alumno</span></li>
-              <li><span className="check">✓</span><span>App para el alumno (marca Pulse)</span></li>
+              <li><span className="check">✓</span><span>Constructor de rutinas</span></li>
+              <li><span className="check">✓</span><span>App del alumno (marca Pulse)</span></li>
               <li><span className="check">✓</span><span>Cobros desde la app (comisión 8%)</span></li>
               <li><span className="check">✓</span><span>Sin vencimiento</span></li>
               <li><span className="check muted">—</span><span className="muted">Personalización de marca</span></li>
@@ -294,10 +320,10 @@ export default function HomePage() {
             <ul className="l-price-features">
               <li><span className="check">✓</span><span><strong>Alumnos ilimitados</strong></span></li>
               <li><span className="check">✓</span><span>Constructor de rutinas completo</span></li>
-              <li><span className="check">✓</span><span>App para el alumno con <strong>tu marca</strong></span></li>
+              <li><span className="check">✓</span><span>App del alumno con <strong>tu marca</strong></span></li>
               <li><span className="check">✓</span><span>Logo y colores propios</span></li>
-              <li><span className="check">✓</span><span><strong>Cobrá a tus alumnos desde la app</strong></span></li>
-              <li><span className="check">✓</span><span>Comisión 5% vs 8% en Free</span></li>
+              <li><span className="check">✓</span><span>Cobrá a tus alumnos desde la app</span></li>
+              <li><span className="check">✓</span><span>Comisión reducida 5%</span></li>
               <li><span className="check">✓</span><span>Soporte prioritario</span></li>
             </ul>
             <a href="/register/admin?plan=pro" className="l-btn-pro">Empezar con Pro</a>
@@ -305,6 +331,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── 8. CTA FINAL ── */}
+      <section className="l-final-cta">
+        <div className="l-final-cta-inner l-reveal">
+          <div className="l-section-label" style={{color:'rgba(255,255,255,0.5)'}}>Una decisión</div>
+          <h2 className="l-final-cta-title">Dejá de administrar.<br /><em>Empezá a entrenar.</em></h2>
+          <p className="l-final-cta-sub">En 10 minutos tenés tu primera rutina cargada y tu primer alumno adentro.</p>
+          <a href="/register/admin" className="l-btn-primary l-btn-xl">Empezar gratis hoy →</a>
+          <div className="l-final-cta-note">Sin tarjeta · Sin contrato · Cancelá cuando quieras</div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
       <footer className="l-footer">
         <div className="l-footer-logo">PULSE</div>
         <p className="l-footer-quote">"La constancia necesita claridad."</p>
