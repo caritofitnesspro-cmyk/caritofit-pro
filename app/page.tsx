@@ -77,8 +77,8 @@ export default function HomePage() {
             <strong>Menos administración. Más cancha.</strong>
           </p>
           <div className="l-hero-actions">
-            <a href="/register/admin" className="l-btn-primary">Empezar gratis →</a>
-            <span className="l-hero-note">3 alumnos incluidos · Sin tarjeta</span>
+            <a href="/register/admin" className="l-btn-primary">Crear mi cuenta gratis →</a>
+            <span className="l-hero-note">Gratis para siempre para tus primeros 3 alumnos</span>
           </div>
           <div className="l-hero-stats">
             <div className="l-hero-stat">
@@ -128,9 +128,7 @@ export default function HomePage() {
             <div className="l-section-label">El problema</div>
             <h2 className="l-section-title">¿Cuántas horas<br /><em>perdés</em> por semana?</h2>
             <p className="l-section-sub">No es falta de organización. Es que nadie te dio una herramienta hecha para entrenadores.</p>
-            <a href="/register/admin" className="l-btn-outline-blue" style={{ marginTop: '32px', display: 'inline-block' }}>
-              Resolver esto gratis →
-            </a>
+            <a href="/register/admin" className="l-btn-outline-blue" style={{ marginTop: '32px', display: 'inline-block' }}>Lo resuelvo con Pulse →</a>
           </div>
           <div className="l-problem-list">
             {[
@@ -161,13 +159,16 @@ export default function HomePage() {
             { antes: 'Tu marca no existe digitalmente', despues: 'App con tu logo, tus colores, tu nombre' },
           ].map(({ antes, despues }, i) => (
             <div key={i} className="l-transform-row l-reveal">
+              <div className="l-transform-num">0{i+1}</div>
               <div className="l-transform-antes">
-                <span className="l-transform-x">✕</span>
                 <span>{antes}</span>
               </div>
-              <div className="l-transform-arrow">→</div>
+              <div className="l-transform-arrow">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M4 10h12M11 5l5 5-5 5" stroke="#5B8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               <div className="l-transform-despues">
-                <span className="l-transform-check">✓</span>
                 <span>{despues}</span>
               </div>
             </div>
@@ -273,6 +274,7 @@ export default function HomePage() {
       {/* ── 6. TESTIMONIO ── */}
       <section className="l-testimonial">
         <div className="l-testimonial-inner l-reveal">
+          <div className="l-testimonial-tag">Caso real</div>
           <div className="l-testimonial-quote">
             "Pulse me ayudó a ordenar cada alumno de forma personalizada. Puedo armar rutinas a distancia, unificar los pagos y automatizar el trabajo — para enfocarme en lo que importa: la evolución de cada alumno."
           </div>
@@ -283,9 +285,23 @@ export default function HomePage() {
               <div className="l-testimonial-role">Entrenadora personal · Buenos Aires</div>
             </div>
           </div>
-          <div className="l-testimonial-cta">
-            <a href="/register/admin" className="l-btn-primary">Quiero lo mismo →</a>
+          <div className="l-testimonial-metrics">
+            <div className="l-tm-item">
+              <div className="l-tm-n">100%</div>
+              <div className="l-tm-l">Digital desde el día 1</div>
+            </div>
+            <div className="l-tm-div" />
+            <div className="l-tm-item">
+              <div className="l-tm-n">0</div>
+              <div className="l-tm-l">PDFs ni Excel</div>
+            </div>
+            <div className="l-tm-div" />
+            <div className="l-tm-item">
+              <div className="l-tm-n">3 hs</div>
+              <div className="l-tm-l">Recuperadas por semana</div>
+            </div>
           </div>
+          <a href="/register/admin" className="l-btn-primary">Quiero lo mismo →</a>
         </div>
       </section>
 
@@ -313,10 +329,10 @@ export default function HomePage() {
             <a href="/register/admin" className="l-btn-outline">Empezar gratis</a>
           </div>
           <div className="l-price-card pro l-reveal">
-            <div className="l-pro-badge">MÁS ELEGIDO</div>
+            <div className="l-pro-badge">El que eligen los que probaron los dos</div>
             <div className="l-price-card-label">Plan Pro</div>
             <div className="l-price-amount"><span className="currency">$</span><span className="number">25.000</span><span className="period">ARS / mes</span></div>
-            <p className="l-price-desc">Para quien ya decidió que su negocio es serio. Menos de lo que ganás con un alumno más.</p>
+            <p className="l-price-desc">Para quien ya decidió que su negocio es serio.</p><p className="l-price-anchor">Menos de lo que ganás con una clase extra.</p>
             <ul className="l-price-features">
               <li><span className="check">✓</span><span><strong>Alumnos ilimitados</strong></span></li>
               <li><span className="check">✓</span><span>Constructor de rutinas completo</span></li>
@@ -326,7 +342,7 @@ export default function HomePage() {
               <li><span className="check">✓</span><span>Comisión reducida 5%</span></li>
               <li><span className="check">✓</span><span>Soporte prioritario</span></li>
             </ul>
-            <a href="/register/admin?plan=pro" className="l-btn-pro">Empezar con Pro</a>
+            <a href="/register/admin?plan=pro" className="l-btn-pro">Activar Pro →</a>
           </div>
         </div>
       </section>
@@ -337,8 +353,8 @@ export default function HomePage() {
           <div className="l-section-label" style={{color:'rgba(255,255,255,0.5)'}}>Una decisión</div>
           <h2 className="l-final-cta-title">Dejá de administrar.<br /><em>Empezá a entrenar.</em></h2>
           <p className="l-final-cta-sub">En 10 minutos tenés tu primera rutina cargada y tu primer alumno adentro.</p>
-          <a href="/register/admin" className="l-btn-primary l-btn-xl">Empezar gratis hoy →</a>
-          <div className="l-final-cta-note">Sin tarjeta · Sin contrato · Cancelá cuando quieras</div>
+          <a href="/register/admin" className="l-btn-primary l-btn-xl">Crear mi cuenta gratis →</a>
+          <div className="l-final-cta-note">Creá tu cuenta en 2 minutos · Sin instalar nada · Sin tarjeta</div>
         </div>
       </section>
 
