@@ -66,14 +66,32 @@ export default function HomePage() {
       </nav>
 
       <section className="l-hero">
-        <div className="l-hero-eyebrow">Para entrenadores personales</div>
-        <h1>Entrená.<br /><em>No administres.</em></h1>
-        <p className="l-hero-sub">
-          Pulse ordena tus alumnos, rutinas y cobros <strong>en un solo lugar</strong>. Para que tu energía vuelva donde tiene que estar.
-        </p>
-        <div className="l-hero-actions">
-          <a href="/register/admin" className="l-btn-primary">Empezar gratis (3 alumnos incluidos)</a>
-          <span className="l-hero-note">Sin tarjeta. Sin compromiso.</span>
+        {/* Imagen deportiva de fondo */}
+        <div className="l-hero-bg">
+          <img
+            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80&auto=format&fit=crop"
+            alt=""
+            className="l-hero-img"
+          />
+          <div className="l-hero-overlay" />
+        </div>
+        <div className="l-hero-content">
+          <div className="l-hero-eyebrow">Para entrenadores personales</div>
+          <h1>Tu negocio.<br /><em>En movimiento.</em></h1>
+          <p className="l-hero-sub">
+            Gestioná alumnos, rutinas y cobros <strong>mientras entrenás</strong>. Sin Excel, sin PDFs, sin caos.
+          </p>
+          <div className="l-hero-actions">
+            <a href="/register/admin" className="l-btn-primary">Empezar gratis →</a>
+            <span className="l-hero-note">3 alumnos incluidos · Sin tarjeta</span>
+          </div>
+          <div className="l-hero-stats">
+            <div className="l-hero-stat"><span className="l-hero-stat-n">10 min</span><span className="l-hero-stat-l">para estar operativo</span></div>
+            <div className="l-hero-stat-div" />
+            <div className="l-hero-stat"><span className="l-hero-stat-n">3 hs</span><span className="l-hero-stat-l">recuperadas por semana</span></div>
+            <div className="l-hero-stat-div" />
+            <div className="l-hero-stat"><span className="l-hero-stat-n">$0</span><span className="l-hero-stat-l">para empezar</span></div>
+          </div>
         </div>
         <div className="l-hero-scroll"><div className="l-scroll-line"></div><span>SCROLL</span></div>
       </section>
@@ -87,9 +105,9 @@ export default function HomePage() {
           </div>
           <div className="l-problem-list">
             {[
-              { n: '01', h: 'El caos del PDF y el Excel', p: 'Cada alumno tiene su rutina en un archivo distinto. Cambiar un ejercicio significa editar cinco documentos. Mandás el PDF equivocado y arrancás a disculparte por WhatsApp.' },
+              { n: '01', h: 'Rutinas que nadie entiende', p: 'Cambiás un ejercicio y tenés que editar cinco archivos. Tu alumno recibe el PDF equivocado. Arrancás a disculparte por WhatsApp a las 10 de la noche.' },
               { n: '02', h: 'Mensajes perdidos en el chat', p: 'La consulta de Martina quedó enterrada entre memes y el pedido de turno de Juan. Respondés tarde, te sentís mal, perdés la imagen profesional que tanto te costó construir.' },
-              { n: '03', h: 'No sabés quién pagó ni cuándo', p: '¿Sofía abonó este mes? ¿Carlos debe dos? Cobrás con vergüenza porque nunca tenés los números claros. O peor: no cobrás.' },
+              { n: '03', h: 'Cobrás con vergüenza o no cobrás', p: '¿Sofía abonó este mes? ¿Carlos debe dos? Sin datos claros, pedís plata con vergüenza. O directamente no cobrás. Y eso te cuesta más que tiempo.' },
             ].map(({ n, h, p }) => (
               <div key={n} className="l-problem-item l-reveal">
                 <span className="l-problem-num">{n}</span>
@@ -103,14 +121,14 @@ export default function HomePage() {
       <section className="l-section l-solution">
         <div className="l-solution-header l-reveal">
           <div className="l-section-label">La solución</div>
-          <h2 className="l-section-title">Tres herramientas.<br /><em>Un solo lugar.</em></h2>
+          <h2 className="l-section-title">Menos administración.<br /><em>Más entrenamiento.</em></h2>
           <p className="l-section-sub">Diseñadas para que en diez minutos ya estés trabajando, no configurando.</p>
         </div>
         <div className="l-features-grid">
           {[
-            { icon: '⚡', h: 'Constructor de Rutinas', p: 'Armá, duplicá y editá rutinas en minutos. Visual, sin tecnicismos, sin Excel. Asignás a un alumno con un clic y él la ve al instante en su app.', tag: 'Rápido y visual' },
-            { icon: '◎', h: 'Gestión de Alumnos', p: 'Ficha completa de cada alumno: rutina activa, historial, notas, estado de pago. Todo en un solo lugar. Nada en WhatsApp, nada en papel, nada en tu cabeza.', tag: 'Todo centralizado' },
-            { icon: '◻', h: 'App para el Alumno', p: 'Tu alumno ve su rutina del día, marca series y deja comentarios. Vos ves el progreso en tiempo real. Una experiencia limpia que te diferencia de cualquier colega.', tag: 'Imagen profesional' },
+            { icon: '⚡', h: 'Rutinas en minutos', p: 'Armá, duplicá y asigná planes de entrenamiento sin abrir un Excel. Tu alumno lo ve en su celular al instante. Vos seguís el progreso en tiempo real.', tag: 'Sin Excel. Sin PDFs.' },
+            { icon: '◎', h: 'Todo sobre tu alumno', p: 'Objetivo, restricciones, historial, checkins y peso en un solo lugar. Sabés exactamente en qué punto está cada uno, sin preguntar ni adivinar.', tag: 'Datos que importan' },
+            { icon: '◻', h: 'Cobrás sin perseguir', p: 'Tu alumno paga desde la app con un botón. Vos recibís la plata directo en tu cuenta de Mercado Pago. Sin transferencias pendientes, sin vergüenza.', tag: 'Cobros automáticos' },
           ].map(({ icon, h, p, tag }) => (
             <div key={h} className="l-feature-card l-reveal">
               <div className="l-feature-icon">{icon}</div>
