@@ -77,8 +77,13 @@ export default function HomePage() {
             <strong>Menos administración. Más cancha.</strong>
           </p>
           <div className="l-hero-actions">
-            <a href="/register/admin" className="l-btn-primary">Crear mi cuenta gratis →</a>
-            <span className="l-hero-note">Gratis para siempre para tus primeros 3 alumnos</span>
+            <a href="/register/admin" className="l-btn-hero">
+              Crear mi cuenta gratis
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{marginLeft:'8px'}}>
+                <path d="M3 9h12M10 4l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </a>
+            <span className="l-hero-note">Gratis para siempre · 3 alumnos incluidos</span>
           </div>
           <div className="l-hero-stats">
             <div className="l-hero-stat">
@@ -145,32 +150,51 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 4. ANTES / DESPUÉS ── */}
-      <section className="l-transform">
-        <div className="l-transform-header l-reveal">
-          <div className="l-section-label">La transformación</div>
-          <h2 className="l-section-title">Lo que cambia<br /><em>con Pulse.</em></h2>
+      {/* ── 4. FEATURE CARDS ── */}
+      <section className="l-features-section">
+        <div className="l-features-section-header l-reveal">
+          <div className="l-section-label">Lo que cambia</div>
+          <h2 className="l-section-title">Una herramienta.<br /><em>Todo resuelto.</em></h2>
+          <p className="l-section-sub">Diseñada para que en 10 minutos ya estés trabajando, no configurando.</p>
         </div>
-        <div className="l-transform-grid">
+        <div className="l-feat-grid">
           {[
-            { antes: 'Rutinas en PDF por WhatsApp', despues: 'Rutinas digitales asignadas en 1 clic' },
-            { antes: 'Consultas enterradas en el chat', despues: 'Todo centralizado, nada en tu cabeza' },
-            { antes: 'No sabés quién pagó ni cuándo', despues: 'El alumno paga desde la app, vos recibís en MP' },
-            { antes: 'Tu marca no existe digitalmente', despues: 'App con tu logo, tus colores, tu nombre' },
-          ].map(({ antes, despues }, i) => (
-            <div key={i} className="l-transform-row l-reveal">
-              <div className="l-transform-num">0{i+1}</div>
-              <div className="l-transform-antes">
-                <span>{antes}</span>
+            {
+              icon: '⚡',
+              tag: 'Sin Excel',
+              title: 'Rutinas en minutos',
+              desc: 'Armá, duplicá y asigná planes de entrenamiento. Tu alumno los ve en su celular al instante. Vos seguís el progreso en tiempo real.',
+              accent: '#5B8CFF',
+            },
+            {
+              icon: '◎',
+              tag: 'Sin WhatsApp',
+              title: 'Todo sobre tu alumno',
+              desc: 'Objetivo, restricciones, historial y checkins en un solo lugar. Sabés exactamente en qué punto está cada uno, sin preguntar.',
+              accent: '#5B8CFF',
+            },
+            {
+              icon: '💳',
+              tag: 'Sin perseguir',
+              title: 'Cobrás sin vergüenza',
+              desc: 'Tu alumno paga desde la app con un botón. Vos recibís directo en tu Mercado Pago. Sin transferencias pendientes.',
+              accent: '#5B8CFF',
+            },
+            {
+              icon: '◈',
+              tag: 'Solo PRO',
+              title: 'Tu marca, no la nuestra',
+              desc: 'Logo, colores y nombre propios. Tus alumnos ven tu identidad, no Pulse. Una app con tu imagen que te diferencia de cualquier colega.',
+              accent: '#5B8CFF',
+            },
+          ].map(({ icon, tag, title, desc }) => (
+            <div key={title} className="l-feat-card l-reveal">
+              <div className="l-feat-card-top">
+                <div className="l-feat-icon">{icon}</div>
+                <span className="l-feat-tag">{tag}</span>
               </div>
-              <div className="l-transform-arrow">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 10h12M11 5l5 5-5 5" stroke="#5B8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="l-transform-despues">
-                <span>{despues}</span>
-              </div>
+              <h3 className="l-feat-title">{title}</h3>
+              <p className="l-feat-desc">{desc}</p>
             </div>
           ))}
         </div>
@@ -271,37 +295,41 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 6. TESTIMONIO ── */}
+      {/* ── 6. TESTIMONIO editorial ── */}
       <section className="l-testimonial">
         <div className="l-testimonial-inner l-reveal">
-          <div className="l-testimonial-tag">Caso real</div>
-          <div className="l-testimonial-quote">
-            "Pulse me ayudó a ordenar cada alumno de forma personalizada. Puedo armar rutinas a distancia, unificar los pagos y automatizar el trabajo — para enfocarme en lo que importa: la evolución de cada alumno."
-          </div>
-          <div className="l-testimonial-author">
-            <div className="l-testimonial-avatar">CL</div>
-            <div>
-              <div className="l-testimonial-name">Carolina Lell</div>
-              <div className="l-testimonial-role">Entrenadora personal · Buenos Aires</div>
+          <div className="l-testimonial-left">
+            <div className="l-testimonial-tag">Caso real</div>
+            <blockquote className="l-testimonial-quote">
+              "Pulse me ayudó a ordenar cada alumno de forma personalizada. Puedo armar rutinas a distancia, unificar los pagos y automatizar el trabajo — para enfocarme en lo que importa: la evolución de cada alumno."
+            </blockquote>
+            <div className="l-testimonial-author">
+              <div className="l-testimonial-avatar">CL</div>
+              <div>
+                <div className="l-testimonial-name">Carolina Lell</div>
+                <div className="l-testimonial-role">Entrenadora personal · Buenos Aires</div>
+              </div>
             </div>
           </div>
-          <div className="l-testimonial-metrics">
+          <div className="l-testimonial-right">
             <div className="l-tm-item">
               <div className="l-tm-n">100%</div>
               <div className="l-tm-l">Digital desde el día 1</div>
             </div>
-            <div className="l-tm-div" />
+            <div className="l-tm-sep" />
             <div className="l-tm-item">
               <div className="l-tm-n">0</div>
               <div className="l-tm-l">PDFs ni Excel</div>
             </div>
-            <div className="l-tm-div" />
+            <div className="l-tm-sep" />
             <div className="l-tm-item">
               <div className="l-tm-n">3 hs</div>
               <div className="l-tm-l">Recuperadas por semana</div>
             </div>
+            <a href="/register/admin" className="l-btn-primary" style={{marginTop:'32px', display:'inline-block'}}>
+              Quiero lo mismo →
+            </a>
           </div>
-          <a href="/register/admin" className="l-btn-primary">Quiero lo mismo →</a>
         </div>
       </section>
 
