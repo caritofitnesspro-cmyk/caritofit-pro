@@ -200,98 +200,223 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 5. DEMO VISUAL (PANTALLAS) ── */}
+      {/* ── 5. MOCKUPS PREMIUM ── */}
       <section className="l-section l-screens">
         <div className="l-screens-header l-reveal">
           <div className="l-section-label">El producto</div>
-          <h2 className="l-section-title">Así se ve<br /><em>por dentro.</em></h2>
-          <p className="l-section-sub">Sin curva de aprendizaje. Lo que necesitás, donde lo esperás.</p>
+          <h2 className="l-section-title">Así se ve<br /><em>un negocio real.</em></h2>
+          <p className="l-section-sub">No un demo. Una entrenadora con 24 alumnos, 8 planes activos y $480.000 ARS en cobros este mes.</p>
         </div>
-        <div className="l-screens-grid">
-          <div className="l-screen-item l-reveal">
-            <div className="l-screen-label">Acceso del alumno</div>
-            <div className="l-screen-mock l-login-mock">
-              <div className="lm-inner">
-                <div className="lm-logo"><div className="lm-logo-icon">P</div></div>
-                <div className="lm-brand">Mi Entrenador</div>
-                <div className="lm-sub">Tu entrenamiento personalizado</div>
-                <div className="lm-tabs"><div className="lm-tab active">🏋 Alumno/a</div><div className="lm-tab">👤 Profesor/a</div></div>
-                <div className="lm-field-label">DNI</div>
-                <div className="lm-input">Sin puntos ni guiones</div>
-                <div className="lm-field-label">CONTRASEÑA</div>
-                <div className="lm-input pw">••••••••</div>
-                <div className="lm-btn">Ingresar</div>
-                <div className="lm-register">¿Primera vez? Registrate acá</div>
-              </div>
-            </div>
-          </div>
-          <div className="l-screen-item l-reveal">
-            <div className="l-screen-label">Panel del entrenador</div>
-            <div className="l-screen-mock l-dash-mock">
-              <div className="dm-sidebar">
-                <div className="dm-sidebar-brand">
-                  <div className="dm-brand-icon">P</div>
-                  <div><div className="dm-brand-name">Mi Equipo</div><div className="dm-brand-role">PANEL</div></div>
+        <div className="l-mockups-grid">
+
+          {/* Dashboard */}
+          <div className="l-mockup-wrap l-reveal">
+            <div className="l-mockup-label">Dashboard</div>
+            <div className="l-phone-frame">
+              <div className="l-phone-screen">
+                <div className="l-ph-head">
+                  <div className="l-ph-date">Viernes, 27 de marzo</div>
+                  <div className="l-ph-brand">Caro Team</div>
+                  <div className="l-ph-greeting">Hola, Carolina 👋</div>
                 </div>
-                <div className="dm-nav-label">GESTIÓN</div>
-                <div className="dm-nav-item active">Dashboard</div>
-                <div className="dm-nav-item">Alumnos/as</div>
-                <div className="dm-nav-item">Planes</div>
-                <div className="dm-nav-item">Mi marca</div>
-              </div>
-              <div className="dm-main">
-                <div className="dm-eyebrow">PULSE</div>
-                <div className="dm-greeting">Hola, Carolina 👋</div>
-                <div className="dm-stats">
-                  <div className="dm-stat"><span className="dm-stat-n">3</span><span className="dm-stat-l">ALUMNOS</span></div>
-                  <div className="dm-stat"><span className="dm-stat-n">2</span><span className="dm-stat-l">ACTIVOS HOY</span></div>
-                  <div className="dm-stat"><span className="dm-stat-n">1</span><span className="dm-stat-l">PLAN NUEVO</span></div>
-                </div>
-                <div className="dm-section-title">Alumnos/as <span className="dm-ver-todos">Ver todos →</span></div>
-                <div className="dm-student"><div className="dm-ava">LR</div><div className="dm-sinfo"><div className="dm-sname">Laura Rodríguez</div><div className="dm-sgoal">Tonificación</div></div><div className="dm-badge green">✓ Plan</div></div>
-                <div className="dm-student"><div className="dm-ava">MP</div><div className="dm-sinfo"><div className="dm-sname">Martín Pérez</div><div className="dm-sgoal">Ganar músculo</div></div><div className="dm-badge green">✓ Plan</div></div>
-                <div className="dm-student"><div className="dm-ava">VA</div><div className="dm-sinfo"><div className="dm-sname">Valeria Acosta</div><div className="dm-sgoal">Rehabilitación</div></div><div className="dm-badge yellow">Sin plan</div></div>
-              </div>
-            </div>
-          </div>
-          <div className="l-screen-item l-reveal">
-            <div className="l-screen-label">Personalización de marca</div>
-            <div className="l-screen-mock l-brand-mock">
-              <div className="bm-inner">
-                <div className="bm-back">← Volver</div>
-                <div className="bm-title">Personalizar marca</div>
-                <div className="bm-subtitle">Configurá cómo te ven tus alumnos</div>
-                <div className="bm-row">
-                  <div className="bm-col">
-                    <div className="bm-field-label">NOMBRE DE MARCA</div>
-                    <div className="bm-input">Mi Entrenador</div>
-                    <div className="bm-field-label" style={{marginTop:'10px'}}>LOGO</div>
-                    <div className="bm-logo-row"><div className="bm-logo-prev">P</div><div className="bm-change-btn">Cambiar</div></div>
-                    <div className="bm-field-label" style={{marginTop:'10px'}}>COLORES</div>
-                    <div className="bm-colors">
-                      <div><div className="bm-color-label">Principal</div><div className="bm-color-row"><div className="bm-swatch" style={{background:'#5B8CFF'}}></div><div className="bm-hex">#5B8CFF</div></div></div>
-                      <div><div className="bm-color-label">Secundario</div><div className="bm-color-row"><div className="bm-swatch" style={{background:'#4A74D9'}}></div><div className="bm-hex">#4A74D9</div></div></div>
+                <div className="l-ph-body">
+                  <div className="l-ph-stat-grid">
+                    {[['24','pink','Alumnos'],['21','green','Con plan'],['3','amber','Sin plan'],['8','pink','Planes']].map(([n,c,l]) => (
+                      <div key={l} className="l-ph-stat-card">
+                        <div className={`l-ph-stat-n ${c}`}>{n}</div>
+                        <div className="l-ph-stat-l">{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="l-rev-box">
+                    <div className="l-rev-label">Ingresos del mes</div>
+                    <div className="l-rev-amount">$480.000</div>
+                    <div className="l-rev-sub">+12% vs mes anterior</div>
+                    <div className="l-rev-row">
+                      {[['18','#16a34a','Cobrados'],['4','#d97706','Pendientes'],['2','#9ca3af','Sin cobro']].map(([n,c,l]) => (
+                        <div key={l} style={{textAlign:'center'}}>
+                          <div style={{fontSize:'13px',fontWeight:'800',color:c}}>{n}</div>
+                          <div style={{fontSize:'8px',color:'#6b7280'}}>{l}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="bm-preview">
-                    <div className="bm-preview-label">VISTA PREVIA</div>
-                    <div className="bm-preview-card">
-                      <div className="bm-preview-sidebar">
-                        <div className="bm-ps-brand"><div className="bm-ps-icon">P</div><div><div className="bm-ps-name">Mi Entrenador</div><div className="bm-ps-role">PANEL</div></div></div>
-                        <div className="bm-ps-item active">Dashboard</div>
-                        <div className="bm-ps-item">Alumnos/as</div>
+                  <div className="l-ph-insight">
+                    <div className="l-ph-insight-icon">⚡</div>
+                    <div className="l-ph-insight-text"><strong>Acción:</strong> Valentina Ruiz sin plan.</div>
+                  </div>
+                  {[['SM','pink','Sofía Martínez','Hipertrofia · Sem 4','ok','✓ Pagó'],['MG','blue','Martín García','Rendimiento · Sem 2','ok','✓ Pagó'],['LR','teal','Laura Rodríguez','Rehabilitación','warn','Pendiente']].map(([ini,c,name,sub,st,badge]) => (
+                    <div key={name} className="l-ph-row">
+                      <div className={`l-ph-ava ${c}`}>{ini}</div>
+                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{sub}</div></div>
+                      <span className={`l-ph-badge ${st}`}>{badge}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="l-ph-nav">
+                  {[['▦','Inicio',true],['◉','Alumnos'],['☰','Planes'],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
+                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
+                      <span className="l-ph-nav-icon">{icon}</span>{label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Alumnos */}
+          <div className="l-mockup-wrap l-reveal">
+            <div className="l-mockup-label">Alumnos</div>
+            <div className="l-phone-frame">
+              <div className="l-phone-screen">
+                <div className="l-ph-head">
+                  <div className="l-ph-date">Gestión</div>
+                  <div className="l-ph-greeting" style={{fontSize:'16px'}}>Alumnos/as</div>
+                  <div className="l-ph-date" style={{marginTop:'2px'}}>24 alumnos · 21 con plan</div>
+                </div>
+                <div className="l-ph-body">
+                  <div className="l-ph-search">🔍 Buscar por nombre o DNI...</div>
+                  <div className="l-ph-list-label green-label">Activos (21)</div>
+                  {[['SM','pink','Sofía Martínez','Hipertrofia · Sem 4/8'],['MG','blue','Martín García','Rendimiento deportivo'],['LR','teal','Laura Rodríguez','Rehabilitación rodilla'],['JP','amber','Juliana Pérez','Pérdida de peso'],['NF','purple','Nicolás Ferreyra','Hipertrofia · Sem 2/6'],['CA','cyan','Camila Acosta','Salud general']].map(([ini,c,name,sub]) => (
+                    <div key={name} className="l-ph-row">
+                      <div className={`l-ph-ava ${c}`}>{ini}</div>
+                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{sub}</div></div>
+                      <span className="l-ph-badge ok">✓ Plan</span>
+                    </div>
+                  ))}
+                  <div className="l-ph-list-label warn-label">Sin plan (3)</div>
+                  {[['VR','red','Valentina Ruiz','Tonificación · Nueva'],['BO','red2','Bruno Ortega','Rendimiento']].map(([ini,c,name,sub]) => (
+                    <div key={name} className="l-ph-row">
+                      <div className={`l-ph-ava ${c}`}>{ini}</div>
+                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{sub}</div></div>
+                      <span className="l-ph-badge warn">Sin plan</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="l-ph-nav">
+                  {[['▦','Inicio'],['◉','Alumnos',true],['☰','Planes'],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
+                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
+                      <span className="l-ph-nav-icon">{icon}</span>{label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Planes */}
+          <div className="l-mockup-wrap l-reveal">
+            <div className="l-mockup-label">Planes</div>
+            <div className="l-phone-frame">
+              <div className="l-phone-screen">
+                <div className="l-ph-head">
+                  <div className="l-ph-date">Gestión</div>
+                  <div className="l-ph-greeting" style={{fontSize:'16px'}}>Planes</div>
+                  <div className="l-ph-date" style={{marginTop:'2px'}}>8 planes · 24 asignaciones</div>
+                </div>
+                <div className="l-ph-body">
+                  {[
+                    {name:'Hipertrofia Avanzada',tag:'Hipertrofia',tagColor:'#fce7f3',tagText:'#be185d',color:'#e260a5',sems:'8',dias:'5',ejs:'42',alumnos:['SM','NF','AG','+4']},
+                    {name:'Rendimiento Deportivo',tag:'Rendimiento',tagColor:'#eff3ff',tagText:'#3b5bdb',color:'#5B8CFF',sems:'6',dias:'4',ejs:'36',alumnos:['MG','BO','+2']},
+                    {name:'Rehabilitación Activa',tag:'Rehabilitación',tagColor:'#f0fdf4',tagText:'#15803d',color:'#16a34a',sems:'4',dias:'3',ejs:'18',alumnos:['LR','EP','+1']},
+                    {name:'Pérdida de Peso',tag:'Salud general',tagColor:'#fef3c7',tagText:'#92400e',color:'#d97706',sems:'12',dias:'4',ejs:'28',alumnos:['JP','CA','+5']},
+                  ].map(({name,tag,tagColor,tagText,color,sems,dias,ejs,alumnos}) => (
+                    <div key={name} className="l-plan-card">
+                      <div className="l-plan-name" style={{color}}>{name}</div>
+                      <span className="l-plan-tag" style={{background:tagColor,color:tagText}}>{tag}</span>
+                      <div className="l-plan-stats">
+                        {[[sems,'Semanas'],[dias,'Días/sem'],[ejs,'Ejercicios']].map(([n,l]) => (
+                          <div key={l} style={{textAlign:'center'}}>
+                            <div style={{fontSize:'16px',fontWeight:'800',color,lineHeight:'1'}}>{n}</div>
+                            <div style={{fontSize:'7px',color:'#9ca3af',textTransform:'uppercase',letterSpacing:'.04em'}}>{l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="l-plan-assigned">
+                        {alumnos.map(a => a.startsWith('+')
+                          ? <span key={a} style={{fontSize:'8px',color:'#9ca3af'}}>{a} más</span>
+                          : <div key={a} className="l-plan-ava-sm" style={{background:color}}>{a}</div>
+                        )}
                       </div>
                     </div>
-                    <div className="bm-preview-ui">
-                      <div className="bm-btn-primary">Botón principal</div>
-                      <div className="bm-btn-secondary">Botón secundario</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-                <div className="bm-save">💾 Guardar</div>
+                <div className="l-ph-nav">
+                  {[['▦','Inicio'],['◉','Alumnos'],['☰','Planes',true],['?','Ayuda'],['◈','Marca']].map(([icon,label,active]) => (
+                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
+                      <span className="l-ph-nav-icon">{icon}</span>{label}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Cobros */}
+          <div className="l-mockup-wrap l-reveal">
+            <div className="l-mockup-label">Cobros</div>
+            <div className="l-phone-frame">
+              <div className="l-phone-screen">
+                <div className="l-ph-head">
+                  <div className="l-ph-date">Marzo 2026</div>
+                  <div className="l-ph-greeting" style={{fontSize:'16px'}}>Cobros</div>
+                  <div style={{display:'flex',alignItems:'center',gap:'4px',marginTop:'2px'}}>
+                    <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>
+                    <span style={{fontSize:'9px',color:'#9ca3af'}}>MP conectado · comisión 5%</span>
+                  </div>
+                </div>
+                <div className="l-ph-body">
+                  <div className="l-rev-box">
+                    <div className="l-rev-label">Ingresos del mes</div>
+                    <div className="l-rev-amount">$480.000</div>
+                    <div className="l-rev-sub">18 cobros aprobados · 4 pendientes</div>
+                    <div className="l-rev-row">
+                      {[['$432k','#16a34a','Recibido'],['$96k','#d97706','Pendiente']].map(([n,c,l]) => (
+                        <div key={l} style={{textAlign:'center'}}>
+                          <div style={{fontSize:'13px',fontWeight:'800',color:c}}>{n}</div>
+                          <div style={{fontSize:'8px',color:'#6b7280'}}>{l}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="l-ph-list-label green-label">Aprobados</div>
+                  {[['SM','pink','Sofía Martínez','Hipertrofia','$27.000'],['MG','blue','Martín García','Rendimiento','$27.000'],['LR','teal','Laura Rodríguez','Rehabilitación','$22.000']].map(([ini,c,name,plan,amount]) => (
+                    <div key={name} className="l-cobro-row">
+                      <div className={`l-ph-ava ${c}`} style={{width:'26px',height:'26px',fontSize:'8px'}}>{ini}</div>
+                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{plan}</div></div>
+                      <div style={{textAlign:'right'}}>
+                        <div style={{fontSize:'12px',fontWeight:'800',color:'#16a34a'}}>{amount}</div>
+                        <span className="l-ph-badge ok" style={{fontSize:'7px'}}>Aprobado</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="l-ph-list-label warn-label">Pendientes</div>
+                  {[['JP','amber','Juliana Pérez','Pérdida de peso','$24.000'],['NF','purple','Nicolás Ferreyra','Hipertrofia','$27.000']].map(([ini,c,name,plan,amount]) => (
+                    <div key={name} className="l-cobro-row">
+                      <div className={`l-ph-ava ${c}`} style={{width:'26px',height:'26px',fontSize:'8px'}}>{ini}</div>
+                      <div className="l-ph-row-info"><div className="l-ph-row-name">{name}</div><div className="l-ph-row-sub">{plan}</div></div>
+                      <div style={{textAlign:'right'}}>
+                        <div style={{fontSize:'12px',fontWeight:'800',color:'#d97706'}}>{amount}</div>
+                        <span className="l-ph-badge warn" style={{fontSize:'7px'}}>Pendiente</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{marginTop:'10px',paddingTop:'8px',borderTop:'1px solid #f3f4f6',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontSize:'10px',color:'#6b7280'}}>Total recibido</span>
+                    <span style={{fontSize:'15px',fontWeight:'900',color:'#16a34a'}}>$432.000</span>
+                  </div>
+                </div>
+                <div className="l-ph-nav">
+                  {[['▦','Inicio'],['◉','Alumnos'],['☰','Planes'],['?','Ayuda'],['◈','Marca',true]].map(([icon,label,active]) => (
+                    <div key={label} className={`l-ph-nav-item${active?' active':''}`}>
+                      <span className="l-ph-nav-icon">{icon}</span>{label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -344,9 +469,9 @@ export default function HomePage() {
           <div className="l-price-card l-reveal">
             <div className="l-price-card-label">Plan Free</div>
             <div className="l-price-amount"><span className="currency">$</span><span className="number">0</span><span className="period">/ siempre</span></div>
-            <p className="l-price-desc">Para arrancar y ver si Pulse es para vos.</p>
+            <p className="l-price-desc">Para probar sin compromiso.</p>
             <ul className="l-price-features">
-              <li><span className="check">✓</span><span>Hasta <strong>3 alumnos</strong></span></li>
+              <li><span className="check">✓</span><span>Hasta <strong>2 alumnos</strong></span></li>
               <li><span className="check">✓</span><span>Constructor de rutinas</span></li>
               <li><span className="check">✓</span><span>App del alumno (marca Pulse)</span></li>
               <li><span className="check">✓</span><span>Cobros desde la app (comisión 8%)</span></li>
