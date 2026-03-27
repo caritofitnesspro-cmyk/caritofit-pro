@@ -56,7 +56,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* ── HERO — idéntico al original, mockup premium ── */}
+      {/* ── HERO ── */}
       <div style={{ maxWidth:'1100px', margin:'0 auto' }}>
         <div className="lp-hero">
           <div>
@@ -70,41 +70,34 @@ export default function HomePage() {
               <a href="/register/admin" className="lp-btn-main">Crear mi app gratis →</a>
               <a href="#producto" className="lp-btn-ghost">Ver cómo funciona</a>
             </div>
-            {/* ✅ FREE = 2 alumnos */}
             <div className="lp-hero-note">Gratis para tus primeros 2 alumnos · Sin tarjeta</div>
           </div>
 
-          {/* PHONE — 240px exacto como el original, datos premium */}
-          <div className="lp-phone">
-            <div className="lp-phone-screen">
-              <div className="lp-phone-header">
-                <div className="lp-ph-greeting">Hola, Caro 👋</div>
-              </div>
-              <div className="lp-phone-body">
-                <div className="lp-ph-grid">
-                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-pink">24</div><div className="lp-ph-stat-l">Alumnos</div></div>
-                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-green">21</div><div className="lp-ph-stat-l">Con plan</div></div>
-                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-red">3</div><div className="lp-ph-stat-l">Sin plan</div></div>
-                  <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-pink">8</div><div className="lp-ph-stat-l">Planes</div></div>
-                </div>
-                <div className="lp-rev-box">
-                  <div className="lp-rev-label">Ingresos del mes</div>
-                  <div className="lp-rev-amount">$820.000</div>
-                  <div className="lp-rev-sub">+15% vs mes anterior</div>
-                </div>
-                <div className="lp-ph-list-title">Activos <span>Ver todos →</span></div>
-                {[['VC','lp-ava-pink','Valentina Cruz','Hipertrofia · Sem 4','ok','✓ Pagó'],
-                  ['AM','lp-ava-blue','Andrés Molina','Rendimiento · Sem 2','ok','✓ Pagó'],
-                  ['CH','lp-ava-teal','Camila Herrera','Rehabilitación','warn','Pendiente']
-                ].map(([ini,c,name,sub,st,badge]) => (
-                  <div key={name} className="lp-ph-row">
-                    <div className={`lp-ph-ava ${c}`}>{ini}</div>
-                    <div><div className="lp-ph-name">{name}</div><div className="lp-ph-goal">{sub}</div></div>
-                    <span className={`lp-ph-badge ${st}`}>{badge}</span>
-                  </div>
-                ))}
-              </div>
+          {/* APP CARD — reemplaza el teléfono */}
+          <div className="lp-app-card">
+            <div className="lp-app-greeting">Hola, Caro 👋</div>
+            <div className="lp-ph-grid">
+              <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-pink">24</div><div className="lp-ph-stat-l">Alumnos</div></div>
+              <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-green">21</div><div className="lp-ph-stat-l">Con plan</div></div>
+              <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-red">3</div><div className="lp-ph-stat-l">Sin plan</div></div>
+              <div className="lp-ph-stat"><div className="lp-ph-stat-n lp-pink">8</div><div className="lp-ph-stat-l">Planes</div></div>
             </div>
+            <div className="lp-rev-box">
+              <div className="lp-rev-label">Ingresos del mes</div>
+              <div className="lp-rev-amount">$820.000</div>
+              <div className="lp-rev-sub">+15% vs mes anterior</div>
+            </div>
+            <div className="lp-ph-list-title">Activos <span>Ver todos →</span></div>
+            {[['VC','lp-ava-pink','Valentina Cruz','Hipertrofia · Sem 4','ok','✓ Pagó'],
+              ['AM','lp-ava-blue','Andrés Molina','Rendimiento · Sem 2','ok','✓ Pagó'],
+              ['CH','lp-ava-teal','Camila Herrera','Rehabilitación','warn','Pendiente']
+            ].map(([ini,c,name,sub,st,badge]) => (
+              <div key={name} className="lp-ph-row">
+                <div className={`lp-ph-ava ${c}`}>{ini}</div>
+                <div><div className="lp-ph-name">{name}</div><div className="lp-ph-goal">{sub}</div></div>
+                <span className={`lp-ph-badge ${st}`}>{badge}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -182,10 +175,8 @@ export default function HomePage() {
               <div className="lp-mini-sub">8 planes activos · 24 asignaciones</div>
             </div>
             {[
-              { name:'Hipertrofia Avanzada', tag:'Hipertrofia', tagBg:'#fce7f3', tagC:'#be185d', color:'#e260a5', sems:'8', dias:'5', ejs:'42', avs:['SM','NF','AG','+4'] },
-              { name:'Rendimiento Deportivo', tag:'Rendimiento', tagBg:'#eff3ff', tagC:'#3b5bdb', color:'#5B8CFF', sems:'6', dias:'4', ejs:'36', avs:['MG','BO','+2'] },
-              { name:'Rehabilitación Activa', tag:'Rehabilitación', tagBg:'#f0fdf4', tagC:'#15803d', color:'#16a34a', sems:'4', dias:'3', ejs:'18', avs:['LR','EP','+1'] },
-              { name:'Pérdida de Peso', tag:'Salud general', tagBg:'#fef3c7', tagC:'#92400e', color:'#d97706', sems:'12', dias:'4', ejs:'28', avs:['JP','CA','+5'] },
+              { name:'Hipertrofia Avanzada', tag:'Hipertrofia', tagBg:'#fce7f3', tagC:'#be185d', color:'#e260a5', sems:'8', dias:'5', ejs:'42', avs:['VC','FI','+4'] },
+              { name:'Rendimiento Deportivo', tag:'Rendimiento', tagBg:'#eff3ff', tagC:'#3b5bdb', color:'#5B8CFF', sems:'6', dias:'4', ejs:'36', avs:['AM','+2'] },
             ].map(({ name, tag, tagBg, tagC, color, sems, dias, ejs, avs }) => (
               <div key={name} className="lp-plan-card">
                 <div className="lp-plan-name" style={{ color }}>{name}</div>
