@@ -142,7 +142,7 @@ function UpgradeContent() {
               <div className="u-price">$0</div>
               <div className="u-price-sub">Para siempre</div>
               <hr className="u-divider" />
-              {['Hasta 3 alumnos', 'Rutinas básicas', 'App del alumno', 'Seguimiento de asistencia'].map(f => (
+              {['Hasta 2 alumnos', 'Rutinas básicas', 'App del alumno', 'Seguimiento de asistencia'].map(f => (
                 <div key={f} className="u-feature"><div className="u-check">✓</div><span>{f}</span></div>
               ))}
               {['Branding propio', 'Alumnos ilimitados', 'Comisión reducida en cobros'].map(f => (
