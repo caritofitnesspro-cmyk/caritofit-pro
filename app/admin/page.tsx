@@ -51,6 +51,12 @@ export default function AdminPage() {
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
+  function track(event: string, params?: Record<string, any>) {
+    if (typeof window !== 'undefined' && (window as any).dataLayer) {
+      (window as any).dataLayer.push({ event, ...params })
+    }
+  }
+
   const autosavePlan = useCallback(async (planData: any) => {
     if (!planData.nombre || planData.nombre.trim().length < 2) return
     if (autosaveTimer.current) clearTimeout(autosaveTimer.current)
@@ -191,6 +197,9 @@ export default function AdminPage() {
     setShowAddAlumno(false)
     setNewA({ nombre:'', apellido:'', dni:'', email:'', password:'' })
     showToast('✅ Alumno/a creado/a — pedile que complete su ficha')
+    // Analytics
+    track('athlete_created', { total_athletes: alumnos.length + 1, is_first: alumnos.length === 0 })
+    if (alumnos.length === 0) track('first_athlete_created')
     loadData()
   }
 
@@ -248,6 +257,11 @@ export default function AdminPage() {
 
   async function wizardFinalizar() {
     await supabase.from('perfiles').update({ onboarding_completo: true }).eq('id', admin!.id)
+    // Analytics
+    track('onboarding_complete', {
+      created_athlete: !!wizardAlumnoId,
+      created_plan: !!wizardPlan?.nombre,
+    })
     setShowWizard(false)
     setWizardStep(1)
     loadData()
@@ -312,8 +326,10 @@ export default function AdminPage() {
     }
     setBp(null)
     showToast('✅ Plan guardado exitosamente')
-    setTab('planes')
+    // Analytics
+    track('plan_saved', { is_new: !bp.id, plan_name: bp.nombre })
     loadData()
+    setTab('planes')
   }
 
   async function eliminarPlan(planId: string) {
