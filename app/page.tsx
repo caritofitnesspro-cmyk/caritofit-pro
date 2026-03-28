@@ -185,19 +185,60 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* QUOTE */}
+      {/* TESTIMONIOS */}
       <div className="lp-quote-section">
-        <div className="lp-quote-inner">
-          <div className="lp-quote-mark">"</div>
-          <p className="lp-quote-text">
-            Pulse me ayudó a ordenar cada atleta de forma personalizada. Puedo armar rutinas a distancia, unificar los pagos y automatizar el trabajo — para enfocarme en lo que importa: la evolución de cada uno.
-          </p>
-          <div className="lp-quote-author">
-            <div className="lp-quote-ava">CL</div>
-            <div>
-              <div className="lp-quote-name">Trainer personal · Buenos Aires</div>
-              <div className="lp-quote-role">Usuaria desde el lanzamiento</div>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div className="lp-section-label" style={{ textAlign:'center', marginBottom:'12px', color:'rgba(91,140,255,0.8)' }}>Lo que dicen</div>
+          <h2 className="lp-section-title" style={{ textAlign:'center', marginBottom:'48px', color:'#f0ede8' }}>
+            Personas reales.<br /><em>Resultados reales.</em>
+          </h2>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'20px' }} className="lp-testi-grid">
+
+            {/* Carito — Trainer */}
+            <div className="lp-testi-card">
+              <div className="lp-testi-stars">★★★★★</div>
+              <p className="lp-testi-body">
+                "Antes mandaba las rutinas por WhatsApp y nunca sabía si las hacían. Ahora cada atleta tiene su app, yo recibo una notificación cuando entrenan y los cobros se manejan solos. Me cambió la forma de trabajar."
+              </p>
+              <div className="lp-testi-foot">
+                <div className="lp-testi-ava" style={{ background:'#e260a5' }}>CL</div>
+                <div>
+                  <div className="lp-testi-name">Carolina L.</div>
+                  <div className="lp-testi-role">Trainer personal · Buenos Aires</div>
+                </div>
+              </div>
             </div>
+
+            {/* Sofi — Atleta */}
+            <div className="lp-testi-card">
+              <div className="lp-testi-stars">★★★★★</div>
+              <p className="lp-testi-body">
+                "La comunicación con mi profe mejoró muchísimo. Antes era todo por chat, ahora tengo mi rutina en la app, marco lo que hago y ella lo ve al instante. Nos enfocamos en entrenar, no en coordinarnos."
+              </p>
+              <div className="lp-testi-foot">
+                <div className="lp-testi-ava" style={{ background:'#5B8CFF' }}>S</div>
+                <div>
+                  <div className="lp-testi-name">Sofía</div>
+                  <div className="lp-testi-role">Atleta · Buenos Aires</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Nahue — Trainer nuevo */}
+            <div className="lp-testi-card">
+              <div className="lp-testi-stars">★★★★★</div>
+              <p className="lp-testi-body">
+                "Me sorprendió lo fácil que fue empezar. En 10 minutos tenía mis primeros atletas cargados y el plan asignado. No necesité ayuda de nadie."
+              </p>
+              <div className="lp-testi-foot">
+                <div className="lp-testi-ava" style={{ background:'#16a34a' }}>NP</div>
+                <div>
+                  <div className="lp-testi-name">Nahuel P.</div>
+                  <div className="lp-testi-role">Trainer · Buenos Aires</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
