@@ -228,7 +228,28 @@ export default function DashboardPage() {
       toggleCheckin(ej.id)
       const ejsDia = bloquesActivos.flatMap((b: any) => b.ejercicios || [])
       const nuevos = checkins.includes(ej.id) ? checkins.filter(id => id !== ej.id) : [...checkins, ej.id]
-      if (ejsDia.length > 0 && ejsDia.every(e => nuevos.includes(e.id))) setTimeout(() => { setDiaTerminado(diaActivo); setShowCaritas(true) }, 600)
+      if (ejsDia.length > 0 && ejsDia.every(e => nuevos.includes(e.id))) {
+        setTimeout(() => { setDiaTerminado(diaActivo); setShowCaritas(true) }, 600)
+        // ✅ Notificar al trainer
+        const { data: { user: u } } = await supabase.auth.getUser()
+        if (u && diaActivo) {
+          const { data: asig } = await supabase.from('asignaciones').select('plan_id').eq('alumno_id', u.id).eq('activo', true).single()
+          const { data: planData } = asig ? await supabase.from('planes').select('nombre').eq('id', asig.plan_id).single() : { data: null }
+          fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/notify-trainer`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              alumnoId: u.id,
+              diaId: (diaActivo as any).id,
+              diaNombre: `${(diaActivo as any).dia}${(diaActivo as any).tipo ? ' — ' + (diaActivo as any).tipo : ''}`,
+              planNombre: planData?.nombre || '',
+            }),
+          }).catch(() => {}) // silencioso si falla
+        }
+      }
     }
     ;(lastTap.current)[ej.id] = now
   }
