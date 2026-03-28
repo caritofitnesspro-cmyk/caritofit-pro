@@ -1,6 +1,6 @@
 // @ts-nocheck
 'use client'
-// app/admin/page.tsx — Panel mobile-first con bottom nav y brand colors dinámicos
+// app/admin/page.tsx
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -26,10 +26,10 @@ export default function AdminPage() {
   const [searchQ, setSearchQ]       = useState('')
   const [toast, setToast]           = useState('')
   const [bp, setBp] = useState<any>(null)
+  // ✅ Modal simplificado — solo 5 campos
   const [showAddAlumno, setShowAddAlumno] = useState(false)
-  const [newA, setNewA] = useState({ nombre:'', apellido:'', dni:'', email:'', telefono:'', edad:'', sexo:'', objetivo:'', nivel:'Principiante', restricciones:'', password:'' })
+  const [newA, setNewA] = useState({ nombre:'', apellido:'', dni:'', email:'', password:'' })
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [planExpandido, setPlanExpandido] = useState(null)
   const [diaEditorActivo, setDiaEditorActivo] = useState<{id: string, nombre: string, numero: number} | null>(null)
   const [bloquesConteo, setBloquesConteo] = useState<Record<string, number>>({})
   const [savingPrecio, setSavingPrecio] = useState(false)
@@ -75,43 +75,30 @@ export default function AdminPage() {
     loadBrand(p.id)
     const { data: as } = await supabase.from('perfiles').select('*').eq('rol', 'alumno').eq('admin_id', p.id).order('nombre')
     setAlumnos(as || [])
-
-    // ✅ FIX: Especificar campos en lugar de * para evitar problemas con RLS en joins
     const { data: ps } = await supabase
       .from('planes')
-      .select(`
-        id, nombre, objetivo, created_at,
-        semanas(
-          id, numero,
-          dias(
-            id, dia, tipo, orden,
-            ejercicios(id, nombre, series, repeticiones, carga, descanso, rpe, rir, observaciones)
-          )
-        )
-      `)
+      .select(`id, nombre, objetivo, created_at, semanas(id, numero, dias(id, dia, tipo, orden, ejercicios(id, nombre, series, repeticiones, carga, descanso, rpe, rir, observaciones)))`)
       .eq('admin_id', p.id)
       .order('created_at', { ascending: false })
     setPlanes(ps || [])
-
-    // ✅ FIX: Filtrar asignaciones solo de los planes del admin, no todas
     const planIds = (ps || []).map((plan: any) => plan.id)
     if (planIds.length > 0) {
-      const { data: asigs } = await supabase
-        .from('asignaciones')
-        .select('*')
-        .eq('activo', true)
-        .in('plan_id', planIds)
+      const { data: asigs } = await supabase.from('asignaciones').select('*').eq('activo', true).in('plan_id', planIds)
       setAsignaciones(asigs || [])
     } else {
       setAsignaciones([])
     }
-
     setLoading(false)
   }
 
   function getPlanAlumno(alumnoId: string) {
     const asig = asignaciones.find(a => a.alumno_id === alumnoId)
     return asig ? planes.find(p => p.id === asig.plan_id) : null
+  }
+
+  // ✅ Ficha completa = tiene objetivo cargado
+  function fichaCompleta(alumno: any) {
+    return !!(alumno.objetivo && alumno.objetivo.trim().length > 0)
   }
 
   async function asignarPlan(alumnoId: string, planId: string | null) {
@@ -122,24 +109,31 @@ export default function AdminPage() {
   }
 
   async function crearAlumno() {
-    if (!newA.nombre || !newA.apellido || !newA.dni || !newA.email) { showToast('⚠️ Completá nombre, apellido, DNI y email'); return }
+    if (!newA.nombre || !newA.apellido || !newA.dni || !newA.email) {
+      showToast('⚠️ Completá nombre, apellido, DNI y email'); return
+    }
     if (!/^\d{7,8}$/.test(newA.dni)) { showToast('⚠️ DNI inválido'); return }
-    if (!newA.objetivo || newA.objetivo.length < 3) { showToast('⚠️ El objetivo es obligatorio'); return }
-    if (!newA.password || newA.password.length < 6) { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return }
-    const res = await fetch('/api/admin/crear-alumno', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newA, adminId: admin!.id }) })
+    if (!newA.password || newA.password.length < 6) {
+      showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return
+    }
+    const res = await fetch('/api/admin/crear-alumno', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newA, adminId: admin!.id })
+    })
     const data = await res.json()
-if (!res.ok) {
-  if (res.status === 403 && data.error?.includes('Límite')) {
-    showToast('⚠️ Límite de 2 alumnos en plan FREE')
-    setTimeout(() => router.push('/admin/upgrade'), 1500)
-    return
-  }
-  showToast('⚠️ ' + data.error)
-  return
-}
+    if (!res.ok) {
+      if (res.status === 403 && data.error?.includes('Límite')) {
+        showToast('⚠️ Límite de 2 alumnos en plan FREE')
+        setTimeout(() => router.push('/admin/upgrade'), 1500)
+        return
+      }
+      showToast('⚠️ ' + data.error)
+      return
+    }
     setShowAddAlumno(false)
-    setNewA({ nombre:'', apellido:'', dni:'', email:'', telefono:'', edad:'', sexo:'', objetivo:'', nivel:'Principiante', restricciones:'', password:'' })
-    showToast('✅ Alumno/a creado/a')
+    setNewA({ nombre:'', apellido:'', dni:'', email:'', password:'' })
+    showToast('✅ Alumno/a creado/a — pedile que complete su ficha')
     loadData()
   }
 
@@ -234,16 +228,12 @@ if (!res.ok) {
     </div>
   )
 
-  // ── Brand colors dinámicos ──
   const wine = brand.primaryColor || '#5B8CFF'
   const wineLight = wine + '15'
   const wineMid = wine + '25'
-
   const filtrados = alumnos.filter(a => `${a.nombre} ${a.apellido} ${a.dni}`.toLowerCase().includes(searchQ.toLowerCase()))
-  const DIAS_SEM = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
-  // Nav items para sidebar y bottom nav
   const NAV_ITEMS = [
     { key: 'dashboard', icon: '▦', label: 'Inicio' },
     { key: 'alumnos',   icon: '◉', label: 'Alumnos' },
@@ -254,10 +244,8 @@ if (!res.ok) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative', background: '#f9fafb' }}>
 
-      {/* Overlay sidebar mobile */}
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 299 }} />}
 
-      {/* Toast */}
       {toast && <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: wine, color: '#fff', padding: '12px 22px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', zIndex: 600, whiteSpace: 'nowrap', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>{toast}</div>}
 
       <style>{`
@@ -281,6 +269,7 @@ if (!res.ok) {
         .badge-green { background: #dcfce7; color: #16a34a; }
         .badge-amber { background: #fef3c7; color: #d97706; }
         .badge-rose { background: ${wineLight}; color: ${wine}; }
+        .badge-gray { background: #f3f4f6; color: #6b7280; }
         .btn-wine { background: ${wine}; color: #fff; border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .15s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-wine:hover { opacity: .88; }
         .btn-ghost { background: transparent; border: 1px solid #e5e7eb; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; color: #374151; display: inline-flex; align-items: center; gap: 6px; transition: border-color .15s; }
@@ -292,10 +281,8 @@ if (!res.ok) {
         .input-field:focus { border-color: ${wine}; }
       `}</style>
 
-      {/* ── SIDEBAR DESKTOP ── */}
+      {/* ── SIDEBAR ── */}
       <aside className={sidebarOpen ? 'admin-sidebar open' : 'admin-sidebar'} style={{ background: '#ffffff', borderRight: '1px solid #f3f4f6', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', width: '240px', flexShrink: 0 }}>
-
-        {/* Brand */}
         <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid #f3f4f6' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '38px', height: '38px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, border: `1px solid ${wineMid}`, background: wineLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -310,21 +297,11 @@ if (!res.ok) {
             </div>
           </div>
         </div>
-
-        {/* Nav */}
         <div style={{ padding: '12px 10px 8px', flex: 1 }}>
           <div style={{ fontSize: '10px', fontWeight: '700', color: '#d1d5db', textTransform: 'uppercase', letterSpacing: '.08em', padding: '0 10px', marginBottom: '6px' }}>Gestión</div>
           {NAV_ITEMS.map(({ key, icon, label }) => (
-            <button key={key}
-              onClick={() => { setTab(key as Tab); setSidebarOpen(false) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '10px 12px', borderRadius: '10px', cursor: 'pointer',
-                transition: 'all .15s', fontSize: '14px', fontWeight: tab === key ? '600' : '500',
-                border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit', marginBottom: '2px',
-                background: tab === key ? wineLight : 'transparent',
-                color: tab === key ? wine : '#6b7280',
-              }}
+            <button key={key} onClick={() => { setTab(key as Tab); setSidebarOpen(false) }}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', cursor: 'pointer', transition: 'all .15s', fontSize: '14px', fontWeight: tab === key ? '600' : '500', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit', marginBottom: '2px', background: tab === key ? wineLight : 'transparent', color: tab === key ? wine : '#6b7280' }}
               onMouseEnter={e => { if (tab !== key) e.currentTarget.style.background = '#f9fafb' }}
               onMouseLeave={e => { if (tab !== key) e.currentTarget.style.background = 'transparent' }}>
               <span style={{ fontSize: '15px', width: '20px', textAlign: 'center', opacity: tab === key ? 1 : 0.5 }}>{icon}</span>
@@ -332,8 +309,7 @@ if (!res.ok) {
               {tab === key && <span style={{ marginLeft: 'auto', width: '5px', height: '5px', borderRadius: '50%', background: wine }} />}
             </button>
           ))}
-          <button
-            onClick={() => router.push('/admin/branding')}
+          <button onClick={() => router.push('/admin/branding')}
             style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', cursor: 'pointer', transition: 'all .15s', fontSize: '14px', fontWeight: '500', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit', marginBottom: '2px', background: 'transparent', color: '#6b7280' }}
             onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
@@ -341,8 +317,6 @@ if (!res.ok) {
             Mi marca
           </button>
         </div>
-
-        {/* User footer */}
         <div style={{ padding: '14px 10px', borderTop: '1px solid #f3f4f6' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '10px', background: '#f9fafb' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#fff', flexShrink: 0 }}>
@@ -367,7 +341,9 @@ if (!res.ok) {
         {tab === 'dashboard' && (() => {
           const sinPlan = alumnos.filter(a => !getPlanAlumno(a.id))
           const conPlan = alumnos.filter(a => !!getPlanAlumno(a.id))
+          const sinFicha = alumnos.filter(a => !fichaCompleta(a))
           const accionPrioritaria = sinPlan[0] || null
+
           let insight = ''
           if (sinPlan.length === 0 && alumnos.length === 0) insight = 'Todavía no tenés alumnos. Empezá creando el primero.'
           else if (sinPlan.length === 0) insight = '¡Todos tus alumnos tienen plan activo!'
@@ -376,8 +352,6 @@ if (!res.ok) {
 
           return (
             <div style={{ padding: '28px 32px', maxWidth: '900px' }}>
-
-              {/* Header */}
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', fontWeight: '600', color: '#9ca3af', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
                   {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -389,7 +363,6 @@ if (!res.ok) {
                 </div>
               </div>
 
-              {/* Métricas */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '24px' }} className="stats-grid-dash">
                 {[
                   { n: alumnos.length, label: 'Alumnos', color: '#111827', bg: '#fff', action: () => setTab('alumnos') },
@@ -406,7 +379,23 @@ if (!res.ok) {
                 ))}
               </div>
 
-              {/* Acción prioritaria */}
+              {/* ✅ Alerta fichas incompletas */}
+              {sinFicha.length > 0 && (
+                <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '14px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '16px' }}>📋</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#0369a1' }}>
+                      {sinFicha.length === 1
+                        ? `${sinFicha[0].nombre} todavía no completó su ficha`
+                        : `${sinFicha.length} alumnos no completaron su ficha`}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#0284c7', marginTop: '2px' }}>
+                      Pediles que ingresen a su app y completen sus datos desde Perfil
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {sinPlan.length > 0 && accionPrioritaria && (
                 <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '14px', padding: '16px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -420,7 +409,6 @@ if (!res.ok) {
                 </div>
               )}
 
-              {/* Accesos rápidos */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
                 {[
                   { label: '+ Alumno', icon: '👤', action: () => setShowAddAlumno(true) },
@@ -436,7 +424,6 @@ if (!res.ok) {
                 ))}
               </div>
 
-              {/* Lista alumnos */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Alumnos</div>
                 <button onClick={() => setTab('alumnos')} style={{ fontSize: '12px', fontWeight: '600', color: wine, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Ver todos →</button>
@@ -453,8 +440,11 @@ if (!res.ok) {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#dc2626', flexShrink: 0 }}>{`${a.nombre[0]}${a.apellido[0]}`.toUpperCase()}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{a.nombre} {a.apellido}</div>
-                          <div style={{ fontSize: '12px', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.objetivo || '—'}</div>
+                          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {a.nombre} {a.apellido}
+                            {!fichaCompleta(a) && <span style={{ fontSize: '9px', fontWeight: '700', background: '#f0f9ff', color: '#0284c7', borderRadius: '20px', padding: '2px 7px' }}>Ficha incompleta</span>}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>{a.objetivo || 'Sin objetivo cargado'}</div>
                         </div>
                         <span style={{ fontSize: '11px', fontWeight: '600', color: '#dc2626', background: '#fef2f2', borderRadius: '20px', padding: '3px 10px', flexShrink: 0 }}>Sin plan</span>
                       </div>
@@ -476,8 +466,11 @@ if (!res.ok) {
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                           <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#fff', flexShrink: 0 }}>{`${a.nombre[0]}${a.apellido[0]}`.toUpperCase()}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{a.nombre} {a.apellido}</div>
-                            <div style={{ fontSize: '12px', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.objetivo || '—'}</div>
+                            <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {a.nombre} {a.apellido}
+                              {!fichaCompleta(a) && <span style={{ fontSize: '9px', fontWeight: '700', background: '#f0f9ff', color: '#0284c7', borderRadius: '20px', padding: '2px 7px' }}>Ficha incompleta</span>}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#9ca3af' }}>{a.objetivo || 'Sin objetivo cargado'}</div>
                           </div>
                           <span style={{ fontSize: '11px', fontWeight: '600', color: '#16a34a', background: '#f0fdf4', borderRadius: '20px', padding: '3px 10px', flexShrink: 0, maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✓ {plan?.nombre}</span>
                         </div>
@@ -509,8 +502,11 @@ if (!res.ok) {
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px', color: '#fff', flexShrink: 0 }}>{`${a.nombre[0]}${a.apellido[0]}`.toUpperCase()}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{a.nombre} {a.apellido}</div>
-                      <div style={{ fontSize: '12px', color: '#9ca3af' }}>DNI {a.dni} · {a.objetivo || '—'}</div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        {a.nombre} {a.apellido}
+                        {!fichaCompleta(a) && <span style={{ fontSize: '9px', fontWeight: '700', background: '#f0f9ff', color: '#0284c7', borderRadius: '20px', padding: '2px 7px' }}>Ficha incompleta</span>}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af' }}>DNI {a.dni} · {a.objetivo || 'Sin objetivo'}</div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
                       <span className={`badge ${plan ? 'badge-green' : 'badge-amber'}`}>{plan ? `✓ ${plan.nombre}` : 'Sin plan'}</span>
@@ -543,9 +539,23 @@ if (!res.ok) {
                     <span className="badge badge-rose">{alumnoActivo.nivel || 'Sin nivel'}</span>
                     {planActivo && <span className="badge badge-green">✓ {planActivo.nombre}</span>}
                     {!planActivo && <span className="badge badge-amber">Sin plan</span>}
+                    {!fichaCompleta(alumnoActivo) && <span className="badge badge-gray">📋 Ficha incompleta</span>}
                   </div>
                 </div>
               </div>
+
+              {/* Aviso ficha incompleta */}
+              {!fichaCompleta(alumnoActivo) && (
+                <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '12px 16px', marginBottom: '14px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ fontSize: '16px', flexShrink: 0 }}>📋</span>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#0369a1', marginBottom: '2px' }}>Ficha incompleta</div>
+                    <div style={{ fontSize: '12px', color: '#0284c7' }}>
+                      {alumnoActivo.nombre} todavía no completó sus datos. Pedile que ingrese a su app y vaya a Perfil → Completar ficha.
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="card" style={{ marginBottom: '14px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '12px' }}>Datos personales</div>
@@ -553,14 +563,18 @@ if (!res.ok) {
                   {[['DNI', alumnoActivo.dni || '—'], ['Edad', alumnoActivo.edad ? `${alumnoActivo.edad} años` : '—'], ['Teléfono', alumnoActivo.telefono || '—'], ['Sexo', alumnoActivo.sexo || '—']].map(([l, v]) => (
                     <div key={l} style={{ background: '#f9fafb', borderRadius: '10px', padding: '10px 14px' }}>
                       <div style={{ fontSize: '10px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '3px' }}>{l}</div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{v}</div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: v === '—' ? '#d1d5db' : '#111827' }}>{v}</div>
                     </div>
                   ))}
                 </div>
-                {alumnoActivo.objetivo && (
+                {alumnoActivo.objetivo ? (
                   <div style={{ background: '#f9fafb', borderRadius: '10px', padding: '10px 14px', marginTop: '10px' }}>
                     <div style={{ fontSize: '10px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '3px' }}>Objetivo</div>
                     <div style={{ fontSize: '14px', color: '#111827', lineHeight: '1.5' }}>{alumnoActivo.objetivo}</div>
+                  </div>
+                ) : (
+                  <div style={{ background: '#f9fafb', borderRadius: '10px', padding: '10px 14px', marginTop: '10px', border: '1px dashed #e5e7eb' }}>
+                    <div style={{ fontSize: '13px', color: '#9ca3af', fontStyle: 'italic' }}>Sin objetivo — el alumno lo completará desde su perfil</div>
                   </div>
                 )}
                 {alumnoActivo.restricciones && (
@@ -637,9 +651,6 @@ if (!res.ok) {
                   <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px', border: '1px dashed #e5e7eb' }}>
                     <div style={{ fontSize: '13px', color: '#374151', fontWeight: '600', marginBottom: '6px' }}>Cobrá desde la app del alumno</div>
                     <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px', lineHeight: '1.5' }}>Tu alumno verá un botón "Pagar mes" en su app y pagará directo a vos via Mercado Pago.</div>
-                    <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: '#92400e' }}>
-                      <strong>Comisiones:</strong> MP 4.99% + Pulse {admin?.plan === 'pro' ? '5%' : '8%'} = <strong>{admin?.plan === 'pro' ? '9.99%' : '12.99%'} por cobro</strong>
-                    </div>
                     <button onClick={async () => {
                       const clientId = process.env.NEXT_PUBLIC_MP_CLIENT_ID || ''
                       const redirectUri = encodeURIComponent(`${window.location.origin}/api/mp/oauth-callback`)
@@ -750,7 +761,6 @@ if (!res.ok) {
                 <button className="btn-wine" style={{ fontSize: '15px', padding: '12px 24px' }} onClick={guardarPlan}>💾 Guardar</button>
               </div>
             </div>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '13px' }}>1</div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#111827' }}>Datos del plan</div>
@@ -769,12 +779,10 @@ if (!res.ok) {
                 </div>
               </div>
             </div>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '13px' }}>2</div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#111827' }}>Semanas y ejercicios</div>
             </div>
-
             {bp.semanas.map((sem: any, si: number) => (
               <div key={sem.id} style={{ border: '1.5px solid #e5e7eb', borderRadius: '14px', padding: '18px', marginBottom: '14px', background: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
@@ -817,23 +825,41 @@ if (!res.ok) {
                     <input style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: '8px', padding: '8px 11px', fontSize: '13px', color: '#111827', outline: 'none', width: '100%', fontFamily: 'inherit', marginBottom: '10px' }}
                       type="text" placeholder="Nombre de la sesión (ej: Pecho, Cardio...)" value={dia.tipo}
                       onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, tipo: e.target.value } : x) } : s) }))} />
-                    {dia.ejercicios.length > 0 && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 50px 60px 65px 65px 50px 50px 30px', gap: '5px', marginBottom: '5px' }}>
-                        {['Ejercicio','Series','Reps','Carga','Descanso','RPE','RIR',''].map(l => (
-                          <span key={l} style={{ fontSize: '9px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', textAlign: l !== 'Ejercicio' ? 'center' : 'left' }}>{l}</span>
-                        ))}
-                      </div>
-                    )}
                     {dia.ejercicios.map((ej: any) => (
-                      <div key={ej.id}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 50px 60px 65px 65px 50px 50px 30px', gap: '5px', marginBottom: '5px' }}>
-                          {[{k:'nombre',ph:'Ejercicio'},{k:'series',ph:'3',type:'number'},{k:'repeticiones',ph:'12'},{k:'carga',ph:'kg/PC'},{k:'descanso',ph:'60s'},{k:'rpe',ph:'1-10'},{k:'rir',ph:'0-5'}].map(({k,ph,type}) => (
-                            <input key={k} type={type||'text'} placeholder={ph} value={(ej as any)[k]||''} style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: '8px', padding: '7px 5px', fontSize: '12px', color: '#111827', outline: 'none', width: '100%', fontFamily: 'inherit', textAlign: k!=='nombre'?'center':'left' }}
-                              onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: k==='series'?parseInt(e.target.value)||1:e.target.value } : ex) } : x) } : s) }))} />
-                          ))}
-                          <button className="btn-danger" style={{ padding: '7px', fontSize: '11px', borderRadius: '8px' }} onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.filter((ex: any) => ex.id !== ej.id) } : x) } : s) }))}>✕</button>
+                      <div key={ej.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px', marginBottom: '8px' }}>
+                        {/* Nombre del ejercicio — prominente */}
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
+                          <input type="text" placeholder="Nombre del ejercicio *" value={ej.nombre || ''}
+                            style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: '#111827', outline: 'none', fontFamily: 'inherit', fontWeight: 600 }}
+                            onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, nombre: e.target.value } : ex) } : x) } : s) }))} />
+                          <button className="btn-danger" style={{ padding: '8px 10px', fontSize: 11, borderRadius: 8, flexShrink: 0 }}
+                            onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.filter((ex: any) => ex.id !== ej.id) } : x) } : s) }))}>✕</button>
                         </div>
-                        <input type="text" placeholder="Observaciones (opcional)" value={ej.observaciones} style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: '8px', padding: '6px 10px', fontSize: '11px', color: '#9ca3af', outline: 'none', width: '100%', fontFamily: 'inherit', marginBottom: '6px' }}
+                        {/* Fila 1: Series, Reps, Carga */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 6 }}>
+                          {[{k:'series',ph:'3',lbl:'Series',type:'number'},{k:'repeticiones',ph:'12',lbl:'Reps'},{k:'carga',ph:'kg/PC',lbl:'Carga'}].map(({k,ph,lbl,type}) => (
+                            <div key={k}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
+                              <input type={type||'text'} placeholder={ph} value={(ej as any)[k]||''}
+                                style={{ width: '100%', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
+                                onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: k==='series'?parseInt(e.target.value)||1:e.target.value } : ex) } : x) } : s) }))} />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Fila 2: Descanso, RPE, RIR */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 8 }}>
+                          {[{k:'descanso',ph:'60s',lbl:'Descanso'},{k:'rpe',ph:'1-10',lbl:'RPE'},{k:'rir',ph:'0-5',lbl:'RIR'}].map(({k,ph,lbl}) => (
+                            <div key={k}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
+                              <input type="text" placeholder={ph} value={(ej as any)[k]||''}
+                                style={{ width: '100%', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
+                                onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: e.target.value } : ex) } : x) } : s) }))} />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Observaciones — último */}
+                        <input type="text" placeholder="Observaciones (opcional)" value={ej.observaciones||''}
+                          style={{ width: '100%', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '7px 10px', fontSize: 12, color: '#9ca3af', outline: 'none', fontFamily: 'inherit' }}
                           onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, observaciones: e.target.value } : ex) } : x) } : s) }))} />
                       </div>
                     ))}
@@ -851,11 +877,9 @@ if (!res.ok) {
                 ))}
               </div>
             ))}
-
             <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '24px' }} onClick={() => setBp((p: any) => ({ ...p, semanas: [...p.semanas, { id: uid(), numero: p.semanas.length + 1, dias: [] }] }))}>
               + Agregar semana {bp.semanas.length + 1}
             </button>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '13px' }}>3</div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#111827' }}>Asignar alumnos/as</div>
@@ -870,7 +894,7 @@ if (!res.ok) {
                     <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: '#fff', flexShrink: 0 }}>{`${a.nombre[0]}${a.apellido[0]}`.toUpperCase()}</div>
                     <div>
                       <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{a.nombre} {a.apellido}</div>
-                      <div style={{ fontSize: '12px', color: '#9ca3af' }}>{a.objetivo}</div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af' }}>{a.objetivo || 'Sin objetivo'}</div>
                     </div>
                   </div>
                 )
@@ -937,51 +961,49 @@ if (!res.ok) {
         </div>
       )}
 
-      {/* MODAL AGREGAR ALUMNO */}
+      {/* ✅ MODAL AGREGAR ALUMNO — simplificado a 5 campos */}
       {showAddAlumno && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowAddAlumno(false)}>
-          <div style={{ background: '#fff', borderRadius: '20px', padding: '24px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '20px', padding: '24px', width: '100%', maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <div style={{ fontSize: '20px', fontWeight: '800', color: '#111827', letterSpacing: '-0.4px' }}>Nuevo alumno/a</div>
               <button onClick={() => setShowAddAlumno(false)} style={{ background: '#f9fafb', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: '#6b7280', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }} className="grid-2-col">
-              {[['nombre','Nombre *','Ej: María'],['apellido','Apellido *','Ej: García'],['dni','DNI *','Sin puntos'],['email','Email *','mail@mail.com'],['telefono','Teléfono','11-0000-0000'],['edad','Edad','30']].map(([k,l,ph]) => (
+            {/* Aviso */}
+            <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px', padding: '10px 14px', marginBottom: '20px', fontSize: '12px', color: '#0369a1' }}>
+              📋 Solo los datos esenciales para el acceso. El alumno completará su ficha desde la app.
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+              {[['nombre','Nombre *','Ej: María'],['apellido','Apellido *','Ej: García']].map(([k,l,ph]) => (
                 <div key={k}>
                   <label className="field-label">{l}</label>
-                  <input className="input-field" type={k==='edad'?'number':k==='email'?'email':'text'} placeholder={ph} value={(newA as any)[k]} onChange={e => setNewA(p => ({ ...p, [k]: e.target.value }))} />
+                  <input className="input-field" type="text" placeholder={ph} value={(newA as any)[k]} onChange={e => setNewA(p => ({ ...p, [k]: e.target.value }))} />
                 </div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }} className="grid-2-col">
-              <div>
-                <label className="field-label">Sexo</label>
-                <select className="input-field" value={newA.sexo} onChange={e => setNewA(p => ({ ...p, sexo: e.target.value }))}>
-                  <option value="">—</option>
-                  {['Femenino','Masculino','No binario','Prefiero no decir'].map(o => <option key={o}>{o}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="field-label">Nivel</label>
-                <select className="input-field" value={newA.nivel} onChange={e => setNewA(p => ({ ...p, nivel: e.target.value }))}>
-                  {['Principiante','Intermedio','Avanzado'].map(o => <option key={o}>{o}</option>)}
-                </select>
-              </div>
-            </div>
+
             <div style={{ marginBottom: '12px' }}>
-              <label className="field-label">Objetivo *</label>
-              <textarea value={newA.objetivo} onChange={e => setNewA(p => ({ ...p, objetivo: e.target.value }))} placeholder="Ej: bajar 5 kilos, tonificar piernas..." style={{ background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: '#111827', outline: 'none', width: '100%', fontFamily: 'inherit', resize: 'vertical', minHeight: '80px', lineHeight: '1.6' }} />
+              <label className="field-label">DNI *</label>
+              <input className="input-field" type="text" placeholder="Sin puntos ni guiones" value={newA.dni}
+                onChange={e => setNewA(p => ({ ...p, dni: e.target.value.replace(/\D/g, '') }))}
+                maxLength={8} />
             </div>
+
             <div style={{ marginBottom: '12px' }}>
-              <label className="field-label">Restricciones <span style={{ textTransform: 'none', fontWeight: '400', fontSize: '11px', color: '#9ca3af' }}>(opcional)</span></label>
-              <input className="input-field" type="text" placeholder="Ej: dolor de rodilla..." value={newA.restricciones} onChange={e => setNewA(p => ({ ...p, restricciones: e.target.value }))} />
+              <label className="field-label">Email *</label>
+              <input className="input-field" type="email" placeholder="alumno@email.com" value={newA.email} onChange={e => setNewA(p => ({ ...p, email: e.target.value }))} />
             </div>
+
             <div style={{ marginBottom: '20px' }}>
               <label className="field-label">Contraseña inicial *</label>
               <input className="input-field" type="password" placeholder="Mínimo 6 caracteres" value={newA.password} onChange={e => setNewA(p => ({ ...p, password: e.target.value }))} />
-              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>El alumno/a puede cambiarla desde su perfil.</div>
+              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>El alumno puede cambiarla desde su perfil.</div>
             </div>
-            <button className="btn-wine" style={{ width: '100%', justifyContent: 'center', fontSize: '15px', padding: '14px' }} onClick={crearAlumno}>Crear alumno/a ✓</button>
+
+            <button className="btn-wine" style={{ width: '100%', justifyContent: 'center', fontSize: '15px', padding: '14px' }} onClick={crearAlumno}>
+              Crear alumno/a ✓
+            </button>
           </div>
         </div>
       )}
