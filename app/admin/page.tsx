@@ -128,7 +128,15 @@ export default function AdminPage() {
     if (!newA.password || newA.password.length < 6) { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return }
     const res = await fetch('/api/admin/crear-alumno', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newA, adminId: admin!.id }) })
     const data = await res.json()
-    if (!res.ok) { showToast('⚠️ ' + data.error); return }
+if (!res.ok) {
+  if (res.status === 403 && data.error?.includes('Límite')) {
+    showToast('⚠️ Límite de 2 alumnos en plan FREE')
+    setTimeout(() => router.push('/admin/upgrade'), 1500)
+    return
+  }
+  showToast('⚠️ ' + data.error)
+  return
+}
     setShowAddAlumno(false)
     setNewA({ nombre:'', apellido:'', dni:'', email:'', telefono:'', edad:'', sexo:'', objetivo:'', nivel:'Principiante', restricciones:'', password:'' })
     showToast('✅ Alumno/a creado/a')
