@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [bloquesActivos, setBloquesActivos] = useState<any[]>([])
   const [ultimoPago, setUltimoPago]   = useState<any>(null)
   const [loadingPago, setLoadingPago] = useState(false)
+  const [racha, setRacha]             = useState(0)
 
   // ✅ Estado del formulario de perfil editable
   const [editando, setEditando]       = useState(false)
@@ -118,6 +119,37 @@ export default function DashboardPage() {
     const hoy = new Date().toISOString().split('T')[0]
     const { data: chkData } = await supabase.from('checkins').select('ejercicio_id').eq('alumno_id', user.id).eq('fecha', hoy)
     setCheckins((chkData || []).map(c => c.ejercicio_id).filter(Boolean))
+
+    // ── Calcular racha ──
+    const hace60 = new Date(); hace60.setDate(hace60.getDate() - 60)
+    const { data: historial } = await supabase
+      .from('checkins')
+      .select('fecha')
+      .eq('alumno_id', user.id)
+      .gte('fecha', hace60.toISOString().split('T')[0])
+      .order('fecha', { ascending: false })
+    if (historial && historial.length > 0) {
+      const diasConCheckin = [...new Set(historial.map((c: any) => c.fecha))]
+      let streak = 0
+      const today = new Date(); today.setHours(0,0,0,0)
+      const ayer = new Date(today); ayer.setDate(ayer.getDate() - 1)
+      const todayStr = today.toISOString().split('T')[0]
+      const ayerStr = ayer.toISOString().split('T')[0]
+      // La racha cuenta si tiene checkin hoy o ayer
+      if (diasConCheckin.includes(todayStr) || diasConCheckin.includes(ayerStr)) {
+        const startDate = diasConCheckin.includes(todayStr) ? today : ayer
+        let cursor = new Date(startDate)
+        while (true) {
+          const cursorStr = cursor.toISOString().split('T')[0]
+          if (diasConCheckin.includes(cursorStr)) {
+            streak++
+            cursor.setDate(cursor.getDate() - 1)
+          } else { break }
+        }
+      }
+      setRacha(streak)
+    }
+
     setLoading(false)
     cargarFotosProgreso()
     const { data: pagoData } = await supabase.from('pagos').select('*').eq('alumno_id', user.id).order('fecha', { ascending: false }).limit(1).maybeSingle()
@@ -367,14 +399,35 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ padding: '20px' }}>
+              {/* ── Racha de adherencia ── */}
+              {racha > 0 && (
+                <div style={{ background: racha >= 7 ? '#fffbeb' : racha >= 3 ? '#fff7ed' : '#f9fafb', border: `1px solid ${racha >= 7 ? '#fde68a' : racha >= 3 ? '#fed7aa' : '#f3f4f6'}`, borderRadius: 16, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ fontSize: 36, lineHeight: 1, flexShrink: 0 }}>
+                    {racha >= 14 ? '🏆' : racha >= 7 ? '🔥' : racha >= 3 ? '⚡' : '✨'}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 28, fontWeight: 900, color: '#111827', lineHeight: 1 }}>{racha}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#6b7280' }}>{racha === 1 ? 'día seguido' : 'días seguidos'}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                      {racha >= 14 ? '¡Sos una máquina! Racha legendaria 🏆' :
+                       racha >= 7  ? '¡Semana completa! Seguí así 🔥' :
+                       racha >= 3  ? '¡Vas muy bien! No pares ahora ⚡' :
+                       '¡Buen comienzo! Mañana seguís la racha'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
                 {[
-                  { n: completadosHoy, label: 'Completados' },
-                  { n: diasSemana1.length, label: 'Esta semana' },
-                  { n: pesoActual ? `${pesoActual}kg` : '—', label: 'Peso actual' },
-                ].map(({ n, label }) => (
+                  { n: completadosHoy, label: 'Hoy', color: '#111827' },
+                  { n: racha > 0 ? `${racha}🔥` : '—', label: 'Racha', color: racha >= 7 ? '#d97706' : racha >= 3 ? '#ea580c' : '#111827' },
+                  { n: pesoActual ? `${pesoActual}kg` : '—', label: 'Peso', color: '#111827' },
+                ].map(({ n, label, color }) => (
                   <div key={label} style={{ background: '#fff', border: '1px solid #f3f4f6', borderRadius: 14, padding: '14px 10px', textAlign: 'center' }}>
-                    <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 24, fontWeight: 900, color: '#111827', lineHeight: 1, marginBottom: 4 }}>{n}</div>
+                    <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 22, fontWeight: 900, color, lineHeight: 1, marginBottom: 4 }}>{n}</div>
                     <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
                   </div>
                 ))}
