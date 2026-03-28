@@ -2,6 +2,7 @@
 'use client'
 // app/admin/page.tsx
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { sendGAEvent } from '@next/third-parties/google'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Perfil, Plan, Asignacion } from '@/types/database'
@@ -52,9 +53,7 @@ export default function AdminPage() {
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   function track(event: string, params?: Record<string, any>) {
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({ event, ...params })
-    }
+    try { sendGAEvent('event', event, params || {}) } catch(e) {}
   }
 
   const autosavePlan = useCallback(async (planData: any) => {
