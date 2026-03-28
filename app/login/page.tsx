@@ -20,8 +20,8 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [brandImageUrl, setBrandImageUrl] = useState<string | null>(null)
   const [brandName, setBrandName] = useState<string | null>(null)
-  const [primaryColor, setPrimaryColor] = useState('#7D0531')
-  const [secondaryColor, setSecondaryColor] = useState('#B05276')
+  const [primaryColor, setPrimaryColor] = useState('#5B8CFF')
+  const [secondaryColor, setSecondaryColor] = useState('#4A74D9')
   const [dniError, setDniError] = useState(false)
   const [passError, setPassError] = useState(false)
 
@@ -35,7 +35,7 @@ function LoginForm() {
       try {
         const { data } = await supabase
           .from('perfiles')
-          .select('brand_image_url, brand_name, primary_color, secondary_color')
+          .select('brand_image_url, brand_name, primary_color, secondary_color, plan')
           .eq('rol', 'admin')
           .limit(1)
           .single()
@@ -43,6 +43,13 @@ function LoginForm() {
         if (data?.brand_name) setBrandName(data.brand_name)
         if (data?.primary_color) setPrimaryColor(data.primary_color)
         if (data?.secondary_color) setSecondaryColor(data.secondary_color)
+        // Si es FREE, fuerza colores Pulse
+        if (data?.plan !== 'pro') {
+          setPrimaryColor('#5B8CFF')
+          setSecondaryColor('#4A74D9')
+          setBrandImageUrl(null)
+          setBrandName(null)
+        }
       } catch {}
     }
     loadBrand()
@@ -276,7 +283,7 @@ function LoginForm() {
             <div className="l-logo">
               {brandImageUrl
                 ? <img src={brandImageUrl} alt={brandName || 'Logo'} />
-                : <span className="l-logo-emoji">🏋️</span>
+                : <svg width="36" height="36" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="16" fill="#5B8CFF"/><text x="16" y="22" textAnchor="middle" fontFamily="Georgia,serif" fontSize="20" fontWeight="700" fill="#fff">P</text></svg>
               }
             </div>
             {brandName && <div className="l-brand-name">{brandName}</div>}
@@ -366,7 +373,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', background: '#F5F2EE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '3px solid #E0D8D0', borderTopColor: '#7D0531', borderRadius: '50%' }} />
+        <div style={{ width: 32, height: 32, border: '3px solid #E0D8D0', borderTopColor: '#5B8CFF', borderRadius: '50%' }} />
       </div>
     }>
       <LoginForm />
