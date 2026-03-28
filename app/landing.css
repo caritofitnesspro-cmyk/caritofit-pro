@@ -65,15 +65,16 @@
 .lp-pill-title { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 8px; letter-spacing: -0.2px; }
 .lp-pill-desc { font-size: 13px; color: #6b7280; line-height: 1.65; }
 
-/* QUOTE */
-.lp-quote-section { background: #0c0c0c; padding: 72px 32px; }
-.lp-quote-inner { max-width: 680px; margin: 0 auto; }
-.lp-quote-mark { font-family: 'Instrument Serif', serif; font-size: 80px; color: #5B8CFF; line-height: 0.6; margin-bottom: 24px; opacity: 0.6; }
-.lp-quote-text { font-family: 'Instrument Serif', serif; font-size: 22px; line-height: 1.6; color: #f0ede8; font-style: italic; margin-bottom: 28px; }
-.lp-quote-author { display: flex; align-items: center; gap: 12px; }
-.lp-quote-ava { width: 40px; height: 40px; border-radius: 50%; background: #5B8CFF; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lp-quote-name { font-size: 14px; font-weight: 600; color: #f0ede8; }
-.lp-quote-role { font-size: 12px; color: #4b5563; margin-top: 2px; }
+/* TESTIMONIOS */
+.lp-quote-section { background: #0c0c0c; padding: 80px 32px; }
+.lp-testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.lp-testi-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 28px 24px; display: flex; flex-direction: column; gap: 16px; }
+.lp-testi-stars { font-size: 14px; color: #f59e0b; letter-spacing: 2px; }
+.lp-testi-body { font-family: 'Instrument Serif', serif; font-size: 16px; line-height: 1.7; color: #f0ede8; font-style: italic; flex: 1; }
+.lp-testi-foot { display: flex; align-items: center; gap: 12px; }
+.lp-testi-ava { width: 38px; height: 38px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lp-testi-name { font-size: 14px; font-weight: 600; color: #f0ede8; }
+.lp-testi-role { font-size: 12px; color: #4b5563; margin-top: 2px; }
 
 /* PRICING */
 .lp-pricing { padding: 80px 32px; }
@@ -148,7 +149,7 @@
   .lp-pills-section { padding: 56px 20px; }
   .lp-pills-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .lp-quote-section { padding: 56px 20px; }
-  .lp-quote-text { font-size: 18px; }
+  .lp-testi-grid { grid-template-columns: 1fr; gap: 14px; }
   .lp-pricing { padding: 56px 20px; }
   .lp-pricing-grid { grid-template-columns: 1fr; }
   .lp-final { padding: 56px 20px; }
