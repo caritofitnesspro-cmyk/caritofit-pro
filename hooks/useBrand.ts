@@ -26,7 +26,7 @@ export function useBrand() {
 
   async function loadBrand(id: string) {
     // ✅ Crear cliente dentro de la función para que tenga el JWT de la sesión activa
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const { data } = await supabase
       .from('perfiles')
@@ -50,7 +50,7 @@ export function useBrand() {
 
   async function saveBrand(updates: Partial<BrandConfig>, adminId: string): Promise<boolean> {
     // ✅ Crear cliente dentro de la función
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const { error } = await supabase
       .from('perfiles')
@@ -72,7 +72,7 @@ export function useBrand() {
 
   async function uploadBrandImage(file: File, adminId: string): Promise<string | null> {
     // ✅ Crear cliente dentro de la función
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const validTypes = ['image/png', 'image/jpeg', 'image/webp']
     if (!validTypes.includes(file.type)) return null
