@@ -218,7 +218,7 @@ export default function DashboardPage() {
     }
   }
 
-  function handleDoubleTap(ej) {
+  async function handleDoubleTap(ej) {
     const now = Date.now()
     const last = (lastTap.current)[ej.id] || 0
     if (now - last < 500) {
