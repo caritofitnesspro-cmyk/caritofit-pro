@@ -181,22 +181,17 @@ export default function AdminPage() {
     setWizardError('')
     if (!wizardPlan.nombre) { setWizardError('Poné un nombre al plan'); return }
     const totalDias = wizardPlan.semanas.reduce((a: number, s: any) => a + s.dias.length, 0)
-    if (!totalDias) { setWizardError('Agregá al menos 1 día de entrenamiento'); return }
+    if (!totalDias) { setWizardError('Seleccioná al menos 1 día de entrenamiento'); return }
     setWizardLoading(true)
     // Crear plan
     const { data: newPlan } = await supabase.from('planes').insert({ nombre: wizardPlan.nombre, objetivo: wizardPlan.objetivo, admin_id: admin!.id }).select().single()
     if (!newPlan) { setWizardError('Error al crear el plan'); setWizardLoading(false); return }
-    // Crear semanas, días y ejercicios
+    // Crear semanas y días (ejercicios se agregan después via bloques)
     for (const sem of wizardPlan.semanas) {
       const { data: semData } = await supabase.from('semanas').insert({ plan_id: newPlan.id, numero: sem.numero }).select().single()
       if (!semData) continue
       for (const dia of sem.dias) {
-        const { data: diaData } = await supabase.from('dias').insert({ semana_id: semData.id, dia: dia.dia, tipo: dia.tipo || '', orden: dia.orden || 0 }).select().single()
-        if (!diaData) continue
-        for (let i = 0; i < (dia.ejercicios || []).length; i++) {
-          const ej = dia.ejercicios[i]
-          await supabase.from('ejercicios').insert({ dia_id: diaData.id, nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga || '', descanso: ej.descanso || '', rpe: ej.rpe || null, rir: ej.rir || null, observaciones: ej.observaciones || '', orden: i })
-        }
+        await supabase.from('dias').insert({ semana_id: semData.id, dia: dia.dia, tipo: dia.tipo || '', orden: dia.orden || 0 })
       }
     }
     // Asignar al atleta del paso 1
@@ -905,58 +900,23 @@ export default function AdminPage() {
                   <div key={dia.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', marginBottom: '10px', border: '1px solid #e5e7eb' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                       <span style={{ fontWeight: '700', fontSize: '14px', color: wine }}>{dia.dia}</span>
-                      <button className="btn-danger" style={{ fontSize: '11px', padding: '4px 8px' }} onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.id !== dia.id) } : s) }))}>✕</button>
+                      <button className="btn-danger" style={{ fontSize: '11px', padding: '4px 8px' }}
+                        onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.id !== dia.id) } : s) }))}>✕</button>
                     </div>
                     <input style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: '8px', padding: '8px 11px', fontSize: '13px', color: '#111827', outline: 'none', width: '100%', fontFamily: 'inherit', marginBottom: '10px' }}
                       type="text" placeholder="Nombre de la sesión (ej: Pecho, Cardio...)" value={dia.tipo}
                       onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, tipo: e.target.value } : x) } : s) }))} />
-                    {dia.ejercicios.map((ej: any) => (
-                      <div key={ej.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px', marginBottom: '8px' }}>
-                        {/* Nombre del ejercicio — prominente */}
-                        <div style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
-                          <input type="text" placeholder="Nombre del ejercicio *" value={ej.nombre || ''}
-                            style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: '#111827', outline: 'none', fontFamily: 'inherit', fontWeight: 600 }}
-                            onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, nombre: e.target.value } : ex) } : x) } : s) }))} />
-                          <button className="btn-danger" style={{ padding: '8px 10px', fontSize: 11, borderRadius: 8, flexShrink: 0 }}
-                            onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.filter((ex: any) => ex.id !== ej.id) } : x) } : s) }))}>✕</button>
-                        </div>
-                        {/* Fila 1: Series, Reps, Carga */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 6 }}>
-                          {[{k:'series',ph:'3',lbl:'Series',type:'number'},{k:'repeticiones',ph:'12',lbl:'Reps'},{k:'carga',ph:'kg/PC',lbl:'Carga'}].map(({k,ph,lbl,type}) => (
-                            <div key={k}>
-                              <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
-                              <input type={type||'text'} placeholder={ph} value={(ej as any)[k]||''}
-                                style={{ width: '100%', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
-                                onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: k==='series'?parseInt(e.target.value)||1:e.target.value } : ex) } : x) } : s) }))} />
-                            </div>
-                          ))}
-                        </div>
-                        {/* Fila 2: Descanso, RPE, RIR */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 8 }}>
-                          {[{k:'descanso',ph:'60s',lbl:'Descanso'},{k:'rpe',ph:'1-10',lbl:'RPE'},{k:'rir',ph:'0-5',lbl:'RIR'}].map(({k,ph,lbl}) => (
-                            <div key={k}>
-                              <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
-                              <input type="text" placeholder={ph} value={(ej as any)[k]||''}
-                                style={{ width: '100%', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
-                                onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: e.target.value } : ex) } : x) } : s) }))} />
-                            </div>
-                          ))}
-                        </div>
-                        {/* Observaciones — último */}
-                        <input type="text" placeholder="Observaciones (opcional)" value={ej.observaciones||''}
-                          style={{ width: '100%', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '7px 10px', fontSize: 12, color: '#9ca3af', outline: 'none', fontFamily: 'inherit' }}
-                          onChange={e => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, observaciones: e.target.value } : ex) } : x) } : s) }))} />
-                      </div>
-                    ))}
-                    <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: '13px', marginTop: '4px' }}
-                      onClick={() => setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: [...x.ejercicios, { id: uid(), nombre: '', series: 3, repeticiones: '12', carga: '', descanso: '60 seg', rpe: '', rir: '', observaciones: '' }] } : x) } : s) }))}>
-                      + Agregar ejercicio
-                    </button>
-                    {bp.id && dia.id && (
-                      <button style={{ width: '100%', marginTop: '8px', padding: '10px', borderRadius: '10px', border: `1.5px dashed ${wine}`, background: 'transparent', color: wine, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    {/* ✅ Solo bloques — ejercicios sueltos eliminados */}
+                    {bp.id && dia.id && !dia.id.startsWith('tmp') ? (
+                      <button style={{ width: '100%', padding: '11px', borderRadius: '10px', border: `1.5px solid ${wine}`, background: wineLight, color: wine, fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                         onClick={() => setDiaEditorActivo({ id: dia.id, nombre: dia.tipo || dia.dia, numero: dia.orden + 1 })}>
-                        🧱 Editar bloques de {dia.dia}
+                        🧱 Agregar ejercicios a {dia.dia}
+                        {bloquesConteo[dia.id] > 0 && <span style={{ background: wine, color: '#fff', borderRadius: '20px', padding: '2px 8px', fontSize: '11px', fontWeight: '700' }}>{bloquesConteo[dia.id]} bloques</span>}
                       </button>
+                    ) : (
+                      <div style={{ background: '#fff', border: '1px dashed #e5e7eb', borderRadius: '10px', padding: '12px', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
+                        💡 Guardá el plan para agregar ejercicios a este día
+                      </div>
                     )}
                   </div>
                 ))}
@@ -1195,53 +1155,24 @@ export default function AdminPage() {
                         })}
                       </div>
                       {sem.dias.map((dia: any) => (
-                        <div key={dia.id} style={{ background: '#fff', borderRadius: '12px', padding: '12px', marginBottom: '8px', border: '1px solid #e5e7eb' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span style={{ fontWeight: '700', fontSize: '13px', color: wine }}>{dia.dia}</span>
-                            <button className="btn-danger" style={{ fontSize: '10px', padding: '3px 7px' }}
-                              onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.id !== dia.id) } : s) }))}>✕</button>
+                        <div key={dia.id} style={{ background: '#fff', borderRadius: '12px', padding: '12px', marginBottom: '8px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                            <span style={{ width: '32px', height: '32px', borderRadius: '50%', background: wineLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '12px', color: wine, flexShrink: 0 }}>{dia.dia.slice(0,3)}</span>
+                            <input style={{ background: 'transparent', border: 'none', fontSize: '13px', color: '#111827', outline: 'none', width: '100%', fontFamily: 'inherit' }}
+                              type="text" placeholder="Nombre de la sesión (ej: Pecho, Cardio...)" value={dia.tipo}
+                              onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, tipo: e.target.value } : x) } : s) }))} />
                           </div>
-                          <input style={{ background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: '8px', padding: '8px 11px', fontSize: '13px', color: '#111827', outline: 'none', width: '100%', fontFamily: 'inherit', marginBottom: '8px' }}
-                            type="text" placeholder="Nombre de la sesión (ej: Pecho, Cardio...)" value={dia.tipo}
-                            onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, tipo: e.target.value } : x) } : s) }))} />
-                          {/* Ejercicios */}
-                          {dia.ejercicios.map((ej: any) => (
-                            <div key={ej.id} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '10px', marginBottom: '8px' }}>
-                              <div style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
-                                <input type="text" placeholder="Nombre del ejercicio *" value={ej.nombre || ''}
-                                  style={{ flex: 1, background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: '#111827', outline: 'none', fontFamily: 'inherit', fontWeight: 600 }}
-                                  onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, nombre: e.target.value } : ex) } : x) } : s) }))} />
-                                <button className="btn-danger" style={{ padding: '8px 10px', fontSize: 11, borderRadius: 8, flexShrink: 0 }}
-                                  onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.filter((ex: any) => ex.id !== ej.id) } : x) } : s) }))}>✕</button>
-                              </div>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 6 }}>
-                                {[{k:'series',ph:'3',lbl:'Series',type:'number'},{k:'repeticiones',ph:'12',lbl:'Reps'},{k:'carga',ph:'kg/PC',lbl:'Carga'}].map(({k,ph,lbl,type}) => (
-                                  <div key={k}>
-                                    <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
-                                    <input type={type||'text'} placeholder={ph} value={(ej as any)[k]||''}
-                                      style={{ width: '100%', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
-                                      onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: k==='series'?parseInt(e.target.value)||1:e.target.value } : ex) } : x) } : s) }))} />
-                                  </div>
-                                ))}
-                              </div>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                                {[{k:'descanso',ph:'60s',lbl:'Descanso'},{k:'rpe',ph:'1-10',lbl:'RPE'},{k:'rir',ph:'0-5',lbl:'RIR'}].map(({k,ph,lbl}) => (
-                                  <div key={k}>
-                                    <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
-                                    <input type="text" placeholder={ph} value={(ej as any)[k]||''}
-                                      style={{ width: '100%', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
-                                      onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: e.target.value } : ex) } : x) } : s) }))} />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                          <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: '13px' }}
-                            onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: [...x.ejercicios, { id: wizardUid(), nombre: '', series: 3, repeticiones: '12', carga: '', descanso: '60 seg', rpe: '', rir: '', observaciones: '' }] } : x) } : s) }))}>
-                            + Agregar ejercicio
-                          </button>
+                          <button className="btn-danger" style={{ fontSize: '10px', padding: '4px 8px', flexShrink: 0 }}
+                            onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.id !== dia.id) } : s) }))}>✕</button>
                         </div>
                       ))}
+                      {/* Aviso ejercicios después */}
+                      {sem.dias.length > 0 && (
+                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '10px 14px', fontSize: '12px', color: '#15803d', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span>🧱</span>
+                          <span>Los ejercicios de cada día los agregás desde el panel una vez guardado el plan.</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                   <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '16px' }}
