@@ -75,10 +75,37 @@ export default function AdminPage() {
     loadBrand(p.id)
     const { data: as } = await supabase.from('perfiles').select('*').eq('rol', 'alumno').eq('admin_id', p.id).order('nombre')
     setAlumnos(as || [])
-    const { data: ps } = await supabase.from('planes').select(`*, semanas(*, dias(*, ejercicios(*)))`).eq('admin_id', p.id).order('created_at', { ascending: false })
+
+    // ✅ FIX: Especificar campos en lugar de * para evitar problemas con RLS en joins
+    const { data: ps } = await supabase
+      .from('planes')
+      .select(`
+        id, nombre, objetivo, created_at,
+        semanas(
+          id, numero,
+          dias(
+            id, dia, tipo, orden,
+            ejercicios(id, nombre, series, repeticiones, carga, descanso, rpe, rir, observaciones)
+          )
+        )
+      `)
+      .eq('admin_id', p.id)
+      .order('created_at', { ascending: false })
     setPlanes(ps || [])
-    const { data: asigs } = await supabase.from('asignaciones').select('*').eq('activo', true)
-    setAsignaciones(asigs || [])
+
+    // ✅ FIX: Filtrar asignaciones solo de los planes del admin, no todas
+    const planIds = (ps || []).map((plan: any) => plan.id)
+    if (planIds.length > 0) {
+      const { data: asigs } = await supabase
+        .from('asignaciones')
+        .select('*')
+        .eq('activo', true)
+        .in('plan_id', planIds)
+      setAsignaciones(asigs || [])
+    } else {
+      setAsignaciones([])
+    }
+
     setLoading(false)
   }
 
@@ -716,7 +743,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Paso 1 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '13px' }}>1</div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#111827' }}>Datos del plan</div>
@@ -736,7 +762,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Paso 2 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '13px' }}>2</div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#111827' }}>Semanas y ejercicios</div>
@@ -823,7 +848,6 @@ export default function AdminPage() {
               + Agregar semana {bp.semanas.length + 1}
             </button>
 
-            {/* Paso 3 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '13px' }}>3</div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#111827' }}>Asignar alumnos/as</div>
