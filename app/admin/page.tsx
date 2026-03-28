@@ -37,6 +37,16 @@ export default function AdminPage() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const autosaveTimer = useRef<any>(null)
 
+  // ── WIZARD ONBOARDING ──
+  const [showWizard, setShowWizard]         = useState(false)
+  const [wizardStep, setWizardStep]         = useState(1)
+  const [wizardLoading, setWizardLoading]   = useState(false)
+  const [wizardAlumno, setWizardAlumno]     = useState({ nombre:'', apellido:'', dni:'', email:'', password:'' })
+  const [wizardAlumnoId, setWizardAlumnoId] = useState<string | null>(null)
+  const [wizardPlan, setWizardPlan]         = useState<any>(null)
+  const [wizardError, setWizardError]       = useState('')
+  const [confetti, setConfetti]             = useState(false)
+
   useEffect(() => { loadData() }, [])
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -73,6 +83,11 @@ export default function AdminPage() {
     if (!p || p.rol !== 'admin') { router.push('/dashboard'); return }
     setAdmin(p)
     loadBrand(p.id)
+    // ✅ Mostrar wizard si es primera vez
+    if (!p.onboarding_completo) {
+      setWizardPlan({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: 'tmp-sem-1', numero: 1, dias: [] }], asignados: [] })
+      setShowWizard(true)
+    }
     const { data: as } = await supabase.from('perfiles').select('*').eq('rol', 'alumno').eq('admin_id', p.id).order('nombre')
     setAlumnos(as || [])
     const { data: ps } = await supabase
@@ -135,6 +150,76 @@ export default function AdminPage() {
     setNewA({ nombre:'', apellido:'', dni:'', email:'', password:'' })
     showToast('✅ Alumno/a creado/a — pedile que complete su ficha')
     loadData()
+  }
+
+  // ── WIZARD FUNCTIONS ──
+  function wizardUid() { return 'tmp-' + Date.now().toString(36) + Math.random().toString(36).slice(2) }
+
+  async function wizardCrearAtleta() {
+    setWizardError('')
+    const { nombre, apellido, dni, email, password } = wizardAlumno
+    if (!nombre || !apellido || !dni || !email || !password) {
+      setWizardError('Completá todos los campos'); return
+    }
+    if (!/^\d{7,8}$/.test(dni)) { setWizardError('DNI inválido — 7 u 8 dígitos'); return }
+    if (password.length < 6) { setWizardError('La contraseña debe tener al menos 6 caracteres'); return }
+    setWizardLoading(true)
+    const res = await fetch('/api/admin/crear-alumno', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...wizardAlumno, adminId: admin!.id })
+    })
+    const data = await res.json()
+    setWizardLoading(false)
+    if (!res.ok) { setWizardError(data.error || 'Error al crear el atleta'); return }
+    setWizardAlumnoId(data.userId)
+    setWizardPlan((p: any) => ({ ...p, asignados: [data.userId] }))
+    setWizardStep(2)
+  }
+
+  async function wizardGuardarPlan() {
+    setWizardError('')
+    if (!wizardPlan.nombre) { setWizardError('Poné un nombre al plan'); return }
+    const totalDias = wizardPlan.semanas.reduce((a: number, s: any) => a + s.dias.length, 0)
+    if (!totalDias) { setWizardError('Agregá al menos 1 día de entrenamiento'); return }
+    setWizardLoading(true)
+    // Crear plan
+    const { data: newPlan } = await supabase.from('planes').insert({ nombre: wizardPlan.nombre, objetivo: wizardPlan.objetivo, admin_id: admin!.id }).select().single()
+    if (!newPlan) { setWizardError('Error al crear el plan'); setWizardLoading(false); return }
+    // Crear semanas, días y ejercicios
+    for (const sem of wizardPlan.semanas) {
+      const { data: semData } = await supabase.from('semanas').insert({ plan_id: newPlan.id, numero: sem.numero }).select().single()
+      if (!semData) continue
+      for (const dia of sem.dias) {
+        const { data: diaData } = await supabase.from('dias').insert({ semana_id: semData.id, dia: dia.dia, tipo: dia.tipo || '', orden: dia.orden || 0 }).select().single()
+        if (!diaData) continue
+        for (let i = 0; i < (dia.ejercicios || []).length; i++) {
+          const ej = dia.ejercicios[i]
+          await supabase.from('ejercicios').insert({ dia_id: diaData.id, nombre: ej.nombre, series: ej.series, repeticiones: ej.repeticiones, carga: ej.carga || '', descanso: ej.descanso || '', rpe: ej.rpe || null, rir: ej.rir || null, observaciones: ej.observaciones || '', orden: i })
+        }
+      }
+    }
+    // Asignar al atleta del paso 1
+    if (wizardAlumnoId) {
+      await supabase.from('asignaciones').insert({ alumno_id: wizardAlumnoId, plan_id: newPlan.id, activo: true })
+    }
+    setWizardLoading(false)
+    setWizardStep(3)
+    setConfetti(true)
+    setTimeout(() => setConfetti(false), 3500)
+  }
+
+  async function wizardFinalizar() {
+    await supabase.from('perfiles').update({ onboarding_completo: true }).eq('id', admin!.id)
+    setShowWizard(false)
+    setWizardStep(1)
+    loadData()
+  }
+
+  async function wizardOmitirPlan() {
+    setWizardStep(3)
+    setConfetti(true)
+    setTimeout(() => setConfetti(false), 3500)
   }
 
   async function guardarPlan() {
@@ -956,6 +1041,267 @@ export default function AdminPage() {
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 24px' }}>
               <RoutineDayEditor diaId={diaEditorActivo.id} diaNombre={diaEditorActivo.nombre} diaNumero={diaEditorActivo.numero} onAgregarEjercicio={() => showToast('💡 Guardá el plan primero')} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL WIZARD ONBOARDING ── */}
+      {showWizard && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '520px', maxHeight: '92vh', overflowY: 'auto', position: 'relative' }}>
+
+            {/* Confetti animado */}
+            {confetti && (
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: '24px', zIndex: 10 }}>
+                <style>{`
+                  @keyframes confetti-fall {
+                    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+                  }
+                  .confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confetti-fall 3s ease-in forwards; }
+                `}</style>
+                {[...Array(30)].map((_, i) => (
+                  <div key={i} className="confetti-piece" style={{ left: `${Math.random() * 100}%`, top: '-10px', background: ['#5B8CFF','#e260a5','#16a34a','#f59e0b','#8b5cf6'][i % 5], animationDelay: `${Math.random() * 1.5}s`, width: `${6 + Math.random() * 8}px`, height: `${6 + Math.random() * 8}px` }} />
+                ))}
+              </div>
+            )}
+
+            {/* Header con steps */}
+            <div style={{ padding: '28px 28px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: wine, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '4px' }}>Configuración inicial</div>
+                  <div style={{ fontSize: '22px', fontWeight: '800', color: '#111827', letterSpacing: '-0.4px' }}>
+                    {wizardStep === 1 && 'Tu primer atleta'}
+                    {wizardStep === 2 && 'Su primer plan'}
+                    {wizardStep === 3 && '¡Todo listo! 🎉'}
+                  </div>
+                </div>
+                {/* Steps indicador */}
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {[1,2,3].map(s => (
+                    <div key={s} style={{ width: s === wizardStep ? '24px' : '8px', height: '8px', borderRadius: '4px', background: s <= wizardStep ? wine : '#e5e7eb', transition: 'all .3s' }} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Barra de progreso */}
+              <div style={{ height: '3px', background: '#f3f4f6', borderRadius: '2px', marginBottom: '24px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: wine, borderRadius: '2px', width: `${((wizardStep - 1) / 2) * 100}%`, transition: 'width .5s ease' }} />
+              </div>
+            </div>
+
+            <div style={{ padding: '0 28px 28px' }}>
+
+              {/* ── PASO 1: Crear atleta ── */}
+              {wizardStep === 1 && (
+                <div>
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: '#0369a1', lineHeight: '1.5' }}>
+                    👋 Empecemos agregando a tu primer atleta. Solo los datos básicos — el resto lo completa desde su app.
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                    {[['nombre','Nombre *','María'],['apellido','Apellido *','García']].map(([k,l,ph]) => (
+                      <div key={k}>
+                        <label className="field-label">{l}</label>
+                        <input className="input-field" type="text" placeholder={ph}
+                          value={(wizardAlumno as any)[k]}
+                          onChange={e => setWizardAlumno(p => ({ ...p, [k]: e.target.value }))} />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label className="field-label">DNI *</label>
+                    <input className="input-field" type="text" placeholder="Sin puntos ni guiones"
+                      value={wizardAlumno.dni}
+                      onChange={e => setWizardAlumno(p => ({ ...p, dni: e.target.value.replace(/\D/g, '') }))}
+                      maxLength={8} />
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label className="field-label">Email *</label>
+                    <input className="input-field" type="email" placeholder="atleta@email.com"
+                      value={wizardAlumno.email}
+                      onChange={e => setWizardAlumno(p => ({ ...p, email: e.target.value }))} />
+                  </div>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label className="field-label">Contraseña inicial *</label>
+                    <input className="input-field" type="password" placeholder="Mínimo 6 caracteres"
+                      value={wizardAlumno.password}
+                      onChange={e => setWizardAlumno(p => ({ ...p, password: e.target.value }))} />
+                    <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>El atleta puede cambiarla desde su perfil.</div>
+                  </div>
+                  {wizardError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '13px', color: '#dc2626', fontWeight: '500' }}>
+                      ⚠️ {wizardError}
+                    </div>
+                  )}
+                  <button className="btn-wine" style={{ width: '100%', justifyContent: 'center', fontSize: '15px', padding: '14px', opacity: wizardLoading ? 0.7 : 1 }}
+                    onClick={wizardCrearAtleta} disabled={wizardLoading}>
+                    {wizardLoading ? 'Creando atleta...' : 'Continuar — Crear plan →'}
+                  </button>
+                  <button onClick={wizardFinalizar} style={{ width: '100%', background: 'transparent', border: 'none', color: '#9ca3af', fontSize: '13px', marginTop: '10px', cursor: 'pointer', fontFamily: 'inherit', padding: '8px' }}>
+                    Omitir por ahora, ir al panel
+                  </button>
+                </div>
+              )}
+
+              {/* ── PASO 2: Crear plan ── */}
+              {wizardStep === 2 && wizardPlan && (
+                <div>
+                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: '#15803d', lineHeight: '1.5' }}>
+                    ✅ <strong>{wizardAlumno.nombre}</strong> fue creado/a. Ahora armá su primer plan de entrenamiento.
+                  </div>
+
+                  {/* Datos del plan */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }} className="grid-2-col">
+                    <div>
+                      <label className="field-label">Nombre del plan *</label>
+                      <input className="input-field" type="text" placeholder="Ej: Plan Fuerza 8 semanas"
+                        value={wizardPlan.nombre}
+                        onChange={e => setWizardPlan((p: any) => ({ ...p, nombre: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="field-label">Objetivo</label>
+                      <select className="input-field" value={wizardPlan.objetivo}
+                        onChange={e => setWizardPlan((p: any) => ({ ...p, objetivo: e.target.value }))}>
+                        {['Bajar de peso','Ganar masa muscular','Salud general','Rendimiento deportivo','Rehabilitación','Flexibilidad'].map(o => <option key={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Semanas */}
+                  {wizardPlan.semanas.map((sem: any, si: number) => (
+                    <div key={sem.id} style={{ border: '1.5px solid #e5e7eb', borderRadius: '14px', padding: '16px', marginBottom: '12px', background: '#fafafa' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: '800', color: wine }}>Semana {sem.numero}</span>
+                        {si > 0 && <button className="btn-danger" style={{ fontSize: '11px', padding: '5px 9px' }}
+                          onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.filter((_: any, i: number) => i !== si).map((s: any, i: number) => ({ ...s, numero: i + 1 })) }))}>Eliminar</button>}
+                      </div>
+                      <label style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: '8px' }}>Días</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+                        {['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d => {
+                          const ya = sem.dias.find((x: any) => x.dia === d)
+                          return (
+                            <button key={d} onClick={() => {
+                              if (ya) {
+                                setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.dia !== d) } : s) }))
+                              } else {
+                                setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: wizardUid(), dia: d, tipo: '', orden: s.dias.length, ejercicios: [] }] } : s) }))
+                              }
+                            }} style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', border: '1.5px solid', fontFamily: 'inherit', background: ya ? wine : '#fff', color: ya ? '#fff' : '#9ca3af', borderColor: ya ? wine : '#e5e7eb' }}>
+                              {d.slice(0, 3)}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      {sem.dias.map((dia: any) => (
+                        <div key={dia.id} style={{ background: '#fff', borderRadius: '12px', padding: '12px', marginBottom: '8px', border: '1px solid #e5e7eb' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span style={{ fontWeight: '700', fontSize: '13px', color: wine }}>{dia.dia}</span>
+                            <button className="btn-danger" style={{ fontSize: '10px', padding: '3px 7px' }}
+                              onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.id !== dia.id) } : s) }))}>✕</button>
+                          </div>
+                          <input style={{ background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: '8px', padding: '8px 11px', fontSize: '13px', color: '#111827', outline: 'none', width: '100%', fontFamily: 'inherit', marginBottom: '8px' }}
+                            type="text" placeholder="Nombre de la sesión (ej: Pecho, Cardio...)" value={dia.tipo}
+                            onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, tipo: e.target.value } : x) } : s) }))} />
+                          {/* Ejercicios */}
+                          {dia.ejercicios.map((ej: any) => (
+                            <div key={ej.id} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '10px', marginBottom: '8px' }}>
+                              <div style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
+                                <input type="text" placeholder="Nombre del ejercicio *" value={ej.nombre || ''}
+                                  style={{ flex: 1, background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: '#111827', outline: 'none', fontFamily: 'inherit', fontWeight: 600 }}
+                                  onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, nombre: e.target.value } : ex) } : x) } : s) }))} />
+                                <button className="btn-danger" style={{ padding: '8px 10px', fontSize: 11, borderRadius: 8, flexShrink: 0 }}
+                                  onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.filter((ex: any) => ex.id !== ej.id) } : x) } : s) }))}>✕</button>
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 6 }}>
+                                {[{k:'series',ph:'3',lbl:'Series',type:'number'},{k:'repeticiones',ph:'12',lbl:'Reps'},{k:'carga',ph:'kg/PC',lbl:'Carga'}].map(({k,ph,lbl,type}) => (
+                                  <div key={k}>
+                                    <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
+                                    <input type={type||'text'} placeholder={ph} value={(ej as any)[k]||''}
+                                      style={{ width: '100%', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
+                                      onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: k==='series'?parseInt(e.target.value)||1:e.target.value } : ex) } : x) } : s) }))} />
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                                {[{k:'descanso',ph:'60s',lbl:'Descanso'},{k:'rpe',ph:'1-10',lbl:'RPE'},{k:'rir',ph:'0-5',lbl:'RIR'}].map(({k,ph,lbl}) => (
+                                  <div key={k}>
+                                    <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>{lbl}</div>
+                                    <input type="text" placeholder={ph} value={(ej as any)[k]||''}
+                                      style={{ width: '100%', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '8px 6px', fontSize: 13, color: '#111827', outline: 'none', fontFamily: 'inherit', textAlign: 'center' }}
+                                      onChange={e => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: x.ejercicios.map((ex: any) => ex.id === ej.id ? { ...ex, [k]: e.target.value } : ex) } : x) } : s) }))} />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                          <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: '13px' }}
+                            onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.map((x: any) => x.id === dia.id ? { ...x, ejercicios: [...x.ejercicios, { id: wizardUid(), nombre: '', series: 3, repeticiones: '12', carga: '', descanso: '60 seg', rpe: '', rir: '', observaciones: '' }] } : x) } : s) }))}>
+                            + Agregar ejercicio
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                  <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '16px' }}
+                    onClick={() => setWizardPlan((p: any) => ({ ...p, semanas: [...p.semanas, { id: wizardUid(), numero: p.semanas.length + 1, dias: [] }] }))}>
+                    + Agregar semana {wizardPlan.semanas.length + 1}
+                  </button>
+
+                  {wizardError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '13px', color: '#dc2626', fontWeight: '500' }}>
+                      ⚠️ {wizardError}
+                    </div>
+                  )}
+                  <button className="btn-wine" style={{ width: '100%', justifyContent: 'center', fontSize: '15px', padding: '14px', opacity: wizardLoading ? 0.7 : 1 }}
+                    onClick={wizardGuardarPlan} disabled={wizardLoading}>
+                    {wizardLoading ? 'Guardando plan...' : 'Guardar plan y continuar →'}
+                  </button>
+                  <button onClick={wizardOmitirPlan} style={{ width: '100%', background: 'transparent', border: 'none', color: '#9ca3af', fontSize: '13px', marginTop: '10px', cursor: 'pointer', fontFamily: 'inherit', padding: '8px' }}>
+                    Omitir este paso por ahora
+                  </button>
+                </div>
+              )}
+
+              {/* ── PASO 3: Éxito ── */}
+              {wizardStep === 3 && (
+                <div style={{ textAlign: 'center', padding: '12px 0 8px' }}>
+                  <div style={{ fontSize: '64px', marginBottom: '16px', lineHeight: 1 }}>🎉</div>
+                  <div style={{ fontFamily: 'inherit', fontSize: '22px', fontWeight: '800', color: '#111827', marginBottom: '8px', letterSpacing: '-0.4px' }}>
+                    ¡Ya estás listo/a!
+                  </div>
+                  <div style={{ fontSize: '15px', color: '#6b7280', marginBottom: '28px', lineHeight: '1.6' }}>
+                    {wizardAlumnoId && wizardPlan?.nombre ? (
+                      <>Creaste a <strong style={{ color: '#111827' }}>{wizardAlumno.nombre} {wizardAlumno.apellido}</strong> con el plan <strong style={{ color: wine }}>{wizardPlan.nombre}</strong>.<br />Ya puede ingresar a su app y empezar a entrenar.</>
+                    ) : wizardAlumnoId ? (
+                      <>Creaste a <strong style={{ color: '#111827' }}>{wizardAlumno.nombre} {wizardAlumno.apellido}</strong>.<br />Podés asignarle un plan desde el panel en cualquier momento.</>
+                    ) : (
+                      <>Tu panel está listo. Podés agregar atletas y planes cuando quieras.</>
+                    )}
+                  </div>
+                  {/* Resumen visual */}
+                  {wizardAlumnoId && (
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ background: wineLight, borderRadius: '12px', padding: '12px 20px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '22px', fontWeight: '800', color: wine }}>1</div>
+                        <div style={{ fontSize: '11px', color: wine, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '.06em' }}>Atleta</div>
+                      </div>
+                      {wizardPlan?.nombre && (
+                        <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '12px 20px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '22px', fontWeight: '800', color: '#16a34a' }}>1</div>
+                          <div style={{ fontSize: '11px', color: '#16a34a', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '.06em' }}>Plan</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <button className="btn-wine" style={{ width: '100%', justifyContent: 'center', fontSize: '15px', padding: '15px' }}
+                    onClick={wizardFinalizar}>
+                    Ir a mi panel →
+                  </button>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
