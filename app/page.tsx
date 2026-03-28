@@ -47,7 +47,7 @@ export default function HomePage() {
   return (
     <div className="lp">
 
-      {/* ── NAV — idéntico al original ── */}
+      {/* ── NAV ── */}
       <nav id="l-navbar" className="lp-nav">
         <div className="lp-logo">PULSE<span>.</span></div>
         <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
@@ -56,33 +56,57 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* ── HERO ── */}
-      <div style={{ maxWidth:'1100px', margin:'0 auto' }}>
-        <div className="lp-hero">
-          <div>
-            <div className="lp-hero-eyebrow">Para entrenadores personales</div>
-            <h1>Tu negocio<br />al ritmo que<br /><em>entrenás.</em></h1>
+      {/* ── HERO — Full bleed con foto ── */}
+      <div className="lp-hero-outer">
+        <div className="lp-hero-wrap">
+
+          <img
+            className="lp-hero-photo"
+            src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400&q=85&auto=format&fit=crop&crop=center"
+            alt="Entrenadora personal guiando a su alumno"
+          />
+          <div className="lp-hero-overlay" />
+
+          <div className="lp-hero-badge">Para entrenadores personales</div>
+
+          <div className="lp-hero-content">
+            <div className="lp-hero-eyebrow">Pulse</div>
+            <h1>
+              Tu negocio<br />
+              al ritmo que<br />
+              <em>entrenás.</em>
+            </h1>
             <p className="lp-hero-sub">
               Alumnos, rutinas y cobros <strong>en una sola app</strong>.<br />
               Menos administración. Más tiempo para entrenar.
             </p>
             <div className="lp-cta-group">
               <a href="/register/admin" className="lp-btn-main">Crear mi app gratis →</a>
-              <a href="#producto" className="lp-btn-ghost">Ver cómo funciona</a>
+              <a href="#producto" className="lp-btn-ghost-dark">Ver cómo funciona</a>
             </div>
             <div className="lp-hero-note">Gratis para tus primeros 2 alumnos · Sin tarjeta</div>
           </div>
-          <div className="lp-hero-img">
-            <img
-              src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80&auto=format&fit=crop"
-              alt="Entrenador personal trabajando con un alumno"
-              className="lp-hero-photo"
-            />
+
+          {/* Stats — solo desktop */}
+          <div className="lp-hero-stats">
+            <div className="lp-stat-pill">
+              <div className="lp-stat-n">10<span>min</span></div>
+              <div className="lp-stat-l">Para estar operativa</div>
+            </div>
+            <div className="lp-stat-pill">
+              <div className="lp-stat-n"><span>$0</span></div>
+              <div className="lp-stat-l">Para empezar</div>
+            </div>
+            <div className="lp-stat-pill">
+              <div className="lp-stat-n">100<span>%</span></div>
+              <div className="lp-stat-l">Digital desde el día 1</div>
+            </div>
           </div>
+
         </div>
       </div>
 
-      {/* ── FEATURES — estructura idéntica al original, mockups premium ── */}
+      {/* ── FEATURES ── */}
       <div className="lp-features" id="producto">
         <div className="lp-section-label">El producto</div>
         <div className="lp-section-title">Así se ve<br /><em>por dentro.</em></div>
@@ -98,7 +122,6 @@ export default function HomePage() {
             <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Estado del plan en tiempo real</span></div>
             <div className="lp-feat-check"><div className="lp-check-dot">✓</div><span>Alerta cuando alguien no tiene plan</span></div>
           </div>
-          {/* lp-mini-screen — misma clase que el original, datos premium */}
           <div className="lp-mini-screen">
             <div className="lp-mini-header">
               <div className="lp-mini-title">Alumnos/as</div>
@@ -191,7 +214,6 @@ export default function HomePage() {
                 <span style={{ fontSize:'10px', color:'#9ca3af', marginLeft:'4px' }}>· comisión 5%</span>
               </div>
             </div>
-            {/* Revenue box */}
             <div className="lp-rev-box">
               <div className="lp-rev-label">Ingresos del mes</div>
               <div className="lp-rev-amount">$820.000</div>
@@ -222,7 +244,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── TESTIMONIAL — idéntico al original ── */}
+      {/* ── TESTIMONIAL ── */}
       <div className="lp-testimonial">
         <div className="lp-testi-inner l-reveal">
           <div className="lp-testi-tag">Caso real</div>
@@ -245,7 +267,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── PRICING — idéntico al original, ✅ FREE = 2 alumnos ── */}
+      {/* ── PRICING ── */}
       <div className="lp-pricing">
         <div className="lp-pricing-inner">
           <div className="lp-section-label" style={{ textAlign:'center' }}>Planes</div>
@@ -256,7 +278,6 @@ export default function HomePage() {
               <div className="lp-price-label">Plan Free</div>
               <div className="lp-price-n">$0</div>
               <div className="lp-price-period">Para siempre</div>
-              {/* ✅ 2 alumnos */}
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Hasta <strong>2 alumnos</strong></div>
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>Constructor de rutinas</div>
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span>App del alumno (marca Pulse)</div>
@@ -282,16 +303,15 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── FINAL CTA — idéntico al original, ✅ FREE = 2 alumnos ── */}
+      {/* ── FINAL CTA ── */}
       <div className="lp-final">
         <h2>Dejá de administrar.<br /><em>Empezá a entrenar.</em></h2>
         <div className="lp-final-sub">En 10 minutos tenés tu primera rutina cargada y tu primer alumno adentro.</div>
         <a href="/register/admin" className="lp-btn-main" style={{ fontSize:'16px', padding:'16px 40px' }}>Crear mi app gratis →</a>
-        {/* ✅ 2 alumnos */}
         <div className="lp-final-note">Gratis para tus primeros 2 alumnos · Sin tarjeta · Sin contrato</div>
       </div>
 
-      {/* ── FOOTER — ecosistema KAIRO ── */}
+      {/* ── FOOTER ── */}
       <div className="lp-footer-eco">
         <div className="lp-footer-eco-in">
           <div className="lp-eco-mark">
