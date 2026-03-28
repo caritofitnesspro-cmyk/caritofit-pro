@@ -32,7 +32,7 @@ export function useBrand() {
       .from('perfiles')
       .select('plan, brand_name, brand_image_url, primary_color, secondary_color')
       .eq('id', id)
-      .single()
+      .single() as { data: { plan: string; brand_name: string | null; brand_image_url: string | null; primary_color: string | null; secondary_color: string | null } | null, error: unknown }
 
     if (data) {
       const isPro = data.plan === 'pro'
