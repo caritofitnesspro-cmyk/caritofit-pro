@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Permite importar imágenes externas si las usás en el futuro
-  images: {
-    domains: ['*.supabase.co'],
+  experimental: {
+    outputFileTracingExcludes: {
+      '*': ['./supabase/**/*'],
+    },
+  },
+  typescript: {
+    ignoreBuildErrors: false,
   },
 }
 
