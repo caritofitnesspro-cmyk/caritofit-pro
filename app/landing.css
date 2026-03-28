@@ -149,7 +149,7 @@
   .lp-pills-section { padding: 56px 20px; }
   .lp-pills-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .lp-quote-section { padding: 56px 20px; }
-  .lp-testi-grid { grid-template-columns: 1fr; gap: 14px; }
+  .lp-testi-grid { grid-template-columns: 1fr !important; gap: 14px; }
   .lp-pricing { padding: 56px 20px; }
   .lp-pricing-grid { grid-template-columns: 1fr; }
   .lp-final { padding: 56px 20px; }
