@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
+import { sendGAEvent } from '@next/third-parties/google'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
@@ -19,9 +20,7 @@ function RegisterForm() {
   const [descuento, setDescuento] = useState<number | null>(null)
 
   function track(event: string, params?: Record<string, any>) {
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({ event, ...params })
-    }
+    try { sendGAEvent('event', event, params || {}) } catch(e) {}
   }
 
   // Evento cuando llega a la página de registro
