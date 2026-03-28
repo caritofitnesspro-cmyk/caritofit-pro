@@ -40,9 +40,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ── 2. VERIFICAR QUE EL ADMIN EXISTE ──
-    // Usamos service role porque este callback no tiene sesión de usuario
     const db = getServiceClient()
-
     const { data: adminPerfil } = await db
       .from('perfiles')
       .select('id, rol')
@@ -75,11 +73,38 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${appUrl}/admin?cobros=error`)
     }
 
-    // ── 4. GUARDAR TOKEN — service role (callback sin sesión de usuario) ──
+    // ── 4. GUARDAR TOKEN EN VAULT (encriptado) ──
+    // Verificar si ya existe un token para este admin
+    const { data: existingToken } = await db
+      .from('mp_tokens')
+      .select('secret_id')
+      .eq('admin_id', adminId)
+      .single()
+
+    if (existingToken?.secret_id) {
+      // Actualizar secret existente en Vault
+      await db.rpc('vault.update_secret', {
+        secret_id: existingToken.secret_id,
+        new_secret: data.access_token,
+      })
+    } else {
+      // Crear nuevo secret en Vault
+      const { data: secretId } = await db.rpc('vault.create_secret', {
+        secret: data.access_token,
+        name: `mp_token_${adminId}`,
+      })
+
+      // Guardar referencia en mp_tokens
+      await db.from('mp_tokens').upsert({
+        admin_id: adminId,
+        secret_id: secretId,
+      })
+    }
+
+    // ── 5. ACTUALIZAR PERFIL sin el token (solo metadatos) ──
     const { error: updateError } = await db
       .from('perfiles')
       .update({
-        mp_cobros_access_token: data.access_token,
         mp_cobros_user_id: String(data.user_id),
         cobros_activos: true,
       })
@@ -87,7 +112,7 @@ export async function GET(req: NextRequest) {
       .eq('rol', 'admin')
 
     if (updateError) {
-      console.error('Error guardando token MP:', updateError.message)
+      console.error('Error actualizando perfil MP:', updateError.message)
       return NextResponse.redirect(`${appUrl}/admin?cobros=error`)
     }
 
