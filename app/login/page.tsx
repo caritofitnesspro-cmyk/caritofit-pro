@@ -30,15 +30,21 @@ function LoginForm() {
     if (nextUrl) setMode('admin')
   }, [nextUrl])
 
+  // ✅ SEGURO: Usa Edge Function en lugar de query directa a la tabla
   useEffect(() => {
     async function loadBrand() {
       try {
-        const { data } = await supabase
-          .from('perfiles')
-          .select('brand_image_url, brand_name, primary_color, secondary_color, plan')
-          .eq('rol', 'admin')
-          .limit(1)
-          .single()
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-brand`,
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+            }
+          }
+        )
+        if (!res.ok) return
+        const data = await res.json()
+
         if (data?.brand_image_url) setBrandImageUrl(data.brand_image_url)
         if (data?.brand_name) setBrandName(data.brand_name)
         if (data?.primary_color) setPrimaryColor(data.primary_color)
@@ -56,15 +62,16 @@ function LoginForm() {
   }, [])
 
   function getContrastText(hex: string): string {
-    const r = parseInt(hex.slice(1,3), 16)
-    const g = parseInt(hex.slice(3,5), 16)
-    const b = parseInt(hex.slice(5,7), 16)
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
     return luminance > 0.5 ? '#1a1a1a' : '#ffffff'
   }
 
   const ctaTextColor = getContrastText(primaryColor)
 
+  // ✅ SEGURO: Usa Edge Function para buscar email por DNI
   async function handleLogin() {
     setError('')
     setDniError(false)
@@ -79,19 +86,29 @@ function LoginForm() {
 
     setLoading(true)
     try {
-      const { data: perfil } = await supabase
-        .from('perfiles')
-        .select('id, email, rol')
-        .eq('dni', dni)
-        .single()
+      // 1. Buscar email por DNI via Edge Function (no expone la tabla)
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/login-by-dni`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ dni })
+        }
+      )
 
-      if (!perfil?.email) {
+      const perfil = await res.json()
+
+      if (!res.ok || !perfil?.email) {
         setDniError(true)
         setError('No existe una cuenta con ese DNI')
         setLoading(false)
         return
       }
 
+      // 2. Autenticar con email + password via Supabase Auth (seguro por diseño)
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: perfil.email,
         password,
@@ -104,7 +121,7 @@ function LoginForm() {
         return
       }
 
-      // Redirigir según ?next= o rol
+      // 3. Redirigir según ?next= o rol
       if (nextUrl) {
         router.push(nextUrl)
       } else if (perfil.rol === 'admin') {
