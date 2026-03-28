@@ -45,7 +45,6 @@ function RegisterForm() {
         throw new Error('DNI inválido — solo números, sin puntos')
       }
 
-      // Verificar que el DNI no esté en uso
       const { data: dniExiste } = await supabase
         .from('perfiles')
         .select('id')
@@ -145,8 +144,58 @@ function RegisterForm() {
           </div>
           {isPro && <div style={styles.proBadge}>Plan PRO</div>}
           <div style={styles.title}>{isPro ? 'Crear cuenta PRO' : 'Registro de profesora'}</div>
-          <div style={styles.sub}>{isPro ? 'Empezá a profesionalizar tu negocio' : 'Gratis para siempre, hasta 3 alumnos'}</div>
+          <div style={styles.sub}>{isPro ? 'Profesionalizá tu negocio sin límites' : 'Gratis para siempre, hasta 2 alumnos'}</div>
         </div>
+
+        {/* Comparación de planes */}
+        {isPro ? (
+          <div style={{ background: '#EEF4FF', border: '1px solid #C7D9FF', borderRadius: 14, padding: '16px 18px', marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#3B5BDB', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
+              ✦ Qué incluye el plan PRO
+            </div>
+            {[
+              'Alumnos ilimitados',
+              'App con tu logo y colores',
+              'Nombre de marca propio',
+              'Cobros con comisión reducida (5%)',
+              'Soporte prioritario',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ color: '#3B5BDB', fontWeight: 700, fontSize: 13 }}>✓</span>
+                <span style={{ fontSize: 13, color: '#1e3a8a' }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid #C7D9FF', marginTop: 10, paddingTop: 10, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 12, color: '#3B5BDB' }}>Precio mensual</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontSize: 20, fontWeight: 800, color: '#3B5BDB' }}>${precioBase.toLocaleString('es-AR')}</span>
+                <span style={{ fontSize: 12, color: '#6b7280' }}>ARS/mes</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ background: '#F5F2EE', border: '1px solid #E6E0DA', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6B6259', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>
+              Qué incluye el plan FREE
+            </div>
+            {[
+              'Hasta 2 alumnos',
+              'Constructor de rutinas completo',
+              'App del alumno (marca Pulse)',
+              'Cobros con comisión 8%',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                <span style={{ color: '#5B8CFF', fontWeight: 700, fontSize: 13 }}>✓</span>
+                <span style={{ fontSize: 13, color: '#374151' }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid #E6E0DA', marginTop: 10, paddingTop: 10 }}>
+              <a href="/register/admin?plan=pro" style={{ fontSize: 13, color: '#5B8CFF', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                ¿Querés más de 2 alumnos? Activá el plan PRO →
+              </a>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
@@ -228,13 +277,6 @@ function RegisterForm() {
 
         </form>
 
-        {!isPro && (
-          <div style={{ marginTop: 16, background: '#F5F2EE', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#9E9188', textAlign: 'center' }}>
-            Plan FREE incluye hasta 3 alumnos ·{' '}
-            <a href="/register/admin?plan=pro" style={{ color: '#5B8CFF', textDecoration: 'none', fontWeight: 500 }}>Ver plan PRO →</a>
-          </div>
-        )}
-
         <div style={styles.back}>
           ¿Ya tenés cuenta? <a href="/login" style={{ color: '#5B8CFF', fontWeight: 500, textDecoration: 'none' }}>Iniciá sesión</a>
         </div>
@@ -247,7 +289,7 @@ function RegisterForm() {
 const styles = {
   root: { minHeight: '100vh', background: '#F5F2EE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', fontFamily: "'DM Sans', sans-serif" },
   card: { background: '#ffffff', borderRadius: 24, padding: '48px 40px 40px', width: '100%', maxWidth: 420, border: '1px solid #E6E0DA', boxShadow: '0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06)', position: 'relative' as const },
-  brand: { textAlign: 'center' as const, marginBottom: 28 },
+  brand: { textAlign: 'center' as const, marginBottom: 20 },
   logo: { width: 56, height: 56, borderRadius: 16, background: '#5B8CFF18', border: '1.5px solid #E6E0DA', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' },
   proBadge: { display: 'inline-block', background: '#5B8CFF', color: 'white', fontSize: 11, fontWeight: 600, padding: '3px 12px', borderRadius: 20, letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' as const },
   title: { fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, fontWeight: 900, color: '#1C1714', marginBottom: 4 },
