@@ -1,8 +1,7 @@
 // hooks/useBrand.ts
 'use client'
-
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 
 export interface BrandConfig {
   brandName: string
@@ -26,7 +25,10 @@ export function useBrand() {
   const [loading, setLoading] = useState(true)
 
   async function loadBrand(id: string) {
-    const { data } = await (supabase as any)
+    // ✅ Crear cliente dentro de la función para que tenga el JWT de la sesión activa
+    const supabase = createClient()
+
+    const { data } = await supabase
       .from('perfiles')
       .select('plan, brand_name, brand_image_url, primary_color, secondary_color')
       .eq('id', id)
@@ -34,16 +36,12 @@ export function useBrand() {
 
     if (data) {
       const isPro = data.plan === 'pro'
-
-      // FREE → siempre branding Pulse
-      // PRO  → branding personalizado del admin
       const config: BrandConfig = isPro ? {
         brandName:      data.brand_name      || PULSE_BRAND.brandName,
         brandImageUrl:  data.brand_image_url || null,
         primaryColor:   data.primary_color   || PULSE_BRAND.primaryColor,
         secondaryColor: data.secondary_color || PULSE_BRAND.secondaryColor,
       } : PULSE_BRAND
-
       setBrand(config)
       applyBrandCSS(config)
     }
@@ -51,7 +49,10 @@ export function useBrand() {
   }
 
   async function saveBrand(updates: Partial<BrandConfig>, adminId: string): Promise<boolean> {
-    const { error } = await (supabase as any)
+    // ✅ Crear cliente dentro de la función
+    const supabase = createClient()
+
+    const { error } = await supabase
       .from('perfiles')
       .update({
         brand_name:      updates.brandName,
@@ -70,6 +71,9 @@ export function useBrand() {
   }
 
   async function uploadBrandImage(file: File, adminId: string): Promise<string | null> {
+    // ✅ Crear cliente dentro de la función
+    const supabase = createClient()
+
     const validTypes = ['image/png', 'image/jpeg', 'image/webp']
     if (!validTypes.includes(file.type)) return null
     if (file.size > 2 * 1024 * 1024) return null
