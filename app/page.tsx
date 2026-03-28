@@ -295,15 +295,15 @@ export default function HomePage() {
       <div className="lp-footer-eco">
         <div className="lp-footer-eco-in">
           <div className="lp-eco-mark">
-            <a href="#" className="lp-eco-item lp-eco-pulse">PULSE<span className="lp-eco-dot lp-eco-dot-pulse">.</span></a>
-            <a href="#" className="lp-eco-item lp-eco-crece">CRECE<span className="lp-eco-dot lp-eco-dot-crece">.</span></a>
-            <a href="#" className="lp-eco-item lp-eco-closer">CLOSER<span className="lp-eco-dot lp-eco-dot-closer">.</span></a>
+            <a href="https://getpulseapp.lat/" target="_blank" rel="noopener" className="lp-eco-item lp-eco-pulse">PULSE<span className="lp-eco-dot lp-eco-dot-pulse">.</span></a>
+            <a href="https://getcreceapp.com/" target="_blank" rel="noopener" className="lp-eco-item lp-eco-crece">CRECE<span className="lp-eco-dot lp-eco-dot-crece">.</span></a>
+            <span className="lp-eco-item lp-eco-watch">WATCH<span className="lp-eco-dot lp-eco-dot-watch">.</span></span>
+            <span className="lp-eco-item lp-eco-closer">CLOSER<span className="lp-eco-dot lp-eco-dot-closer">.</span></span>
             <a href="https://getsignalatam.lat/" target="_blank" rel="noopener" className="lp-eco-item lp-eco-signal">SIGNAL<span className="lp-eco-dot lp-eco-dot-signal">.</span></a>
           </div>
           <div className="lp-foot-links">
-            <a href="https://kairo.lat/" target="_blank" rel="noopener" className="lp-foot-kairo"><strong>KAIRO</strong> — Make it simple</a>
+            <a href="https://kairo.lat/" target="_blank" rel="noopener" className="lp-foot-kairo">Built by <strong>KAIRO</strong> · Make it simple</a>
             <a href="/privacidad">Privacidad</a>
-            <a href="mailto:hola@getpulseapp.lat">Contacto</a>
           </div>
         </div>
       </div>
