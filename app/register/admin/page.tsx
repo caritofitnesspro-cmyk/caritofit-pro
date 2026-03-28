@@ -18,6 +18,17 @@ function RegisterForm() {
   const [success, setSuccess] = useState(false)
   const [descuento, setDescuento] = useState<number | null>(null)
 
+  function track(event: string, params?: Record<string, any>) {
+    if (typeof window !== 'undefined' && (window as any).dataLayer) {
+      (window as any).dataLayer.push({ event, ...params })
+    }
+  }
+
+  // Evento cuando llega a la página de registro
+  useState(() => {
+    track('register_start', { plan: isPro ? 'pro' : 'free' })
+  })
+
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   async function validarCodigo(codigo: string) {
@@ -100,6 +111,11 @@ function RegisterForm() {
       }
 
       setSuccess(true)
+      // Analytics — registro completado
+      track('register_complete', {
+        plan: isPro ? 'pro' : 'free',
+        used_code: !!form.codigo,
+      })
       setTimeout(() => {
         if (isPro) {
           const params = descuento ? `?descuento=${descuento}` : ''
