@@ -76,6 +76,48 @@ export default function AdminPage() {
     }, 1000)
   }, [admin, supabase])
 
+  // ✅ Guarda el plan silenciosamente en DB cuando se agrega el primer día
+  // Así el trainer puede agregar ejercicios sin hacer click en Guardar primero
+  async function guardarPlanSilencioso(currentBp: any, semId: string, dia: string, orden: number): Promise<{planId: string, semId: string, diaId: string} | null> {
+    try {
+      let planId = currentBp.id
+      let semanaId = semId
+
+      // 1. Si el plan no existe, crearlo
+      if (!planId) {
+        const nombre = currentBp.nombre?.trim() || 'Nuevo plan'
+        const { data: newPlan } = await supabase
+          .from('planes')
+          .insert({ nombre, objetivo: currentBp.objetivo, admin_id: admin!.id })
+          .select().single()
+        if (!newPlan) return null
+        planId = newPlan.id
+      }
+
+      // 2. Si la semana no existe, crearla
+      if (!semanaId || semanaId.startsWith('tmp')) {
+        const semNum = currentBp.semanas.find((s: any) => s.id === semId)?.numero || 1
+        const { data: newSem } = await supabase
+          .from('semanas')
+          .insert({ plan_id: planId, numero: semNum })
+          .select().single()
+        if (!newSem) return null
+        semanaId = newSem.id
+      }
+
+      // 3. Crear el día
+      const { data: newDia } = await supabase
+        .from('dias')
+        .insert({ semana_id: semanaId, dia, tipo: '', orden })
+        .select().single()
+      if (!newDia) return null
+
+      return { planId, semId: semanaId, diaId: newDia.id }
+    } catch(e) {
+      return null
+    }
+  }
+
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
@@ -850,6 +892,7 @@ export default function AdminPage() {
                 <div>
                   <label className="field-label">Nombre del plan *</label>
                   <input className="input-field" type="text" placeholder="Ej: Plan Fuerza 8 semanas" value={bp.nombre} onChange={e => { const newBp = { ...bp, nombre: e.target.value }; setBp(newBp); autosavePlan(newBp) }} />
+                  {!bp.nombre && <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>💡 Podés elegir los días ahora y escribir el nombre después</div>}
                 </div>
                 <div>
                   <label className="field-label">Objetivo</label>
@@ -880,14 +923,42 @@ export default function AdminPage() {
                       return (
                         <button key={d} onClick={async () => {
                           if (ya) {
-                            if (ya.id && !ya.id.startsWith('tmp') && bp.id) await supabase.from('dias').delete().eq('id', ya.id)
+                            // Eliminar día — si existe en DB, borrarlo
+                            if (ya.id && !ya.id.startsWith('tmp') && bp.id) {
+                              await supabase.from('dias').delete().eq('id', ya.id)
+                            }
                             setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: s.dias.filter((x: any) => x.dia !== d) } : s) }))
                           } else {
+                            // ✅ Guardar silencioso — crea plan+semana+día en DB automáticamente
+                            // así el botón de bloques aparece de inmediato sin click en Guardar
+                            const orden = sem.dias.length
                             if (bp.id && sem.id && !sem.id.startsWith('tmp')) {
-                              const { data: newDia } = await supabase.from('dias').insert({ semana_id: sem.id, dia: d, tipo: '', orden: sem.dias.length }).select().single()
-                              if (newDia) { setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: newDia.id, dia: d, tipo: '', orden: s.dias.length, ejercicios: [] }] } : s) })); return }
+                              // Plan y semana ya existen, solo crear el día
+                              const { data: newDia } = await supabase.from('dias').insert({ semana_id: sem.id, dia: d, tipo: '', orden }).select().single()
+                              if (newDia) {
+                                setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: newDia.id, dia: d, tipo: '', orden, ejercicios: [] }] } : s) }))
+                                return
+                              }
+                            } else {
+                              // Plan o semana no existen — guardado silencioso completo
+                              const resultado = await guardarPlanSilencioso(bp, sem.id, d, orden)
+                              if (resultado) {
+                                setSaveStatus('saved')
+                                setTimeout(() => setSaveStatus('idle'), 2000)
+                                setBp((p: any) => ({
+                                  ...p,
+                                  id: resultado.planId,
+                                  nombre: p.nombre || 'Nuevo plan',
+                                  semanas: p.semanas.map((s: any) => s.id === sem.id
+                                    ? { ...s, id: resultado.semId, dias: [...s.dias, { id: resultado.diaId, dia: d, tipo: '', orden, ejercicios: [] }] }
+                                    : s
+                                  )
+                                }))
+                                return
+                              }
+                              // Fallback si falla el guardado — id temporal
+                              setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: uid(), dia: d, tipo: '', orden, ejercicios: [] }] } : s) }))
                             }
-                            setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: uid(), dia: d, tipo: '', orden: s.dias.length, ejercicios: [] }] } : s) }))
                           }
                         }} style={{ padding: '7px 13px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', border: '1.5px solid', transition: '.15s', fontFamily: 'inherit', background: ya ? wine : '#fff', color: ya ? '#fff' : '#9ca3af', borderColor: ya ? wine : '#e5e7eb' }}>
                           {d.slice(0, 3)}
