@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Prohibido' }, { status: 403 })
     }
 
-    // ── 2. LEER DATOS — service role (lee datos cruzados alumno/admin) ──
+    // ── 2. LEER DATOS — service role ──
     const db = getServiceClient()
 
     const { data: alumno } = await db
@@ -51,16 +51,39 @@ export async function POST(req: NextRequest) {
 
     const { data: admin } = await db
       .from('perfiles')
-      .select('plan, mp_cobros_access_token, cobros_activos, brand_name')
+      .select('plan, cobros_activos, brand_name, mp_cobros_user_id')
       .eq('id', adminId)
       .eq('rol', 'admin')
       .single()
 
     if (!admin) return NextResponse.json({ error: 'Admin no encontrado' }, { status: 404 })
     if (!admin.cobros_activos) return NextResponse.json({ error: 'Cobros no activos' }, { status: 400 })
-    if (!admin.mp_cobros_access_token) return NextResponse.json({ error: 'MP no conectado' }, { status: 400 })
+    if (!admin.mp_cobros_user_id) return NextResponse.json({ error: 'MP no conectado' }, { status: 400 })
 
-    // ── 3. CREAR PREFERENCIA EN MP ──
+    // ── 3. LEER TOKEN DESDE VAULT (encriptado) ──
+    const { data: tokenRow } = await db
+      .from('mp_tokens')
+      .select('secret_id')
+      .eq('admin_id', adminId)
+      .single()
+
+    if (!tokenRow?.secret_id) {
+      return NextResponse.json({ error: 'Token MP no encontrado' }, { status: 400 })
+    }
+
+    const { data: secrets } = await db
+      .from('vault.decrypted_secrets')
+      .select('decrypted_secret')
+      .eq('id', tokenRow.secret_id)
+      .single()
+
+    if (!secrets?.decrypted_secret) {
+      return NextResponse.json({ error: 'No se pudo leer el token MP' }, { status: 500 })
+    }
+
+    const mpAccessToken = secrets.decrypted_secret
+
+    // ── 4. CREAR PREFERENCIA EN MP ──
     const monto = alumno.precio_mensual
     const comisionPct = admin.plan === 'pro' ? COMISION_PRO : COMISION_FREE
     const comisionMonto = Math.round(monto * comisionPct)
@@ -70,7 +93,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${admin.mp_cobros_access_token}`,
+        Authorization: `Bearer ${mpAccessToken}`,
       },
       body: JSON.stringify({
         items: [{ title: `Cuota mensual — ${admin.brand_name || 'Pulse'}`, quantity: 1, unit_price: monto, currency_id: 'ARS' }],
@@ -90,7 +113,7 @@ export async function POST(req: NextRequest) {
     const mpData = await mpRes.json()
     if (!mpRes.ok) return NextResponse.json({ error: mpData.message || 'Error MP' }, { status: 400 })
 
-    // ── 4. REGISTRAR PAGO — service role (route corre server-side) ──
+    // ── 5. REGISTRAR PAGO ──
     await db.from('pagos').insert({
       alumno_id: alumnoId,
       admin_id: adminId,
@@ -101,7 +124,12 @@ export async function POST(req: NextRequest) {
       estado: 'pendiente',
     })
 
-    return NextResponse.json({ init_point: mpData.init_point, monto, comision: comisionMonto, monto_neto: monto - comisionMonto })
+    return NextResponse.json({
+      init_point: mpData.init_point,
+      monto,
+      comision: comisionMonto,
+      monto_neto: monto - comisionMonto,
+    })
 
   } catch (error) {
     console.error('Error crear-pago:', (error as Error).message)
