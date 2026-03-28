@@ -1,13 +1,12 @@
 // @ts-nocheck
 'use client'
-// app/dashboard/page.tsx — Dashboard del alumno — Light mode Pulse
+// app/dashboard/page.tsx — Dashboard del alumno
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Perfil, Plan, Semana, Dia, Ejercicio, Peso } from '@/types/database'
 import { SoporteChat } from '@/components/SoporteChat'
 
-// ── Colores por tipo de bloque ──
 const TIPO_EMOJI: any  = { normal: '💪', circuito: '🔁', superserie: '⚡', entrada_en_calor: '🔥', vuelta_a_la_calma: '🧘' }
 const TIPO_LABEL: any  = { normal: 'Normal', circuito: 'Circuito', superserie: 'Superserie', entrada_en_calor: 'Entrada en calor', vuelta_a_la_calma: 'Vuelta a la calma' }
 const TIPO_COLOR: any  = { normal: '#3b82f6', circuito: '#22c55e', superserie: '#8b5cf6', entrada_en_calor: '#f97316', vuelta_a_la_calma: '#06b6d4' }
@@ -38,9 +37,16 @@ export default function DashboardPage() {
   const [diaTerminado, setDiaTerminado] = useState(null)
   const lastTap                       = useRef({})
   const [bloquesActivos, setBloquesActivos] = useState<any[]>([])
-  const [ultimoPago, setUltimoPago] = useState<any>(null)
+  const [ultimoPago, setUltimoPago]   = useState<any>(null)
   const [loadingPago, setLoadingPago] = useState(false)
-  // Branding del admin
+
+  // ✅ Estado del formulario de perfil editable
+  const [editando, setEditando]       = useState(false)
+  const [savingPerfil, setSavingPerfil] = useState(false)
+  const [formPerfil, setFormPerfil]   = useState({
+    telefono: '', edad: '', sexo: '', objetivo: '', nivel: 'Principiante', restricciones: ''
+  })
+
   const [brand, setBrand] = useState({
     name: 'Pulse',
     imageUrl: null as string | null,
@@ -52,6 +58,11 @@ export default function DashboardPage() {
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
+  // ✅ Ficha completa si tiene objetivo
+  function fichaCompleta(p: any) {
+    return !!(p?.objetivo && p.objetivo.trim().length > 0)
+  }
+
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
@@ -60,7 +71,22 @@ export default function DashboardPage() {
     if (p.rol === 'admin') { router.push('/admin'); return }
     setPerfil(p)
 
-    // Cargar branding del admin
+    // Inicializar form con datos actuales
+    setFormPerfil({
+      telefono: p.telefono || '',
+      edad: p.edad ? String(p.edad) : '',
+      sexo: p.sexo || '',
+      objetivo: p.objetivo || '',
+      nivel: p.nivel || 'Principiante',
+      restricciones: p.restricciones || '',
+    })
+
+    // Si la ficha está incompleta, ir directamente al perfil
+    if (!fichaCompleta(p)) {
+      setTab('perfil')
+      setEditando(true)
+    }
+
     if (p.admin_id) {
       const { data: adminPerfil } = await supabase
         .from('perfiles')
@@ -77,6 +103,7 @@ export default function DashboardPage() {
         })
       }
     }
+
     const { data: asig } = await supabase.from('asignaciones').select('plan_id').eq('alumno_id', user.id).eq('activo', true).single()
     if (asig) {
       const { data: planData } = await supabase.from('planes').select('*').eq('id', asig.plan_id).single()
@@ -93,16 +120,34 @@ export default function DashboardPage() {
     setCheckins((chkData || []).map(c => c.ejercicio_id).filter(Boolean))
     setLoading(false)
     cargarFotosProgreso()
-
-    // Cargar último pago
-    const { data: pagoData } = await supabase
-      .from('pagos')
-      .select('*')
-      .eq('alumno_id', user.id)
-      .order('fecha', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const { data: pagoData } = await supabase.from('pagos').select('*').eq('alumno_id', user.id).order('fecha', { ascending: false }).limit(1).maybeSingle()
     setUltimoPago(pagoData)
+  }
+
+  // ✅ Guardar ficha del alumno
+  async function guardarPerfil() {
+    if (!formPerfil.objetivo || formPerfil.objetivo.trim().length < 3) {
+      showToast('⚠️ El objetivo es obligatorio'); return
+    }
+    setSavingPerfil(true)
+    const { error } = await supabase
+      .from('perfiles')
+      .update({
+        telefono: formPerfil.telefono || null,
+        edad: formPerfil.edad ? parseInt(formPerfil.edad) : null,
+        sexo: formPerfil.sexo || null,
+        objetivo: formPerfil.objetivo.trim(),
+        nivel: formPerfil.nivel,
+        restricciones: formPerfil.restricciones || null,
+      })
+      .eq('id', perfil!.id)
+
+    setSavingPerfil(false)
+    if (error) { showToast('⚠️ Error al guardar'); return }
+
+    showToast('✅ Perfil actualizado')
+    setEditando(false)
+    loadData()
   }
 
   async function cargarFotosProgreso() {
@@ -204,7 +249,6 @@ export default function DashboardPage() {
       if (!user) return
       const { data: p } = await supabase.from('perfiles').select('admin_id').eq('id', user.id).single()
       if (!p?.admin_id) { showToast('⚠️ No tenés profe asignado'); setLoadingPago(false); return }
-
       const res = await fetch('/api/mp/crear-pago', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -222,7 +266,7 @@ export default function DashboardPage() {
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #e5e7eb', borderTopColor: '#7D0531', borderRadius: '50%', animation: 'spin .7s linear infinite', margin: '0 auto 12px' }} />
+        <div style={{ width: 40, height: 40, border: '3px solid #e5e7eb', borderTopColor: '#5B8CFF', borderRadius: '50%', animation: 'spin .7s linear infinite', margin: '0 auto 12px' }} />
         <div style={{ color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>Cargando...</div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -234,8 +278,6 @@ export default function DashboardPage() {
   const totalEjs = diasSemana1.flatMap(d => (d as any).ejercicios || []).length
   const ini = `${perfil?.nombre?.[0] || ''}${perfil?.apellido?.[0] || ''}`.toUpperCase()
   const pesoActual = pesos.length > 0 ? pesos[pesos.length - 1].valor : null
-
-  // Color dinámico del brand
   const wine = brand.primaryColor
 
   return (
@@ -245,19 +287,16 @@ export default function DashboardPage() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #f9fafb; }
         .d-root { min-height: 100vh; background: #f9fafb; max-width: 430px; margin: 0 auto; position: relative; font-family: 'DM Sans', sans-serif; }
-        .d-toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #111827; color: #fff; padding: '10px 20px'; borderRadius: '10px'; fontSize: '14px'; fontWeight: '500'; zIndex: 999; white-space: nowrap; }
-        .d-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 1px solid #f3f4f6; display: flex; padding: 8px 0 20px; z-index: 100; }
-        .d-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .d-section { padding-bottom: 90px; }
         .d-header { padding: 20px 20px 14px; border-bottom: 1px solid #f3f4f6; }
         .d-eyebrow { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
         .d-title { font-family: 'Fraunces', Georgia, serif; font-size: 24px; font-weight: 900; color: #111827; letter-spacing: -0.3px; }
         .d-card { background: #fff; border-radius: 16px; border: 1px solid #f3f4f6; padding: 16px; }
-        .d-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; }
         .d-input { width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 12px 14px; font-size: 15px; font-family: 'DM Sans', sans-serif; color: #111827; outline: none; }
         .d-input:focus { border-color: ${wine}; }
         .d-btn-primary { width: 100%; background: ${wine}; color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; }
         .d-btn-ghost { background: transparent; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: #374151; cursor: pointer; }
+        .d-field-label { display: block; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .d-animate { animation: slideUp .3s ease both; }
       `}</style>
@@ -273,17 +312,13 @@ export default function DashboardPage() {
         {/* ── TAB INICIO ── */}
         {tab === 'inicio' && (
           <div className="d-section d-animate">
-
-            {/* Header con saludo */}
             <div style={{ padding: '32px 20px 20px', background: '#fff', borderBottom: '1px solid #f3f4f6' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div>
                   <div style={{ fontSize: '13px', color: '#9ca3af', fontWeight: '500', marginBottom: '2px' }}>
                     {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: wine, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>
-                    {brand.name}
-                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: wine, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{brand.name}</div>
                   <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '26px', fontWeight: '900', color: '#111827', letterSpacing: '-0.3px' }}>
                     Hola, {perfil?.nombre} 👋
                   </div>
@@ -298,7 +333,21 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Barra de progreso del plan */}
+              {/* Aviso ficha incompleta */}
+              {!fichaCompleta(perfil) && (
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>📋</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#92400e', marginBottom: 2 }}>Completá tu ficha</div>
+                    <div style={{ fontSize: 12, color: '#b45309' }}>Tu entrenadora necesita tus datos para personalizar tu plan.</div>
+                  </div>
+                  <button onClick={() => { setTab('perfil'); setEditando(true) }}
+                    style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                    Completar →
+                  </button>
+                </div>
+              )}
+
               {plan ? (
                 <div style={{ background: '#f9fafb', borderRadius: 14, padding: '14px 16px', border: '1px solid #f3f4f6' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -318,8 +367,6 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ padding: '20px' }}>
-
-              {/* Métricas rápidas */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
                 {[
                   { n: completadosHoy, label: 'Completados' },
@@ -333,7 +380,6 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Esta semana */}
               {diasSemana1.length > 0 && (
                 <>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 10 }}>Esta semana</div>
@@ -365,7 +411,6 @@ export default function DashboardPage() {
                 </>
               )}
 
-              {/* Restricciones médicas */}
               {perfil?.restricciones && (
                 <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 14, padding: '12px 16px', display: 'flex', gap: 10 }}>
                   <span style={{ fontSize: 16, flexShrink: 0 }}>📌</span>
@@ -376,14 +421,11 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Botón pagar mes — solo si el profe tiene cobros activos */}
               {perfil?.precio_mensual && (
                 <div style={{ marginTop: 16, background: '#fff', border: '1px solid #f3f4f6', borderRadius: 16, padding: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 2 }}>
-                        Cuota mensual
-                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 2 }}>Cuota mensual</div>
                       <div style={{ fontSize: 22, fontWeight: 900, color: '#111827', fontFamily: 'Fraunces, Georgia, serif' }}>
                         ${Number(perfil.precio_mensual).toLocaleString('es-AR')} ARS
                       </div>
@@ -393,23 +435,11 @@ export default function DashboardPage() {
                         </div>
                       )}
                       {ultimoPago?.estado === 'pendiente' && (
-                        <div style={{ fontSize: 11, color: '#d97706', fontWeight: 600, marginTop: 2 }}>
-                          ⏳ Pago pendiente
-                        </div>
+                        <div style={{ fontSize: 11, color: '#d97706', fontWeight: 600, marginTop: 2 }}>⏳ Pago pendiente</div>
                       )}
                     </div>
-                    <button
-                      onClick={handlePagar}
-                      disabled={loadingPago || ultimoPago?.estado === 'aprobado'}
-                      style={{
-                        background: ultimoPago?.estado === 'aprobado' ? '#f0fdf4' : wine,
-                        color: ultimoPago?.estado === 'aprobado' ? '#16a34a' : '#fff',
-                        border: ultimoPago?.estado === 'aprobado' ? '1px solid #bbf7d0' : 'none',
-                        borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 700,
-                        cursor: ultimoPago?.estado === 'aprobado' ? 'default' : 'pointer',
-                        fontFamily: 'DM Sans, sans-serif', opacity: loadingPago ? 0.7 : 1,
-                        flexShrink: 0,
-                      }}>
+                    <button onClick={handlePagar} disabled={loadingPago || ultimoPago?.estado === 'aprobado'}
+                      style={{ background: ultimoPago?.estado === 'aprobado' ? '#f0fdf4' : wine, color: ultimoPago?.estado === 'aprobado' ? '#16a34a' : '#fff', border: ultimoPago?.estado === 'aprobado' ? '1px solid #bbf7d0' : 'none', borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: ultimoPago?.estado === 'aprobado' ? 'default' : 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: loadingPago ? 0.7 : 1, flexShrink: 0 }}>
                       {loadingPago ? 'Procesando...' : ultimoPago?.estado === 'aprobado' ? '✓ Pagado' : 'Pagar mes →'}
                     </button>
                   </div>
@@ -419,7 +449,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── TAB PLAN - Lista de días ── */}
+        {/* ── TAB PLAN ── */}
         {tab === 'plan' && !diaActivo && (
           <div className="d-section d-animate">
             <div className="d-header">
@@ -478,7 +508,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── TAB PLAN - Detalle de un día ── */}
+        {/* ── TAB PLAN - Detalle día ── */}
         {tab === 'plan' && diaActivo && (
           <div className="d-section d-animate">
             <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff', zIndex: 40 }}>
@@ -489,7 +519,6 @@ export default function DashboardPage() {
               </div>
               <div style={{ width: 60 }} />
             </div>
-
             <div style={{ padding: '16px 20px' }}>
               {bloquesActivos.length > 0 ? bloquesActivos.map((bloque: any) => {
                 const color = TIPO_COLOR[bloque.tipo] || wine
@@ -533,28 +562,11 @@ export default function DashboardPage() {
                                 {ej.descanso && ej.descanso !== '-' && <span style={{ background: '#f0f9ff', color: '#0284c7', borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>⏱ {ej.descanso}</span>}
                               </div>
                               {ej.observaciones && <div style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic', marginTop: 6 }}>💡 {ej.observaciones}</div>}
-                              {series.length > 0 && series.some((s: any) => s.peso || s.rpe || s.rir) && (
-                                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                  {series.map((s: any, i: number) => (s.peso || s.rpe || s.rir) && (
-                                    <div key={i} style={{ fontSize: 12, color: wine, background: '#fdf2f5', borderRadius: 8, padding: '4px 10px', display: 'inline-flex', gap: 10 }}>
-                                      <span>Serie {i+1}</span>
-                                      {s.peso && <span>⚖️ {s.peso}kg</span>}
-                                      {s.rpe && <span>RPE {s.rpe}</span>}
-                                      {s.rir && <span>RIR {s.rir}</span>}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         )
                       })}
                     </div>
-                    {isCircuito && bloque.descanso_entre_rondas && (
-                      <div style={{ background: `${color}08`, padding: '8px 14px', fontSize: 12, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>⏱</span> Descanso entre rondas: <strong style={{ color }}>{bloque.descanso_entre_rondas} seg</strong>
-                      </div>
-                    )}
                   </div>
                 )
               }) : (diaActivo as any).ejercicios?.length > 0 ? (
@@ -596,8 +608,6 @@ export default function DashboardPage() {
               <div className="d-title">Progreso</div>
             </div>
             <div style={{ padding: '16px 20px' }}>
-
-              {/* Fotos */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Fotos de progreso</div>
                 <button onClick={() => setShowFotoModal(true)} style={{ background: wine, color: '#fff', border: 'none', borderRadius: 10, padding: '7px 14px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}>+ Foto</button>
@@ -621,7 +631,6 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Historial de peso */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Historial de peso</div>
                 <button onClick={() => setShowPesoModal(true)} style={{ background: wine, color: '#fff', border: 'none', borderRadius: 10, padding: '7px 14px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}>+ Registrar</button>
@@ -661,41 +670,124 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── TAB PERFIL ── */}
+        {/* ── TAB PERFIL — con formulario editable ── */}
         {tab === 'perfil' && (
           <div className="d-section d-animate">
-            <div className="d-header">
-              <div className="d-eyebrow">Mi cuenta</div>
-              <div className="d-title">Perfil</div>
+            <div className="d-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div className="d-eyebrow">Mi cuenta</div>
+                <div className="d-title">Perfil</div>
+              </div>
+              {!editando && (
+                <button onClick={() => setEditando(true)}
+                  style={{ background: wine + '15', color: wine, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}>
+                  ✏️ Editar
+                </button>
+              )}
             </div>
             <div style={{ padding: '16px 20px' }}>
 
-              {/* Card de perfil */}
-              <div style={{ background: wine, borderRadius: 20, padding: '20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* Card nombre */}
+              <div style={{ background: wine, borderRadius: 20, padding: '20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20, color: '#fff', flexShrink: 0 }}>{ini}</div>
                 <div>
                   <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 20, fontWeight: 900, color: '#fff' }}>{perfil?.nombre} {perfil?.apellido}</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>{perfil?.nivel}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', marginTop: 2 }}>DNI {perfil?.dni} · {perfil?.email}</div>
                 </div>
               </div>
 
-              {/* Objetivo */}
-              {perfil?.objetivo && (
-                <div style={{ background: '#fff', border: '1px solid #f3f4f6', borderRadius: 16, padding: '14px 16px', marginBottom: 14 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>🎯 Mi objetivo</div>
-                  <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.6 }}>{perfil.objetivo}</p>
+              {/* Ficha incompleta aviso */}
+              {!fichaCompleta(perfil) && !editando && (
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '12px 14px', marginBottom: 14, fontSize: 13, color: '#92400e' }}>
+                  ⚠️ Tu ficha está incompleta. Completala para que tu entrenadora pueda personalizar tu plan.
                 </div>
               )}
 
-              {/* Datos */}
-              <div style={{ background: '#fff', border: '1px solid #f3f4f6', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
-                {[['DNI', perfil?.dni], ['Email', perfil?.email], ['Teléfono', perfil?.telefono], ['Edad', perfil?.edad ? `${perfil.edad} años` : '—'], ['Sexo', perfil?.sexo], ['Nivel', perfil?.nivel], ['Restricciones', perfil?.restricciones || 'Ninguna']].map(([k, v], i, arr) => (
-                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid #f9fafb' : 'none' }}>
-                    <span style={{ color: '#9ca3af', fontSize: 13 }}>{k}</span>
-                    <span style={{ fontWeight: 600, fontSize: 13, color: '#111827', textAlign: 'right', maxWidth: '60%' }}>{v || '—'}</span>
+              {/* MODO LECTURA */}
+              {!editando && (
+                <>
+                  {perfil?.objetivo && (
+                    <div style={{ background: '#fff', border: '1px solid #f3f4f6', borderRadius: 16, padding: '14px 16px', marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>🎯 Mi objetivo</div>
+                      <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.6 }}>{perfil.objetivo}</p>
+                    </div>
+                  )}
+                  <div style={{ background: '#fff', border: '1px solid #f3f4f6', borderRadius: 16, overflow: 'hidden', marginBottom: 14 }}>
+                    {[['Teléfono', perfil?.telefono], ['Edad', perfil?.edad ? `${perfil.edad} años` : '—'], ['Sexo', perfil?.sexo], ['Nivel', perfil?.nivel], ['Restricciones', perfil?.restricciones || 'Ninguna']].map(([k, v], i, arr) => (
+                      <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid #f9fafb' : 'none' }}>
+                        <span style={{ color: '#9ca3af', fontSize: 13 }}>{k}</span>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: v ? '#111827' : '#d1d5db', textAlign: 'right', maxWidth: '60%' }}>{v || '—'}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
+
+              {/* MODO EDICIÓN */}
+              {editando && (
+                <div style={{ background: '#fff', border: '1px solid #f3f4f6', borderRadius: 16, padding: '16px', marginBottom: 14 }}>
+                  {!fichaCompleta(perfil) && (
+                    <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#0369a1' }}>
+                      📋 Completá tus datos para que tu entrenadora pueda personalizar tu entrenamiento.
+                    </div>
+                  )}
+
+                  <div style={{ marginBottom: 14 }}>
+                    <label className="d-field-label">Objetivo *</label>
+                    <textarea
+                      value={formPerfil.objetivo}
+                      onChange={e => setFormPerfil(p => ({ ...p, objetivo: e.target.value }))}
+                      placeholder="Ej: bajar 5 kilos, ganar masa muscular, mejorar resistencia..."
+                      style={{ width: '100%', background: '#f9fafb', border: `1.5px solid ${formPerfil.objetivo ? '#e5e7eb' : wine}`, borderRadius: 12, padding: '12px 14px', fontSize: 14, fontFamily: 'DM Sans, sans-serif', color: '#111827', outline: 'none', resize: 'vertical', minHeight: 80, lineHeight: 1.6 }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                    <div>
+                      <label className="d-field-label">Teléfono</label>
+                      <input className="d-input" type="text" placeholder="11-0000-0000" value={formPerfil.telefono} onChange={e => setFormPerfil(p => ({ ...p, telefono: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="d-field-label">Edad</label>
+                      <input className="d-input" type="number" placeholder="30" value={formPerfil.edad} onChange={e => setFormPerfil(p => ({ ...p, edad: e.target.value }))} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                    <div>
+                      <label className="d-field-label">Sexo</label>
+                      <select className="d-input" value={formPerfil.sexo} onChange={e => setFormPerfil(p => ({ ...p, sexo: e.target.value }))}>
+                        <option value="">—</option>
+                        {['Femenino','Masculino','No binario','Prefiero no decir'].map(o => <option key={o}>{o}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="d-field-label">Nivel</label>
+                      <select className="d-input" value={formPerfil.nivel} onChange={e => setFormPerfil(p => ({ ...p, nivel: e.target.value }))}>
+                        {['Principiante','Intermedio','Avanzado'].map(o => <option key={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 16 }}>
+                    <label className="d-field-label">Restricciones médicas <span style={{ textTransform: 'none', fontWeight: 400, fontSize: 11, color: '#9ca3af' }}>(opcional)</span></label>
+                    <input className="d-input" type="text" placeholder="Ej: dolor de rodilla, hernia..." value={formPerfil.restricciones} onChange={e => setFormPerfil(p => ({ ...p, restricciones: e.target.value }))} />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    {fichaCompleta(perfil) && (
+                      <button onClick={() => setEditando(false)}
+                        style={{ flex: 1, background: 'transparent', border: '1px solid #e5e7eb', borderRadius: 12, padding: 13, fontSize: 14, fontWeight: 500, color: '#6b7280', fontFamily: 'inherit', cursor: 'pointer' }}>
+                        Cancelar
+                      </button>
+                    )}
+                    <button className="d-btn-primary" onClick={guardarPerfil} disabled={savingPerfil}
+                      style={{ flex: 2, opacity: savingPerfil ? 0.7 : 1 }}>
+                      {savingPerfil ? 'Guardando...' : 'Guardar ficha ✓'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <button onClick={logout} style={{ width: '100%', background: 'transparent', border: '1px solid #e5e7eb', borderRadius: 12, padding: 14, fontSize: 14, fontWeight: 500, color: '#6b7280', fontFamily: 'inherit', cursor: 'pointer' }}>
                 Cerrar sesión
@@ -712,11 +804,7 @@ export default function DashboardPage() {
               <div className="d-title">Ayuda</div>
             </div>
             <div style={{ flex: 1, overflow: 'hidden' }}>
-              <SoporteChat
-                userType="alumno"
-                userName={perfil?.nombre}
-                primaryColor={brand.primaryColor}
-              />
+              <SoporteChat userType="alumno" userName={perfil?.nombre} primaryColor={brand.primaryColor} />
             </div>
           </div>
         )}
@@ -725,15 +813,19 @@ export default function DashboardPage() {
         <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, background: '#fff', borderTop: '1px solid #f3f4f6', display: 'flex', padding: '8px 0 20px', zIndex: 100 }}>
           {[
             { key: 'inicio', icon: '⊞', label: 'Inicio' },
-            { key: 'plan',   icon: '▤',  label: 'Mi Plan' },
+            { key: 'plan',   icon: '▤', label: 'Mi Plan' },
             { key: 'progreso', icon: '↑', label: 'Progreso' },
-            { key: 'ayuda',  icon: '?',   label: 'Ayuda' },
-            { key: 'perfil', icon: '◉',  label: 'Perfil' },
+            { key: 'ayuda',  icon: '?', label: 'Ayuda' },
+            { key: 'perfil', icon: '◉', label: 'Perfil' },
           ].map(({ key, icon, label }) => (
-            <button key={key} onClick={() => { setTab(key as any); if (key === 'plan') setDiaActivo(null) }}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '6px 0', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+            <button key={key} onClick={() => { setTab(key as any); if (key === 'plan') setDiaActivo(null); if (key === 'perfil') setEditando(false) }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '6px 0', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', position: 'relative' }}>
               <span style={{ fontSize: 18, color: tab === key ? wine : '#d1d5db', transition: '.2s', fontWeight: 'bold' }}>{icon}</span>
               <span style={{ fontSize: 10, fontWeight: 700, color: tab === key ? wine : '#9ca3af' }}>{label}</span>
+              {/* Punto rojo si ficha incompleta en perfil */}
+              {key === 'perfil' && !fichaCompleta(perfil) && (
+                <span style={{ position: 'absolute', top: 4, right: '50%', marginRight: -14, width: 7, height: 7, background: '#ef4444', borderRadius: '50%', border: '1.5px solid #fff' }} />
+              )}
             </button>
           ))}
         </nav>
