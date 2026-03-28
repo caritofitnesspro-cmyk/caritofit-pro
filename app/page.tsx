@@ -44,6 +44,13 @@ export default function HomePage() {
 
   if (checking) return null
 
+  // ── Analytics helper ──
+  function track(event: string, params?: Record<string, any>) {
+    if (typeof window !== 'undefined' && (window as any).dataLayer) {
+      (window as any).dataLayer.push({ event, ...params })
+    }
+  }
+
   return (
     <div className="lp">
 
@@ -52,7 +59,7 @@ export default function HomePage() {
         <div className="lp-logo">PULSE<span>.</span></div>
         <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
           <a href="/login" className="lp-nav-login">Iniciar sesión</a>
-          <a href="/register/admin" className="lp-nav-cta">Empezar gratis</a>
+          <a href="/register/admin" className="lp-nav-cta" onClick={() => track('cta_click', { location: 'nav' })}>Empezar gratis</a>
         </div>
       </nav>
 
@@ -78,7 +85,7 @@ export default function HomePage() {
               Tus atletas entrenan. Vos lo sabés al instante.
             </p>
             <div className="lp-cta-group">
-              <a href="/register/admin" className="lp-btn-main">Crear mi app gratis →</a>
+              <a href="/register/admin" className="lp-btn-main" onClick={() => track('cta_click', { location: 'hero' })}>Crear mi app gratis →</a>
               <a href="#como-funciona" className="lp-btn-ghost-dark">Ver cómo funciona</a>
             </div>
             <div className="lp-hero-note">Gratis para tus primeros 2 atletas · Sin tarjeta</div>
@@ -264,7 +271,7 @@ export default function HomePage() {
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Cobros (comisión 8%)</span></div>
               <div className="lp-price-feat"><span className="lp-pf-dot muted">—</span><span style={{ color:'#9ca3af' }}>Branding propio</span></div>
               <div className="lp-price-feat"><span className="lp-pf-dot muted">—</span><span style={{ color:'#9ca3af' }}>Comisión reducida</span></div>
-              <a href="/register/admin" className="lp-price-cta free">Empezar gratis</a>
+              <a href="/register/admin" className="lp-price-cta free" onClick={() => track('cta_click', { location: 'pricing_free' })}>Empezar gratis</a>
             </div>
             <div className="lp-price-card pro">
               <div style={{ display:'inline-block', background:'#5B8CFF', color:'#fff', fontSize:'10px', fontWeight:'700', padding:'4px 12px', borderRadius:'20px', marginBottom:'12px', letterSpacing:'0.06em' }}>MÁS ELEGIDO</div>
@@ -277,7 +284,7 @@ export default function HomePage() {
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Cobros (comisión 5%)</span></div>
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Soporte prioritario</span></div>
               <div style={{ fontSize:'12px', color:'#3b5bdb', marginTop:'8px', fontWeight:'600' }}>Menos de lo que ganás con una clase extra.</div>
-              <a href="/register/admin?plan=pro" className="lp-price-cta pro">Activar Pro →</a>
+              <a href="/register/admin?plan=pro" className="lp-price-cta pro" onClick={() => track('cta_click', { location: 'pricing_pro' })}>Activar Pro →</a>
             </div>
           </div>
         </div>
@@ -287,7 +294,7 @@ export default function HomePage() {
       <div className="lp-final">
         <h2>Tu negocio más ordenado.<br /><em>Desde hoy.</em></h2>
         <div className="lp-final-sub">En 10 minutos tenés tu primer atleta adentro y tu primer plan cargado.</div>
-        <a href="/register/admin" className="lp-btn-main" style={{ fontSize:'16px', padding:'16px 40px' }}>Crear mi app gratis →</a>
+        <a href="/register/admin" className="lp-btn-main" style={{ fontSize:'16px', padding:'16px 40px' }} onClick={() => track('cta_click', { location: 'final_cta' })}>Crear mi app gratis →</a>
         <div className="lp-final-note">Gratis para tus primeros 2 atletas · Sin tarjeta · Sin contrato</div>
       </div>
 
