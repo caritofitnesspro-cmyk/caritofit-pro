@@ -321,7 +321,7 @@ function LoginForm() {
                 onClick={() => { setMode(m); setError(''); setDniError(false); setPassError(false) }}
                 className={`l-toggle-btn ${mode === m ? 'active' : 'inactive'}`}
               >
-                {m === 'alumno' ? '🏋️ Alumno/a' : '👩‍💼 Profesora'}
+                {m === 'alumno' ? '⚡ Atleta' : '🎯 Trainer'}
               </button>
             ))}
           </div>
