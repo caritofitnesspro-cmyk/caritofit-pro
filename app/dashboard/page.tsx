@@ -110,7 +110,7 @@ export default function DashboardPage() {
       const { data: planData } = await supabase.from('planes').select('*').eq('id', asig.plan_id).single()
       if (planData) {
         setPlan(planData)
-        const { data: semsData } = await supabase.from('semanas').select(`*, dias(*, ejercicios(*))`).eq('plan_id', planData.id).order('numero')
+        const { data: semsData } = await supabase.from('semanas').select(`*, dias(*, ejercicios(*), bloques(*, ejercicios(*)))`).eq('plan_id', planData.id).order('numero')
         setSemanas(semsData || [])
       }
     }
@@ -327,8 +327,14 @@ export default function DashboardPage() {
   )
 
   const diasSemana1 = semanas[0]?.dias || []
-  const completadosHoy = diasSemana1.flatMap(d => (d as any).ejercicios || []).filter((e: Ejercicio) => checkins.includes(e.id)).length
-  const totalEjs = diasSemana1.flatMap(d => (d as any).ejercicios || []).length
+  // ✅ Incluir ejercicios de bloques en el conteo
+  function getEjsDia(dia: any): any[] {
+    const sueltos = dia.ejercicios || []
+    const deBloques = (dia.bloques || []).flatMap((b: any) => b.ejercicios || [])
+    return [...sueltos, ...deBloques]
+  }
+  const completadosHoy = diasSemana1.flatMap(d => getEjsDia(d)).filter((e: Ejercicio) => checkins.includes(e.id)).length
+  const totalEjs = diasSemana1.flatMap(d => getEjsDia(d)).length
   const ini = `${perfil?.nombre?.[0] || ''}${perfil?.apellido?.[0] || ''}`.toUpperCase()
   const pesoActual = pesos.length > 0 ? pesos[pesos.length - 1].valor : null
   const wine = brand.primaryColor
@@ -459,7 +465,7 @@ export default function DashboardPage() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 10 }}>Esta semana</div>
                   <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #f3f4f6', overflow: 'hidden', marginBottom: 20 }}>
                     {diasSemana1.map((dia: any, i: number) => {
-                      const ejsDia = dia.ejercicios || []
+                      const ejsDia = getEjsDia(dia)
                       const doneCount = ejsDia.filter((e: Ejercicio) => checkins.includes(e.id)).length
                       const allDone = ejsDia.length > 0 && doneCount === ejsDia.length
                       return (
@@ -551,7 +557,7 @@ export default function DashboardPage() {
                       </div>
                       <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #f3f4f6', overflow: 'hidden' }}>
                         {(sem.dias || []).map((dia: any, i: number) => {
-                          const ejs = dia.ejercicios || []
+                          const ejs = getEjsDia(dia)
                           const done = ejs.filter((e: Ejercicio) => checkins.includes(e.id)).length
                           const allDone = ejs.length > 0 && done === ejs.length
                           return (
