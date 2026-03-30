@@ -549,7 +549,7 @@ export default function AdminPage() {
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
                 {[
                   { label: '+ Alumno', icon: '👤', action: () => setShowAddAlumno(true) },
-                  { label: '+ Plan', icon: '📋', action: () => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: uid(), numero: 1, dias: [] }], asignados: [] }); setTab('builder') } },
+                  { label: '+ Plan', icon: '📋', action: () => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: 'tmp-' + uid(), numero: 1, dias: [] }], asignados: [] }); setTab('builder') } },
                   { label: 'Ver planes', icon: '📊', action: () => setTab('planes') },
                 ].map(({ label, icon, action }) => (
                   <button key={label} onClick={action}
@@ -737,7 +737,7 @@ export default function AdminPage() {
                         setTab('builder')
                       }}>✏️ Editar</button>
                     )}
-                    <button className="btn-wine" style={{ fontSize: '12px', padding: '6px 12px' }} onClick={() => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: uid(), numero: 1, dias: [] }], asignados: [alumnoActivo.id] }); setTab('builder') }}>+ Nuevo</button>
+                    <button className="btn-wine" style={{ fontSize: '12px', padding: '6px 12px' }} onClick={() => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: 'tmp-' + uid(), numero: 1, dias: [] }], asignados: [alumnoActivo.id] }); setTab('builder') }}>+ Nuevo</button>
                   </div>
                 </div>
                 <select value={planActivo?.id || ''} onChange={e => asignarPlan(alumnoActivo.id, e.target.value || null)}
@@ -832,14 +832,14 @@ export default function AdminPage() {
             <div style={{ marginBottom: '20px' }}><div className="page-eyebrow">Gestión</div><div className="page-title">Planes</div></div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ fontSize: '14px', color: '#9ca3af' }}>{planes.length} plan{planes.length !== 1 ? 'es' : ''}</div>
-              <button className="btn-wine" onClick={() => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: uid(), numero: 1, dias: [] }], asignados: [] }); setTab('builder') }}>+ Crear plan</button>
+              <button className="btn-wine" onClick={() => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: 'tmp-' + uid(), numero: 1, dias: [] }], asignados: [] }); setTab('builder') }}>+ Crear plan</button>
             </div>
             {!planes.length ? (
               <div className="card" style={{ textAlign: 'center', padding: '56px 24px' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
                 <div style={{ fontSize: '20px', fontWeight: '700', color: wine, marginBottom: '10px' }}>Ningún plan todavía</div>
                 <p style={{ color: '#9ca3af', marginBottom: '20px' }}>Creá el primer plan y asignalo a tus alumnos</p>
-                <button className="btn-wine" onClick={() => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: uid(), numero: 1, dias: [] }], asignados: [] }); setTab('builder') }}>+ Crear primer plan</button>
+                <button className="btn-wine" onClick={() => { setBp({ id: null, nombre: '', objetivo: 'Bajar de peso', semanas: [{ id: 'tmp-' + uid(), numero: 1, dias: [] }], asignados: [] }); setTab('builder') }}>+ Crear primer plan</button>
               </div>
             ) : planes.map(plan => {
               const asigAlumnos = alumnos.filter(a => getPlanAlumno(a.id)?.id === plan.id)
@@ -971,8 +971,8 @@ export default function AdminPage() {
                                 }))
                                 return
                               }
-                              // Fallback si falla el guardado — id temporal
-                              setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: uid(), dia: d, tipo: '', orden, ejercicios: [] }] } : s) }))
+                              // Fallback si falla el guardado — id temporal con prefijo tmp-
+                              setBp((p: any) => ({ ...p, semanas: p.semanas.map((s: any) => s.id === sem.id ? { ...s, dias: [...s.dias, { id: 'tmp-' + uid(), dia: d, tipo: '', orden, ejercicios: [] }] } : s) }))
                             }
                           }
                         }} style={{ padding: '7px 13px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', border: '1.5px solid', transition: '.15s', fontFamily: 'inherit', background: ya ? wine : '#fff', color: ya ? '#fff' : '#9ca3af', borderColor: ya ? wine : '#e5e7eb' }}>
@@ -1008,9 +1008,38 @@ export default function AdminPage() {
                 ))}
               </div>
             ))}
-            <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '24px' }} onClick={() => setBp((p: any) => ({ ...p, semanas: [...p.semanas, { id: uid(), numero: p.semanas.length + 1, dias: [] }] }))}>
+
+            {/* ✅ FIX: Botón agregar semana — persiste en DB si el plan ya existe */}
+            <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: '24px' }}
+              onClick={async () => {
+                const nuevoNumero = bp.semanas.length + 1
+
+                if (bp.id) {
+                  // Plan ya existe en DB → crear la semana directamente y usar su id real
+                  const { data: newSem } = await supabase
+                    .from('semanas')
+                    .insert({ plan_id: bp.id, numero: nuevoNumero })
+                    .select()
+                    .single()
+
+                  if (newSem) {
+                    setBp((p: any) => ({
+                      ...p,
+                      semanas: [...p.semanas, { id: newSem.id, numero: nuevoNumero, dias: [] }]
+                    }))
+                    return
+                  }
+                }
+
+                // Plan nuevo (sin id todavía) → id temporal con prefijo tmp-
+                setBp((p: any) => ({
+                  ...p,
+                  semanas: [...p.semanas, { id: 'tmp-' + uid(), numero: nuevoNumero, dias: [] }]
+                }))
+              }}>
               + Agregar semana {bp.semanas.length + 1}
             </button>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: wine, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '13px' }}>3</div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#111827' }}>Asignar alumnos/as</div>
