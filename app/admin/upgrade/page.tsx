@@ -71,8 +71,11 @@ function UpgradeContent() {
     )
   }
 
-  const precioBase = 25000
-  const precioFinal = descuento ? Math.round(precioBase * (1 - descuento / 100)) : precioBase
+  const precioBase = 35000
+  const precioPromo = 25000
+  const precioFinal = descuento
+    ? Math.round(precioPromo * (1 - descuento / 100))
+    : precioPromo
 
   return (
     <>
@@ -100,12 +103,14 @@ function UpgradeContent() {
         .u-card { background: #ffffff; border-radius: 20px; padding: 28px 24px; border: 1px solid #E6E0DA; position: relative; }
         .u-card.pro { border: 2px solid #5B8CFF; box-shadow: 0 4px 24px #5B8CFF20; }
         .u-card.pro::before { content: ''; position: absolute; top: 0; left: 32px; right: 32px; height: 2.5px; background: linear-gradient(90deg, #5B8CFF, #4A74D9); border-radius: 0 0 6px 6px; }
-        .u-badge { display: inline-block; background: #5B8CFF; color: white; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.05em; margin-bottom: 12px; text-transform: uppercase; }
+        .u-badge { display: inline-block; background: #5B8CFF; color: white; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.05em; margin-bottom: 4px; text-transform: uppercase; }
+        .u-launch-badge { display: inline-block; background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-left: 6px; }
         .u-discount-badge { display: inline-block; background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-left: 6px; }
-        .u-plan-name { font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 900; color: #1C1714; margin-bottom: 6px; }
+        .u-plan-name { font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 900; color: #1C1714; margin-bottom: 6px; margin-top: 8px; }
         .u-price { font-size: 36px; font-weight: 700; color: #1C1714; margin-bottom: 2px; line-height: 1; }
-        .u-price-original { font-size: 16px; color: #9E9188; text-decoration: line-through; margin-bottom: 2px; }
-        .u-price-sub { font-size: 12px; color: #9E9188; margin-bottom: 20px; }
+        .u-price-original { font-size: 14px; color: #9E9188; text-decoration: line-through; margin-bottom: 2px; }
+        .u-price-sub { font-size: 12px; color: #9E9188; margin-bottom: 4px; }
+        .u-price-note { font-size: 11px; color: #BDB5AD; margin-bottom: 16px; }
         .u-divider { border: none; border-top: 1px solid #F0EBE5; margin: 16px 0; }
         .u-feature { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; font-size: 13.5px; color: #3C3430; }
         .u-check { width: 16px; height: 16px; border-radius: 50%; background: #5B8CFF18; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 9px; color: #5B8CFF; font-weight: 700; }
@@ -155,16 +160,26 @@ function UpgradeContent() {
 
             {/* PRO */}
             <div className="u-card pro">
-              <div className="u-badge">
-                Recomendado
-                {descuento > 0 && <span className="u-discount-badge">{descuento}% OFF</span>}
+              <div>
+                <span className="u-badge">
+                  Recomendado
+                </span>
+                <span className="u-launch-badge">
+                  {descuento > 0 ? `${descuento}% OFF` : 'Lanzamiento'}
+                </span>
               </div>
               <div className="u-plan-name">Pro</div>
-              {descuento > 0 && (
-                <div className="u-price-original">${precioBase.toLocaleString('es-AR')} ARS</div>
-              )}
-              <div className="u-price">${Number(precioFinal).toLocaleString('es-AR')} <span style={{ fontSize: 16, fontWeight: 400, color: '#9E9188' }}>ARS</span></div>
-              <div className="u-price-sub">por mes · se renueva automáticamente</div>
+              <div className="u-price-original">${precioBase.toLocaleString('es-AR')} ARS/mes</div>
+              <div className="u-price">
+                ${Number(precioFinal).toLocaleString('es-AR')}{' '}
+                <span style={{ fontSize: 16, fontWeight: 400, color: '#9E9188' }}>ARS</span>
+              </div>
+              <div className="u-price-sub">
+                {descuento > 0
+                  ? `precio especial · primeros 3 meses`
+                  : 'precio de lanzamiento · primeros 3 meses'}
+              </div>
+              <div className="u-price-note">≈ USD 25 · luego ${precioBase.toLocaleString('es-AR')} ARS/mes</div>
               <hr className="u-divider" />
               {[
                 'Todo lo de Free',
