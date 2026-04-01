@@ -260,6 +260,8 @@ export default function HomePage() {
             Sin contratos. Sin letras chicas.
           </p>
           <div className="lp-pricing-grid">
+
+            {/* FREE */}
             <div className="lp-price-card">
               <div className="lp-price-label">Free</div>
               <div className="lp-price-n">$0</div>
@@ -272,11 +274,18 @@ export default function HomePage() {
               <div className="lp-price-feat"><span className="lp-pf-dot muted">—</span><span style={{ color:'#9ca3af' }}>Comisión reducida</span></div>
               <a href="/register/admin" className="lp-price-cta free" onClick={() => track('cta_click', { location: 'pricing_free' })}>Empezar gratis</a>
             </div>
+
+            {/* PRO */}
             <div className="lp-price-card pro">
-              <div style={{ display:'inline-block', background:'#5B8CFF', color:'#fff', fontSize:'10px', fontWeight:'700', padding:'4px 12px', borderRadius:'20px', marginBottom:'12px', letterSpacing:'0.06em' }}>MÁS ELEGIDO</div>
+              <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px' }}>
+                <div style={{ display:'inline-block', background:'#5B8CFF', color:'#fff', fontSize:'10px', fontWeight:'700', padding:'4px 12px', borderRadius:'20px', letterSpacing:'0.06em' }}>MÁS ELEGIDO</div>
+                <div style={{ display:'inline-block', background:'#dcfce7', color:'#15803d', fontSize:'10px', fontWeight:'700', padding:'4px 10px', borderRadius:'20px', letterSpacing:'0.06em' }}>LANZAMIENTO</div>
+              </div>
               <div className="lp-price-label">Pro</div>
+              <div style={{ fontSize:'13px', color:'#9ca3af', textDecoration:'line-through', marginBottom:'2px' }}>$35.000 ARS/mes</div>
               <div className="lp-price-n">$25.000</div>
-              <div className="lp-price-period">ARS / mes</div>
+              <div className="lp-price-period">ARS / mes · primeros 3 meses</div>
+              <div style={{ fontSize:'11px', color:'#6b7280', marginBottom:'16px' }}>≈ USD 25 · luego $35.000 ARS/mes</div>
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span><strong>Atletas ilimitados</strong></span></div>
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>App con tu logo y colores</span></div>
               <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Nombre de marca propio</span></div>
@@ -285,6 +294,7 @@ export default function HomePage() {
               <div style={{ fontSize:'12px', color:'#3b5bdb', marginTop:'8px', fontWeight:'600' }}>Menos de lo que ganás con una clase extra.</div>
               <a href="/register/admin?plan=pro" className="lp-price-cta pro" onClick={() => track('cta_click', { location: 'pricing_pro' })}>Activar Pro →</a>
             </div>
+
           </div>
         </div>
       </div>
