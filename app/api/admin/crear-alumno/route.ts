@@ -15,7 +15,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
     }
 
-    // Insertar perfil sin restricciones de RLS
+    // ── 1. VERIFICAR AUTH — el token debe corresponder al usuario recién registrado ──
+    const authHeader = req.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+    if (user.id !== id) {
+      console.error(`Intento no autorizado: token de ${user.id} para crear perfil de ${id}`)
+      return NextResponse.json({ error: 'Prohibido' }, { status: 403 })
+    }
+
+    // ── 2. INSERTAR PERFIL sin restricciones de RLS ──
     const { error: profileError } = await supabaseAdmin
       .from('perfiles')
       .upsert({
@@ -34,7 +50,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: profileError.message }, { status: 500 })
     }
 
-    // Marcar código de descuento como usado si aplica
+    // ── 3. MARCAR CÓDIGO DE DESCUENTO como usado si aplica ──
     if (codigoId && userId) {
       await supabaseAdmin
         .from('codigos_invitacion')
