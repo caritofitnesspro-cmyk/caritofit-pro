@@ -87,7 +87,7 @@ function RegisterForm() {
       if (!authData.user) throw new Error('No se pudo crear el usuario')
 
       // 2. Insertar perfil via API Route (usa service role, sin RLS)
-      const res = await fetch('/api/admin/create-profile', {
+      const res = await fetch('/api/admin/crear-alumno', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
