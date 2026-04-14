@@ -1,6 +1,14 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
+
+function getServiceClient() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,6 +18,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
     }
 
+    // ── 1. VERIFICAR AUTH — el trainer debe estar logueado y ser el mismo ──
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+    if (user.id !== adminId) {
+      console.error(`Intento no autorizado: user ${user.id} intentó suscribir admin ${adminId}`)
+      return NextResponse.json({ error: 'Prohibido' }, { status: 403 })
+    }
+
     const accessToken = process.env.MP_ACCESS_TOKEN
     if (!accessToken) {
       return NextResponse.json({ error: 'MP no configurado' }, { status: 500 })
@@ -17,7 +36,6 @@ export async function POST(req: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://getpulseapp.lat'
 
-    // Precio base en ARS
     const precioBase = 25000
     const precioFinal = descuento ? Math.round(precioBase * (1 - descuento / 100)) : precioBase
 
@@ -25,8 +43,6 @@ export async function POST(req: NextRequest) {
       ? `Pulse PRO — Plan mensual (${descuento}% OFF)`
       : 'Pulse PRO — Plan mensual'
 
-    // No mandamos payer_email — MP lo pide en el checkout directamente
-    // Evita el error "Cannot operate between different countries"
     const subscriptionData = {
       reason,
       auto_recurring: {
@@ -61,9 +77,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Guardar subscription_id en Supabase
-    const supabase = createClient()
-    await supabase
+    // ── 2. GUARDAR subscription_id con service role (no anon) ──
+    const db = getServiceClient()
+    await db
       .from('perfiles')
       .update({
         mp_subscription_id: mpData.id,
