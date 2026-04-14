@@ -23,7 +23,6 @@ function RegisterForm() {
     try { sendGAEvent('event', event, params || {}) } catch(e) {}
   }
 
-  // Evento cuando llega a la página de registro
   useState(() => {
     track('register_start', { plan: isPro ? 'pro' : 'free' })
   })
@@ -77,6 +76,7 @@ function RegisterForm() {
         codigoId = codigoData.id
       }
 
+      // 1. Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -86,31 +86,27 @@ function RegisterForm() {
       if (authError) throw new Error(authError.message)
       if (!authData.user) throw new Error('No se pudo crear el usuario')
 
-      const { error: profileError } = await supabase
-        .from('perfiles')
-        .upsert({
+      // 2. Insertar perfil via API Route (usa service role, sin RLS)
+      const res = await fetch('/api/admin/create-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           id: authData.user.id,
           nombre: form.nombre,
           apellido: form.apellido,
           dni: form.dni,
           email: form.email,
-          rol: 'admin',
-          plan: 'free',
-          primary_color: '#5B8CFF',
-          secondary_color: '#4A74D9',
-        })
+          codigoId,
+          userId: authData.user.id,
+        }),
+      })
 
-      if (profileError) throw new Error('Error al guardar el perfil')
-
-      if (codigoId) {
-        await supabase
-          .from('codigos_invitacion')
-          .update({ usado: true, usado_por: authData.user.id })
-          .eq('id', codigoId)
+      if (!res.ok) {
+        const body = await res.json()
+        throw new Error(body.error || 'Error al guardar el perfil')
       }
 
       setSuccess(true)
-      // Analytics — registro completado
       track('register_complete', {
         plan: isPro ? 'pro' : 'free',
         used_code: !!form.codigo,
@@ -162,7 +158,6 @@ function RegisterForm() {
           <div style={styles.sub}>{isPro ? 'Profesionalizá tu negocio sin límites' : 'Gratis para siempre, hasta 2 alumnos'}</div>
         </div>
 
-        {/* Comparación de planes */}
         {isPro ? (
           <div style={{ background: '#EEF4FF', border: '1px solid #C7D9FF', borderRadius: 14, padding: '16px 18px', marginBottom: 20 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#3B5BDB', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
