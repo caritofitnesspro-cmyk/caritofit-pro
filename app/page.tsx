@@ -22,7 +22,12 @@ export default function HomePage() {
     }
     checkSession()
     const navbar = document.getElementById('l-navbar')
-    const onScroll = () => navbar?.classList.toggle('scrolled', window.scrollY > 40)
+    const onScroll = () => {
+      const scrolled = window.scrollY > 40
+      const pastHero = window.scrollY > 500
+      navbar?.classList.toggle('scrolled', scrolled)
+      navbar?.classList.toggle('past-hero', pastHero)
+    }
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -85,6 +90,14 @@ export default function HomePage() {
       {/* NAV */}
       <nav id="l-navbar" className="lp-nav">
         <div className="lp-logo">PULSE<span>.</span></div>
+
+        {/* Links de navegación — ocultos en mobile */}
+        <div className="lp-nav-links">
+          <a href="#el-producto" className="lp-nav-link">El producto</a>
+          <a href="#como-funciona" className="lp-nav-link">Cómo funciona</a>
+          <a href="#precios" className="lp-nav-link">Precios</a>
+        </div>
+
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <a href="/login" className="lp-nav-login">Iniciar sesión</a>
           <a href="/register/admin" className="lp-nav-cta" onClick={() => track('cta_click', { location: 'nav' })}>Empezar gratis</a>
