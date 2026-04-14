@@ -87,9 +87,14 @@ function RegisterForm() {
       if (!authData.user) throw new Error('No se pudo crear el usuario')
 
       // 2. Insertar perfil via API Route (usa service role, sin RLS)
+      const { data: { session } } = await supabase.auth.getSession()
+
       const res = await fetch('/api/admin/crear-alumno', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
         body: JSON.stringify({
           id: authData.user.id,
           nombre: form.nombre,
