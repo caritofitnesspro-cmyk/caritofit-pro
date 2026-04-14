@@ -30,6 +30,11 @@ function LoginForm() {
   }, [nextUrl])
 
   useEffect(() => {
+    // Solo cargar brand en subdominios personalizados, nunca en el login público de Pulse
+    const hostname = window.location.hostname
+    const isCustomDomain = hostname !== 'getpulseapp.lat' && hostname !== 'localhost'
+    if (!isCustomDomain) return
+
     async function loadBrand() {
       try {
         const res = await fetch(
@@ -42,18 +47,11 @@ function LoginForm() {
         )
         if (!res.ok) return
         const data = await res.json()
-
+        if (data?.plan !== 'pro') return
         if (data?.brand_image_url) setBrandImageUrl(data.brand_image_url)
         if (data?.brand_name) setBrandName(data.brand_name)
         if (data?.primary_color) setPrimaryColor(data.primary_color)
         if (data?.secondary_color) setSecondaryColor(data.secondary_color)
-        // Si es FREE, fuerza colores Pulse
-        if (data?.plan !== 'pro') {
-          setPrimaryColor('#5B8CFF')
-          setSecondaryColor('#4A74D9')
-          setBrandImageUrl(null)
-          setBrandName(null)
-        }
       } catch {}
     }
     loadBrand()
@@ -313,7 +311,7 @@ function LoginForm() {
               }
             </div>
             <div className="l-brand-name">
-              {brandName || <><em>Pulse</em></>}
+              {brandName ? brandName : <em>Pulse</em>}
             </div>
             <div className="l-brand-claim">
               {brandName ? 'Tu entrenamiento personalizado' : 'Entrená. No administres.'}
