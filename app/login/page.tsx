@@ -25,12 +25,10 @@ function LoginForm() {
   const [dniError, setDniError] = useState(false)
   const [passError, setPassError] = useState(false)
 
-  // Si viene con ?next= es flujo PRO — mostrar tab profesora por defecto
   useEffect(() => {
     if (nextUrl) setMode('admin')
   }, [nextUrl])
 
-  // ✅ SEGURO: Usa Edge Function en lugar de query directa a la tabla
   useEffect(() => {
     async function loadBrand() {
       try {
@@ -71,7 +69,6 @@ function LoginForm() {
 
   const ctaTextColor = getContrastText(primaryColor)
 
-  // ✅ SEGURO: Usa Edge Function para buscar email por DNI
   async function handleLogin() {
     setError('')
     setDniError(false)
@@ -86,7 +83,6 @@ function LoginForm() {
 
     setLoading(true)
     try {
-      // 1. Buscar email por DNI via Edge Function (no expone la tabla)
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/login-by-dni`,
         {
@@ -108,7 +104,6 @@ function LoginForm() {
         return
       }
 
-      // 2. Autenticar con email + password via Supabase Auth (seguro por diseño)
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: perfil.email,
         password,
@@ -121,7 +116,6 @@ function LoginForm() {
         return
       }
 
-      // 3. Redirigir según ?next= o rol
       if (nextUrl) {
         router.push(nextUrl)
       } else if (perfil.rol === 'admin') {
@@ -139,7 +133,7 @@ function LoginForm() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -209,8 +203,18 @@ function LoginForm() {
         }
         .l-logo:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 0 0 6px ${primaryColor}14; }
         .l-logo img { width: 100%; height: 100%; object-fit: cover; }
-        .l-logo-emoji { font-size: 32px; line-height: 1; }
-        .l-brand-name { font-family: 'Fraunces', Georgia, serif; font-size: 24px; font-weight: 900; color: #1C1714; letter-spacing: -0.4px; margin-bottom: 5px; }
+        .l-brand-name {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: 26px;
+          font-weight: 900;
+          color: #1C1714;
+          letter-spacing: -0.4px;
+          margin-bottom: 5px;
+        }
+        .l-brand-name em {
+          font-style: italic;
+          color: ${primaryColor};
+        }
         .l-brand-claim { font-size: 13.5px; color: #9E9188; font-weight: 400; }
 
         .l-next-banner {
@@ -300,14 +304,22 @@ function LoginForm() {
             <div className="l-logo">
               {brandImageUrl
                 ? <img src={brandImageUrl} alt={brandName || 'Logo'} />
-                : <svg width="36" height="36" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="16" fill="#5B8CFF"/><text x="16" y="22" textAnchor="middle" fontFamily="Georgia,serif" fontSize="20" fontWeight="700" fill="#fff">P</text></svg>
+                : (
+                  <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="16" fill="#5B8CFF"/>
+                    <text x="16" y="22" textAnchor="middle" fontFamily="Georgia,serif" fontSize="20" fontWeight="700" fill="#fff">P</text>
+                  </svg>
+                )
               }
             </div>
-            {brandName && <div className="l-brand-name">{brandName}</div>}
-            <div className="l-brand-claim">Tu entrenamiento personalizado</div>
+            <div className="l-brand-name">
+              {brandName || <><em>Pulse</em></>}
+            </div>
+            <div className="l-brand-claim">
+              {brandName ? 'Tu entrenamiento personalizado' : 'Entrená. No administres.'}
+            </div>
           </div>
 
-          {/* Banner cuando viene del flujo PRO */}
           {nextUrl && (
             <div className="l-next-banner">
               🎉 Ingresá para activar tu plan PRO
