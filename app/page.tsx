@@ -10,6 +10,13 @@ export default function HomePage() {
   const router = useRouter()
   const supabase = createClient()
   const [checking, setChecking] = useState(true)
+  const heroLines = [
+    'Dejá de perseguir pagos.',
+    'Dejá de crear planillas de Excel.',
+    'Dejá de tener mil charlas de WhatsApp.',
+  ]
+  const [heroIdx, setHeroIdx] = useState(0)
+  const [heroVisible, setHeroVisible] = useState(true)
 
   useEffect(() => {
     async function checkSession() {
@@ -43,6 +50,17 @@ export default function HomePage() {
     }, 100)
     return () => clearTimeout(timer)
   }, [checking])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroVisible(false)
+      setTimeout(() => {
+        setHeroIdx(i => (i + 1) % heroLines.length)
+        setHeroVisible(true)
+      }, 400)
+    }, 2800)
+    return () => clearInterval(interval)
+  }, [])
 
   if (checking) return null
 
@@ -171,7 +189,16 @@ export default function HomePage() {
             Usada por trainers en Argentina
           </div>
           <h1 className="lp-h1">
-            Dejá de perseguir pagos.<br />
+            <span
+              style={{
+                display: 'block',
+                opacity: heroVisible ? 1 : 0,
+                transform: heroVisible ? 'translateY(0)' : 'translateY(-6px)',
+                transition: 'opacity 0.4s ease, transform 0.4s ease',
+              }}
+            >
+              {heroLines[heroIdx]}
+            </span>
             Empezá a <span className="lp-acc">entrenar.</span>
           </h1>
           {/*
