@@ -335,6 +335,67 @@
 }
 
 /* ─────────────────────────────────────────
+   ANTES / DESPUÉS — imágenes
+───────────────────────────────────────── */
+.lp-ba-imgs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.lp-ba-img-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.lp-ba-img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.lp-ba-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.lp-ba-img-label {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 5px;
+}
+.lp-ba-img-label--b {
+  background: rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.lp-ba-img-label--a {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.lp-ba-arrow-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--muted-2);
+  transform: rotate(90deg);
+}
+
+/* ─────────────────────────────────────────
    FEATURES
 ───────────────────────────────────────── */
 .lp-feat-grid {
@@ -646,7 +707,21 @@
   .lp-sec-chip { font-size: 11px; }
   .lp-sec-h { font-size: 48px; margin-bottom: 48px; }
 
-  /* ANTES/DESPUÉS — fila */
+  /* ANTES/DESPUÉS imágenes */
+  .lp-ba-imgs {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .lp-ba-img-wrap { aspect-ratio: 4 / 3; }
+  .lp-ba-arrow-center {
+    transform: rotate(0deg);
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+
+  /* ANTES/DESPUÉS cards — fila */
   .lp-ba-grid {
     flex-direction: row;
     gap: 0;
