@@ -10,13 +10,6 @@ export default function HomePage() {
   const router = useRouter()
   const supabase = createClient()
   const [checking, setChecking] = useState(true)
-  const heroLines = [
-    'Dejá de perseguir pagos.',
-    'Dejá de armar planillas.',
-    'Dejá de inundar el WhatsApp.',
-  ]
-  const [heroIdx, setHeroIdx] = useState(0)
-  const [heroVisible, setHeroVisible] = useState(true)
 
   useEffect(() => {
     async function checkSession() {
@@ -50,17 +43,6 @@ export default function HomePage() {
     }, 100)
     return () => clearTimeout(timer)
   }, [checking])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHeroVisible(false)
-      setTimeout(() => {
-        setHeroIdx(i => (i + 1) % heroLines.length)
-        setHeroVisible(true)
-      }, 400)
-    }, 2800)
-    return () => clearInterval(interval)
-  }, [])
 
   if (checking) return null
 
@@ -139,6 +121,29 @@ export default function HomePage() {
 
   return (
     <div className="lp">
+      <style>{`
+        /* Hero image — sin desaturación para respetar las fotos profesionales */
+        .lp-hero-img {
+          filter: none;
+          object-position: center top;
+        }
+        /* Desktop: columna de imagen más ancha para que respire */
+        @media (min-width: 768px) {
+          .lp-hero { grid-template-columns: 1fr 48%; }
+          .lp-hero-img-wrap { min-height: 580px; }
+        }
+        @media (min-width: 1024px) {
+          .lp-hero { grid-template-columns: 1fr 50%; }
+          .lp-hero-img-wrap { min-height: 640px; }
+        }
+        @media (min-width: 1280px) {
+          .lp-hero { grid-template-columns: 1fr 54%; }
+          .lp-hero-img-wrap { min-height: 700px; }
+        }
+        /* Reducir espacio muerto entre pricing y CTA final */
+        #precios { padding-bottom: 48px; }
+        .lp-final { padding-top: 64px; }
+      `}</style>
 
       {/* ── NAV ── */}
       <nav id="l-navbar" className="lp-nav">
@@ -150,7 +155,7 @@ export default function HomePage() {
             className="lp-nav-cta"
             onClick={() => track('cta_click', { location: 'nav' })}
           >
-            Probá gratis
+            Probá Pulse gratis
           </a>
         </div>
       </nav>
@@ -161,8 +166,8 @@ export default function HomePage() {
         <div className="lp-hero-media">
           <div className="lp-hero-img-wrap">
             <img
-              src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400&q=85&auto=format&fit=crop&crop=center"
-              alt="Trainer guiando a su alumno"
+              src="/hero.png"
+              alt="Trainer corrigiendo el ejercicio de su alumno"
               className="lp-hero-img"
             />
           </div>
@@ -189,16 +194,7 @@ export default function HomePage() {
             Usada por trainers en Argentina
           </div>
           <h1 className="lp-h1">
-            <span
-              style={{
-                display: 'block',
-                opacity: heroVisible ? 1 : 0,
-                transform: heroVisible ? 'translateY(0)' : 'translateY(-6px)',
-                transition: 'opacity 0.4s ease, transform 0.4s ease',
-              }}
-            >
-              {heroLines[heroIdx]}
-            </span>
+            Dejá de perseguir pagos.<br />
             Empezá a <span className="lp-acc">entrenar.</span>
           </h1>
           {/*
@@ -395,14 +391,14 @@ export default function HomePage() {
         </div>
         <div className="lp-final-r">
           <p className="lp-final-sub">
-            En 10 minutos tenés tu primer alumno adentro y su primer plan asignado.
+            En 10 minutos tenés tu primer alumno adentro con su plan asignado.
           </p>
           <a
             href="/register/admin"
             className="lp-btn-primary"
             onClick={() => track('cta_click', { location: 'final_cta' })}
           >
-            Probá Pulse ahora, es gratis →
+            Probá Pulse ahora — es gratis →
           </a>
           {/*
             CHANGE: Old note repeated the "2 alumnos gratis" already stated in hero + pricing.
