@@ -12,8 +12,8 @@ export default function HomePage() {
   const [checking, setChecking] = useState(true)
   const heroLines = [
     'Dejá de perseguir pagos.',
-    'Dejá de crear planillas de Excel.',
-    'Dejá de tener mil charlas de WhatsApp.',
+    'Dejá de armar planillas.',
+    'Dejá de inundar el WhatsApp.',
   ]
   const [heroIdx, setHeroIdx] = useState(0)
   const [heroVisible, setHeroVisible] = useState(true)
@@ -362,7 +362,10 @@ export default function HomePage() {
                 number lands, which is a proven pricing psychology technique.
               */}
               <div className="lp-price-anchor">Menos de lo que ganás con una clase extra</div>
-              <div className="lp-price-n">$25.000</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                <div className="lp-price-n">$25.000</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 500, color: 'var(--muted-2)', textDecoration: 'line-through' }}>$35.000</div>
+              </div>
               <div className="lp-price-period">ARS / mes</div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span><strong>Alumnos ilimitados</strong></span></div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>App con tu logo y colores</span></div>
