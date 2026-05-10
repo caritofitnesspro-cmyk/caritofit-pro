@@ -200,6 +200,25 @@ export default function HomePage() {
             TU DÍA HOY.<br />
             <span>TU DÍA CON PULSE.</span>
           </h2>
+
+          {/* Imágenes antes/después */}
+          <div className="lp-ba-imgs l-reveal">
+            <div className="lp-ba-img-card">
+              <div className="lp-ba-img-wrap">
+                <img src="/antes.png" alt="Trainer agobiado con papeles y WhatsApp" className="lp-ba-img" />
+              </div>
+              <div className="lp-ba-img-label lp-ba-img-label--b">Antes</div>
+            </div>
+            <div className="lp-ba-arrow-center">→</div>
+            <div className="lp-ba-img-card">
+              <div className="lp-ba-img-wrap">
+                <img src="/despues.png" alt="Trainer tranquilo, cobró solo" className="lp-ba-img" />
+              </div>
+              <div className="lp-ba-img-label lp-ba-img-label--a">Con Pulse</div>
+            </div>
+          </div>
+
+          {/* Cards de texto */}
           <div className="lp-ba-grid">
             {beforeAfter.map(({ before, after }, i) => (
               <div key={i} className="lp-ba-card l-reveal">
