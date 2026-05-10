@@ -20,6 +20,7 @@ export default function HomePage() {
       else router.push('/dashboard')
     }
     checkSession()
+
     const navbar = document.getElementById('l-navbar')
     const onScroll = () => navbar?.classList.toggle('scrolled', window.scrollY > 40)
     window.addEventListener('scroll', onScroll)
@@ -45,268 +46,312 @@ export default function HomePage() {
 
   if (checking) return null
 
-  // ── Analytics helper ──
   function track(event: string, params?: Record<string, any>) {
-    try { sendGAEvent('event', event, params || {}) } catch(e) {}
+    try { sendGAEvent('event', event, params || {}) } catch (e) {}
   }
+
+  const beforeAfter = [
+    {
+      before: 'Mandás la rutina por WhatsApp y rezás para que la encuentren.',
+      after: 'Tu alumno abre su app, ve su plan del día y marca cada ejercicio. Vos lo ves al instante.',
+    },
+    {
+      before: 'Cobrar se siente incómodo, perseguís transferencias semanas.',
+      after: 'Tu alumno ve "Pagar mes" en su app. El dinero llega a tu Mercado Pago. Sin mensajes incómodos.',
+    },
+    {
+      before: 'No sabés si tu alumno entrenó o no hasta que te escribe.',
+      after: 'Recibís una notificación cuando alguien completa su sesión. Sin preguntar. Sin adivinar.',
+    },
+  ]
+
+  const features = [
+    {
+      num: '01',
+      title: 'Tus alumnos no se van',
+      desc: 'Ven su progreso, sus rachas y sus fotos. Cuando un alumno ve cuánto avanzó, no cancela.',
+    },
+    {
+      num: '02',
+      title: 'Sabés quién entrenó sin preguntar',
+      desc: 'Notificación en tiempo real cada vez que alguien completa su sesión. El control sin el esfuerzo.',
+    },
+    {
+      num: '03',
+      title: 'Tu marca, no la nuestra',
+      desc: 'Con PRO tu app lleva tu nombre y colores. Tus alumnos ven tu marca. Vos construís tu negocio.',
+    },
+    {
+      num: '04',
+      title: 'Cobrá sin tener que pedirlo',
+      desc: 'Tus alumnos pagan desde la app. El dinero va directo a tu Mercado Pago. Fin de los mensajes incómodos.',
+    },
+  ]
+
+  const testimonios = [
+    {
+      body: 'Antes mandaba las rutinas por WhatsApp y nunca sabía si las hacían. Ahora cada alumno tiene su app, recibo una notificación cuando entrenan y los cobros se manejan solos.',
+      name: 'Carolina L.',
+      role: 'Trainer personal · Buenos Aires',
+      initials: 'CL',
+      avatarBg: '#fce7f3',
+      avatarColor: '#9d174d',
+    },
+    {
+      body: 'Antes era todo por chat, ahora tengo mi rutina en la app, marco lo que hago y mi profe lo ve al instante. Nos enfocamos en entrenar, no en coordinarnos.',
+      name: 'Sofía',
+      role: 'Alumno · Buenos Aires',
+      initials: 'S',
+      avatarBg: '#eef3ff',
+      avatarColor: '#1a56db',
+    },
+    {
+      body: 'Me sorprendió lo fácil que fue empezar. En 10 minutos tenía mis primeros alumnos cargados y el plan asignado. No necesité ayuda de nadie.',
+      name: 'Nahuel P.',
+      role: 'Trainer · Buenos Aires',
+      initials: 'NP',
+      avatarBg: '#ecfdf5',
+      avatarColor: '#065f46',
+    },
+  ]
 
   return (
     <div className="lp">
 
-      {/* NAV */}
+      {/* ── NAV ── */}
       <nav id="l-navbar" className="lp-nav">
         <div className="lp-logo">PULSE<span>.</span></div>
-        <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
+        <div className="lp-nav-r">
           <a href="/login" className="lp-nav-login">Iniciar sesión</a>
-          <a href="/register/admin" className="lp-nav-cta" onClick={() => track('cta_click', { location: 'nav' })}>Empezar gratis</a>
+          <a
+            href="/register/admin"
+            className="lp-nav-cta"
+            onClick={() => track('cta_click', { location: 'nav' })}
+          >
+            Empezar gratis
+          </a>
         </div>
       </nav>
 
-      {/* HERO */}
-      <div className="lp-hero-outer">
-        <div className="lp-hero-wrap">
-          <img
-            className="lp-hero-photo"
-            src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400&q=85&auto=format&fit=crop&crop=center"
-            alt="Trainer guiando a su alumno"
-          />
-          <div className="lp-hero-overlay" />
-          <div className="lp-hero-badge">Para entrenadores personales</div>
-          <div className="lp-hero-content">
-            <div className="lp-hero-eyebrow">Antes: Excel + WhatsApp + perseguir pagos. Ahora:</div>
-            <h1>
-              Dejá de administrar<br />
-              tus personalizados<br />
-              en WhatsApp.<br />
-              Empezá a<br />
-              <em>entrenarlos.</em>
-            </h1>
-            <p className="lp-hero-sub">
-              Pulse centraliza tus rutinas, cobros y seguimiento <strong>en un solo lugar</strong>.<br />
-              Tus alumnos tienen su app. Vos tenés el control.
-            </p>
-            <div className="lp-cta-group">
-              <a href="/register/admin" className="lp-btn-main" onClick={() => track('cta_click', { location: 'hero' })}>Probá Pulse gratis →</a>
-              <a href="#como-funciona" className="lp-btn-ghost-dark">Ver cómo funciona</a>
-            </div>
-            <div className="lp-hero-note">Gratis para tus primeros 2 alumnos · Sin tarjeta · Sin contrato</div>
+      {/* ── HERO ── */}
+      <section className="lp-hero">
+        {/* Imagen + stats — arriba en mobile, columna derecha en desktop */}
+        <div className="lp-hero-media">
+          <div className="lp-hero-img-wrap">
+            <img
+              src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400&q=85&auto=format&fit=crop&crop=center"
+              alt="Trainer guiando a su alumno"
+              className="lp-hero-img"
+            />
           </div>
-          <div className="lp-hero-stats">
-            <div className="lp-stat-pill">
-              <div className="lp-stat-n">10<span>min</span></div>
-              <div className="lp-stat-l">Para estar operativo</div>
+          <div className="lp-stats-bar">
+            <div className="lp-sstat">
+              <div className="lp-sstat-n">10<em>min</em></div>
+              <div className="lp-sstat-l">Para operar</div>
             </div>
-            <div className="lp-stat-pill">
-              <div className="lp-stat-n"><span>$0</span></div>
-              <div className="lp-stat-l">Para empezar</div>
+            <div className="lp-sstat">
+              <div className="lp-sstat-n">$<em>0</em></div>
+              <div className="lp-sstat-l">Para empezar</div>
             </div>
-            <div className="lp-stat-pill">
-              <div className="lp-stat-n">0<span>wsp</span></div>
-              <div className="lp-stat-l">Para mandar rutinas</div>
+            <div className="lp-sstat">
+              <div className="lp-sstat-n">0<em>wsp</em></div>
+              <div className="lp-sstat-l">Para rutinas</div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ANTES / DESPUES */}
-      <div className="lp-before-after" id="como-funciona">
-        <div className="lp-ba-inner">
-          <div className="lp-section-label" style={{ textAlign:'center', marginBottom:'12px' }}>El cambio real</div>
-          <h2 className="lp-section-title" style={{ textAlign:'center', marginBottom:'8px' }}>
-            Tu día hoy.<br /><em>Tu día con Pulse.</em>
-          </h2>
-          <p className="lp-section-sub" style={{ textAlign:'center', margin:'0 auto 48px' }}>
-            Sabemos exactamente cuánto tiempo perdés en lo que no es entrenar.
+        {/* Texto — debajo en mobile, columna izquierda en desktop */}
+        <div className="lp-hero-body">
+          <div className="lp-badge">
+            <span className="lp-badge-dot" />
+            Para entrenadores personales
+          </div>
+          <h1 className="lp-h1">
+            La app que simplifica<br />
+            la gestión de <span className="lp-acc">tus alumnos.</span>
+          </h1>
+          <p className="lp-sub">
+            Rutinas, cobros y seguimiento en un solo lugar.
+            Tus alumnos tienen su app. Vos tenés el control.
           </p>
+          <div className="lp-cta-row">
+            <a
+              href="/register/admin"
+              className="lp-btn-primary"
+              onClick={() => track('cta_click', { location: 'hero' })}
+            >
+              Probá Pulse gratis →
+            </a>
+            <a href="#como-funciona" className="lp-btn-ghost">
+              Ver cómo funciona
+            </a>
+          </div>
+          <div className="lp-note">
+            Gratis para tus primeros 2 alumnos · Sin tarjeta · Sin contrato
+          </div>
+        </div>
+      </section>
+
+      {/* ── ANTES / DESPUÉS ── */}
+      <section className="lp-section lp-section--alt" id="como-funciona">
+        <div className="lp-wrap">
+          <div className="lp-sec-chip">El cambio real</div>
+          <h2 className="lp-sec-h">
+            TU DÍA HOY.<br />
+            <span>TU DÍA CON PULSE.</span>
+          </h2>
           <div className="lp-ba-grid">
-            {[
-              {
-                before: '📱 Mandás la rutina por WhatsApp y rezás para que la encuentren',
-                after:  'Tu alumno abre su app, ve su plan del día y marca cada ejercicio. Vos lo ves al instante.',
-                icon: '📋'
-              },
-              {
-                before: '😬 Cobrar se siente incómodo, perseguís transferencias semanas',
-                after:  'Tu alumno ve "Pagar mes" en su app. El dinero llega a tu Mercado Pago. Sin mensajes incómodos.',
-                icon: '💳'
-              },
-              {
-                before: '🤷 No sabés si tu alumno entrenó o no hasta que te escribe',
-                after:  'Recibís una notificación cuando alguien completa su sesión. Sin preguntar. Sin adivinar.',
-                icon: '🔔'
-              },
-            ].map(({ before, after, icon }, i) => (
+            {beforeAfter.map(({ before, after }, i) => (
               <div key={i} className="lp-ba-card l-reveal">
-                <div className="lp-ba-icon">{icon}</div>
-                <div className="lp-ba-before">
-                  <div className="lp-ba-label lp-ba-label-before">Antes</div>
-                  <div className="lp-ba-text">{before}</div>
-                </div>
-                <div className="lp-ba-arrow">↓</div>
-                <div className="lp-ba-after">
-                  <div className="lp-ba-label lp-ba-label-after">Con Pulse</div>
-                  <div className="lp-ba-text">{after}</div>
+                <div className="lp-ba-tag lp-tag-b">Antes</div>
+                <div className="lp-ba-b-txt">{before}</div>
+                <div className="lp-ba-tag lp-tag-a">Con Pulse</div>
+                <div className="lp-ba-a-txt">{after}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section className="lp-section">
+        <div className="lp-wrap">
+          <div className="lp-sec-chip">Por qué Pulse</div>
+          <h2 className="lp-sec-h">
+            COBRÁ SIN PEDIRLO.<br />
+            <span>SABÉ SIN PREGUNTAR.</span>
+          </h2>
+          <div className="lp-feat-grid">
+            {features.map(({ num, title, desc }, i) => (
+              <div key={i} className="lp-feat-card l-reveal">
+                <div className="lp-feat-num">{num}</div>
+                <div className="lp-feat-title">{title}</div>
+                <div className="lp-feat-desc">{desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIOS ── */}
+      <section className="lp-section lp-section--alt">
+        <div className="lp-wrap">
+          <div className="lp-sec-chip">Lo que dicen</div>
+          <h2 className="lp-sec-h">
+            PROFES REALES.<br />
+            <span>RESULTADOS REALES.</span>
+          </h2>
+          <div className="lp-testi-grid">
+            {testimonios.map(({ body, name, role, initials, avatarBg, avatarColor }, i) => (
+              <div key={i} className="lp-testi-card l-reveal">
+                <div className="lp-testi-stars">★★★★★</div>
+                <p className="lp-testi-body">{body}</p>
+                <div className="lp-testi-foot">
+                  <div
+                    className="lp-testi-ava"
+                    style={{ background: avatarBg, color: avatarColor }}
+                  >
+                    {initials}
+                  </div>
+                  <div>
+                    <div className="lp-testi-name">{name}</div>
+                    <div className="lp-testi-role">{role}</div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* DIFERENCIAL */}
-      <div className="lp-pills-section">
-        <div className="lp-pills-inner">
-          <div className="lp-section-label" style={{ textAlign:'center', marginBottom:'12px' }}>Por qué Pulse</div>
-          <h2 className="lp-section-title" style={{ textAlign:'center', marginBottom:'48px' }}>
-            Cobrá sin pedirlo.<br /><em>Sabé sin preguntar.</em>
+      {/* ── PRICING ── */}
+      <section className="lp-section" id="precios">
+        <div className="lp-wrap">
+          <div className="lp-sec-chip">Sin sorpresas</div>
+          <h2 className="lp-sec-h" style={{ marginBottom: '8px' }}>
+            EMPEZÁ GRATIS.<br />
+            <span>SIN EXCUSAS.</span>
           </h2>
-          <div className="lp-pills-grid">
-            {[
-              {
-                icon: '🔥',
-                title: 'Tus alumnos no se van',
-                desc: 'Ven su progreso, sus rachas y sus fotos. Cuando un alumno ve cuánto avanzó, no cancela.'
-              },
-              {
-                icon: '⚡',
-                title: 'Sabés quién entrenó sin preguntar',
-                desc: 'Notificación en tiempo real cada vez que alguien completa su sesión. El control sin el esfuerzo.'
-              },
-              {
-                icon: '🎨',
-                title: 'Tu marca, no la nuestra',
-                desc: 'Con PRO tu app lleva tu nombre y colores. Tus alumnos ven tu marca. Vos construís tu negocio.'
-              },
-              {
-                icon: '💸',
-                title: 'Cobrá sin tener que pedirlo',
-                desc: 'Tus alumnos pagan desde la app. El dinero va directo a tu Mercado Pago. Fin de los mensajes incómodos.'
-              },
-            ].map(({ icon, title, desc }, i) => (
-              <div key={i} className="lp-pill-card l-reveal">
-                <div className="lp-pill-icon">{icon}</div>
-                <div className="lp-pill-title">{title}</div>
-                <div className="lp-pill-desc">{desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* TESTIMONIOS */}
-      <div className="lp-quote-section">
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div className="lp-section-label" style={{ textAlign:'center', marginBottom:'12px', color:'rgba(91,140,255,0.8)' }}>Lo que dicen</div>
-          <h2 className="lp-section-title" style={{ textAlign:'center', marginBottom:'48px', color:'#f0ede8' }}>
-            Profes reales.<br /><em>Resultados reales.</em>
-          </h2>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'20px' }} className="lp-testi-grid">
-
-            {/* Carito — Trainer */}
-            <div className="lp-testi-card">
-              <div className="lp-testi-stars">★★★★★</div>
-              <p className="lp-testi-body">
-                "Antes mandaba las rutinas por WhatsApp y nunca sabía si las hacían. Ahora cada alumno tiene su app, yo recibo una notificación cuando entrenan y los cobros se manejan solos. Me cambió la forma de trabajar."
-              </p>
-              <div className="lp-testi-foot">
-                <div className="lp-testi-ava" style={{ background:'#e260a5' }}>CL</div>
-                <div>
-                  <div className="lp-testi-name">Carolina L.</div>
-                  <div className="lp-testi-role">Trainer personal · Buenos Aires</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sofi — Alumno */}
-            <div className="lp-testi-card">
-              <div className="lp-testi-stars">★★★★★</div>
-              <p className="lp-testi-body">
-                "La comunicación con mi profe mejoró muchísimo. Antes era todo por chat, ahora tengo mi rutina en la app, marco lo que hago y ella lo ve al instante. Nos enfocamos en entrenar, no en coordinarnos."
-              </p>
-              <div className="lp-testi-foot">
-                <div className="lp-testi-ava" style={{ background:'#5B8CFF' }}>S</div>
-                <div>
-                  <div className="lp-testi-name">Sofía</div>
-                  <div className="lp-testi-role">Alumno · Buenos Aires</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Nahue — Trainer nuevo */}
-            <div className="lp-testi-card">
-              <div className="lp-testi-stars">★★★★★</div>
-              <p className="lp-testi-body">
-                "Me sorprendió lo fácil que fue empezar. En 10 minutos tenía mis primeros alumnos cargados y el plan asignado. No necesité ayuda de nadie."
-              </p>
-              <div className="lp-testi-foot">
-                <div className="lp-testi-ava" style={{ background:'#16a34a' }}>NP</div>
-                <div>
-                  <div className="lp-testi-name">Nahuel P.</div>
-                  <div className="lp-testi-role">Trainer · Buenos Aires</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      {/* PRICING */}
-      <div className="lp-pricing" id="precios">
-        <div className="lp-pricing-inner">
-          <div className="lp-section-label" style={{ textAlign:'center', marginBottom:'12px' }}>Sin sorpresas</div>
-          <h2 className="lp-section-title" style={{ textAlign:'center', marginBottom:'8px' }}>
-            Empezá gratis.<br /><em>Sin excusas para no probarlo.</em>
-          </h2>
-          <p style={{ fontSize:'14px', color:'#6b7280', textAlign:'center', marginBottom:'48px' }}>
-            Sin contratos. Sin letras chicas.
-          </p>
+          <p className="lp-pricing-sub">Sin contratos. Sin letras chicas.</p>
           <div className="lp-pricing-grid">
+
             <div className="lp-price-card">
               <div className="lp-price-label">Free</div>
               <div className="lp-price-n">$0</div>
               <div className="lp-price-period">Para siempre</div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Hasta 2 alumnos</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>App para cada alumno</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Rutinas y planes</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Cobros (comisión 8%)</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot muted">—</span><span style={{ color:'#9ca3af' }}>Branding propio</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot muted">—</span><span style={{ color:'#9ca3af' }}>Comisión reducida</span></div>
-              <a href="/register/admin" className="lp-price-cta free" onClick={() => track('cta_click', { location: 'pricing_free' })}>Empezar gratis</a>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Hasta 2 alumnos</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>App para cada alumno</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Rutinas y planes</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Cobros (comisión 8%)</span></div>
+              <div className="lp-price-feat"><span className="lp-pc lp-pc--off">—</span><span className="lp-pc-muted">Branding propio</span></div>
+              <a
+                href="/register/admin"
+                className="lp-price-cta lp-price-cta--free"
+                onClick={() => track('cta_click', { location: 'pricing_free' })}
+              >
+                Empezar gratis
+              </a>
             </div>
-            <div className="lp-price-card pro">
-              <div style={{ display:'inline-block', background:'#5B8CFF', color:'#fff', fontSize:'10px', fontWeight:'700', padding:'4px 12px', borderRadius:'20px', marginBottom:'12px', letterSpacing:'0.06em' }}>MÁS ELEGIDO</div>
+
+            <div className="lp-price-card lp-price-card--pro">
+              <div className="lp-price-popular">Más elegido</div>
               <div className="lp-price-label">Pro</div>
               <div className="lp-price-n">$25.000</div>
               <div className="lp-price-period">ARS / mes</div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span><strong>Alumnos ilimitados</strong></span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>App con tu logo y colores</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Nombre de marca propio</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Cobros (comisión 5%)</span></div>
-              <div className="lp-price-feat"><span className="lp-pf-dot">✓</span><span>Soporte prioritario</span></div>
-              <div style={{ fontSize:'12px', color:'#3b5bdb', marginTop:'8px', fontWeight:'600' }}>Menos de lo que ganás con una clase extra.</div>
-              <a href="/register/admin?plan=pro" className="lp-price-cta pro" onClick={() => track('cta_click', { location: 'pricing_pro' })}>Activar Pro →</a>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span><strong>Alumnos ilimitados</strong></span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>App con tu logo y colores</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Nombre de marca propio</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Cobros (comisión 5%)</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Soporte prioritario</span></div>
+              <a
+                href="/register/admin?plan=pro"
+                className="lp-price-cta lp-price-cta--pro"
+                onClick={() => track('cta_click', { location: 'pricing_pro' })}
+              >
+                Activar Pro →
+              </a>
             </div>
+
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* FINAL CTA */}
-      <div className="lp-final">
-        <h2>Menos gestión.<br /><em>Más entrenamiento.</em></h2>
-        <div className="lp-final-sub">En 10 minutos tenés tu primer alumno adentro y su primer plan asignado.</div>
-        <a href="/register/admin" className="lp-btn-main" style={{ fontSize:'16px', padding:'16px 40px' }} onClick={() => track('cta_click', { location: 'final_cta' })}>Empezá a simplificar tu gestión →</a>
-        <div className="lp-final-note">Gratis para tus primeros 2 alumnos · Sin tarjeta · Sin contrato</div>
-      </div>
-
-      {/* FOOTER */}
-      <div className="lp-footer-eco">
-        <div className="lp-footer-eco-in" style={{justifyContent: 'center'}}>
-          <div className="lp-foot-links">
-            <a href="https://kairoinc.lat/" target="_blank" rel="noopener" className="lp-foot-kairo">Built by <strong>KAIRO</strong> · Make it simple — 2026</a>
+      {/* ── FINAL CTA ── */}
+      <section className="lp-final">
+        <div className="lp-final-l">
+          <h2 className="lp-final-h">
+            MENOS GESTIÓN.<br />
+            <span>MÁS ENTRENAMIENTO.</span>
+          </h2>
+        </div>
+        <div className="lp-final-r">
+          <p className="lp-final-sub">
+            En 10 minutos tenés tu primer alumno adentro y su primer plan asignado.
+          </p>
+          <a
+            href="/register/admin"
+            className="lp-btn-primary"
+            onClick={() => track('cta_click', { location: 'final_cta' })}
+          >
+            Empezá a simplificar tu gestión →
+          </a>
+          <div className="lp-note lp-note--right">
+            Gratis · Sin tarjeta · Sin contrato
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="lp-footer">
+        <a
+          href="https://kairoinc.lat/"
+          target="_blank"
+          rel="noopener"
+          className="lp-footer-link"
+        >
+          Built by <strong>KAIRO</strong> · Make it simple — 2026
+        </a>
+      </footer>
 
     </div>
   )
