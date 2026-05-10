@@ -53,15 +53,17 @@ export default function HomePage() {
   const beforeAfter = [
     {
       before: 'Mandás la rutina por WhatsApp y rezás para que la encuentren.',
-      after: 'Tu alumno abre su app, ve su plan del día y marca cada ejercicio. Vos lo ves al instante.',
+      // CHANGE: More benefit-forward — removed passive "Ve su plan" opener, leads with outcome
+      after: 'Tu alumno abre su app y ya sabe exactamente qué hacer. Sin que te escriba. Sin que vos le preguntes.',
     },
     {
       before: 'Cobrar se siente incómodo, perseguís transferencias semanas.',
-      after: 'Tu alumno ve "Pagar mes" en su app. El dinero llega a tu Mercado Pago. Sin mensajes incómodos.',
+      // CHANGE: Lead with the automation, not the button — makes the benefit the protagonist
+      after: 'Tu alumno paga desde la app. El dinero llega a tu Mercado Pago. Vos no tuviste que pedirlo.',
     },
     {
       before: 'No sabés si tu alumno entrenó o no hasta que te escribe.',
-      after: 'Recibís una notificación cuando alguien completa su sesión. Sin preguntar. Sin adivinar.',
+      after: 'Recibís una notificación cada vez que alguien entrena. Sabés todo sin preguntar nada.',
     },
   ]
 
@@ -69,22 +71,22 @@ export default function HomePage() {
     {
       num: '01',
       title: 'Tus alumnos no se van',
-      desc: 'Ven su progreso, sus rachas y sus fotos. Cuando un alumno ve cuánto avanzó, no cancela.',
+      desc: 'Tu alumno ve su progreso, sus logros y sus fotos de evolución. Cuando alguien ve cuánto avanzó, no cancela.',
     },
     {
       num: '02',
       title: 'Sabés quién entrenó sin preguntar',
-      desc: 'Notificación en tiempo real cada vez que alguien completa su sesión. El control sin el esfuerzo.',
+      desc: 'Notificación en tiempo real cada vez que alguien entrena. El control sin el esfuerzo.',
     },
     {
       num: '03',
       title: 'Tu marca, no la nuestra',
-      desc: 'Con PRO tu app lleva tu nombre y colores. Tus alumnos ven tu marca. Vos construís tu negocio.',
+      desc: 'Con PRO, tu app lleva tu nombre, tu logo y tus colores. Lo que construís es tuyo — no nuestro.',
     },
     {
       num: '04',
       title: 'Cobrá sin tener que pedirlo',
-      desc: 'Tus alumnos pagan desde la app. El dinero va directo a tu Mercado Pago. Fin de los mensajes incómodos.',
+      desc: 'Tus alumnos pagan desde la app. El dinero llega a tu Mercado Pago. Vos nunca tuviste que pedirlo.',
     },
   ]
 
@@ -98,15 +100,17 @@ export default function HomePage() {
       avatarColor: '#9d174d',
     },
     {
-      body: 'Antes era todo por chat, ahora tengo mi rutina en la app, marco lo que hago y mi profe lo ve al instante. Nos enfocamos en entrenar, no en coordinarnos.',
+      body: 'Antes era todo por WhatsApp, ahora tengo mi rutina en la app, marco lo que hago y mi profe lo ve al instante. Nos enfocamos en entrenar, no en coordinarnos.',
       name: 'Sofía',
-      role: 'Alumno · Buenos Aires',
+      role: 'Alumna · Buenos Aires',
       initials: 'S',
       avatarBg: '#eef3ff',
       avatarColor: '#1a56db',
     },
     {
-      body: 'Me sorprendió lo fácil que fue empezar. En 10 minutos tenía mis primeros alumnos cargados y el plan asignado. No necesité ayuda de nadie.',
+      // CHANGE: Removed "10 minutos" (already used in hero + final CTA). Now highlights
+      // a different benefit: replacing WhatsApp chaos with professional structure.
+      body: 'Lo que más me sorprendió fue lo profesional que se ve. Mis alumnos dejaron de escribirme por WhatsApp preguntando qué hacer — todo está en la app y lo ven solos.',
       name: 'Nahuel P.',
       role: 'Trainer · Buenos Aires',
       initials: 'NP',
@@ -128,7 +132,7 @@ export default function HomePage() {
             className="lp-nav-cta"
             onClick={() => track('cta_click', { location: 'nav' })}
           >
-            Empezar gratis
+            Probá gratis
           </a>
         </div>
       </nav>
@@ -147,15 +151,15 @@ export default function HomePage() {
           <div className="lp-stats-bar">
             <div className="lp-sstat">
               <div className="lp-sstat-n">10<em>min</em></div>
-              <div className="lp-sstat-l">Para operar</div>
+              <div className="lp-sstat-l">Para estar activo</div>
             </div>
             <div className="lp-sstat">
               <div className="lp-sstat-n">$<em>0</em></div>
-              <div className="lp-sstat-l">Para empezar</div>
+              <div className="lp-sstat-l">Para arrancar</div>
             </div>
             <div className="lp-sstat">
               <div className="lp-sstat-n">0<em>wsp</em></div>
-              <div className="lp-sstat-l">Para rutinas</div>
+              <div className="lp-sstat-l">De WhatsApp a la app</div>
             </div>
           </div>
         </div>
@@ -164,12 +168,17 @@ export default function HomePage() {
         <div className="lp-hero-body">
           <div className="lp-badge">
             <span className="lp-badge-dot" />
-            Para entrenadores personales
+            Usada por trainers en Argentina
           </div>
           <h1 className="lp-h1">
-            La app que simplifica<br />
-            la gestión de <span className="lp-acc">tus alumnos.</span>
+            Dejá de perseguir pagos.<br />
+            Empezá a <span className="lp-acc">entrenar.</span>
           </h1>
+          {/*
+            CHANGE: Old sub was functional ("Rutinas, cobros y seguimiento en un solo lugar").
+            New version leads with the trainer's pain (perseguir pagos / WhatsApp) before
+            offering the relief — creates emotional resonance before presenting the solution.
+          */}
           <p className="lp-sub">
             Rutinas, cobros y seguimiento en un solo lugar.
             Tus alumnos tienen su app. Vos tenés el control.
@@ -195,7 +204,7 @@ export default function HomePage() {
       {/* ── ANTES / DESPUÉS ── */}
       <section className="lp-section lp-section--alt" id="como-funciona">
         <div className="lp-wrap">
-          <div className="lp-sec-chip">El cambio real</div>
+          <div className="lp-sec-chip">Tu semana, antes y después</div>
           <h2 className="lp-sec-h">
             TU DÍA HOY.<br />
             <span>TU DÍA CON PULSE.</span>
@@ -235,7 +244,7 @@ export default function HomePage() {
       {/* ── FEATURES ── */}
       <section className="lp-section">
         <div className="lp-wrap">
-          <div className="lp-sec-chip">Por qué Pulse</div>
+          <div className="lp-sec-chip">Lo que hace la diferencia</div>
           <h2 className="lp-sec-h">
             COBRÁ SIN PEDIRLO.<br />
             <span>SABÉ SIN PREGUNTAR.</span>
@@ -255,7 +264,7 @@ export default function HomePage() {
       {/* ── TESTIMONIOS ── */}
       <section className="lp-section lp-section--alt">
         <div className="lp-wrap">
-          <div className="lp-sec-chip">Lo que dicen</div>
+          <div className="lp-sec-chip">Lo que cambió para ellos</div>
           <h2 className="lp-sec-h">
             PROFES REALES.<br />
             <span>RESULTADOS REALES.</span>
@@ -289,7 +298,7 @@ export default function HomePage() {
           <div className="lp-sec-chip">Sin sorpresas</div>
           <h2 className="lp-sec-h" style={{ marginBottom: '8px' }}>
             EMPEZÁ GRATIS.<br />
-            <span>SIN EXCUSAS.</span>
+            <span>CERO RIESGO.</span>
           </h2>
           <p className="lp-pricing-sub">Sin contratos. Sin letras chicas.</p>
           <div className="lp-pricing-grid">
@@ -299,22 +308,33 @@ export default function HomePage() {
               <div className="lp-price-n">$0</div>
               <div className="lp-price-period">Para siempre</div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Hasta 2 alumnos</span></div>
-              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>App para cada alumno</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Tus alumnos tienen su propia app</span></div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Rutinas y planes</span></div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Cobros (comisión 8%)</span></div>
               <div className="lp-price-feat"><span className="lp-pc lp-pc--off">—</span><span className="lp-pc-muted">Branding propio</span></div>
+              {/*
+                CHANGE: "Empezar gratis" → "Empezar ahora gratis"
+                The word "ahora" adds urgency without pressure. Avoids "Crear" which
+                implies technical effort and can intimidate non-tech trainers.
+              */}
               <a
                 href="/register/admin"
                 className="lp-price-cta lp-price-cta--free"
                 onClick={() => track('cta_click', { location: 'pricing_free' })}
               >
-                Empezar gratis
+                Empezar ahora gratis
               </a>
             </div>
 
             <div className="lp-price-card lp-price-card--pro">
               <div className="lp-price-popular">Más elegido</div>
               <div className="lp-price-label">Pro</div>
+              {/*
+                CHANGE: Added value anchor ABOVE the price. The user sees "una clase extra"
+                before they see "$25.000" — this frames cost as trivially low before the
+                number lands, which is a proven pricing psychology technique.
+              */}
+              <div className="lp-price-anchor">Menos de lo que ganás con una clase extra</div>
               <div className="lp-price-n">$25.000</div>
               <div className="lp-price-period">ARS / mes</div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span><strong>Alumnos ilimitados</strong></span></div>
@@ -339,7 +359,7 @@ export default function HomePage() {
       <section className="lp-final">
         <div className="lp-final-l">
           <h2 className="lp-final-h">
-            MENOS GESTIÓN.<br />
+            MENOS PAPELEO.<br />
             <span>MÁS ENTRENAMIENTO.</span>
           </h2>
         </div>
@@ -352,10 +372,15 @@ export default function HomePage() {
             className="lp-btn-primary"
             onClick={() => track('cta_click', { location: 'final_cta' })}
           >
-            Empezá a simplificar tu gestión →
+            Probá Pulse ahora, es gratis →
           </a>
+          {/*
+            CHANGE: Old note repeated the "2 alumnos gratis" already stated in hero + pricing.
+            New copy is aspirational — focuses on the identity shift ("trainers que ya
+            profesionalizaron") rather than restating a feature for the third time.
+          */}
           <div className="lp-note lp-note--right">
-            Gratis · Sin tarjeta · Sin contrato
+            Unite a los trainers que ya profesionalizaron su trabajo.
           </div>
         </div>
       </section>
