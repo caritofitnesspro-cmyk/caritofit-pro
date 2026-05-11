@@ -143,6 +143,17 @@ export default function HomePage() {
         /* Reducir espacio muerto entre pricing y CTA final */
         #precios { padding-bottom: 48px; }
         .lp-final { padding-top: 64px; }
+        /* Hero H1: fuente menor para que cada frase quede en 1 línea */
+        .lp-hero .lp-h1 { font-size: 44px; line-height: 1.06; }
+        @media (min-width: 1024px) {
+          .lp-hero .lp-h1 { font-size: 50px; }
+        }
+        @media (min-width: 1280px) {
+          .lp-hero .lp-h1 { font-size: 56px; }
+        }
+        @media (min-width: 1440px) {
+          .lp-hero .lp-h1 { font-size: 62px; }
+        }
       `}</style>
 
       {/* ── NAV ── */}
@@ -331,7 +342,7 @@ export default function HomePage() {
               <div className="lp-price-n">$0</div>
               <div className="lp-price-period">Para siempre</div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Hasta 2 alumnos</span></div>
-              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Tus alumnos tienen su propia app</span></div>
+              <div className="lp-price-feat"><span className="lp-pc">✓</span><span>App propia para cada alumno</span></div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Rutinas y planes</span></div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Cobros (comisión 8%)</span></div>
               <div className="lp-price-feat"><span className="lp-pc lp-pc--off">—</span><span className="lp-pc-muted">Branding propio</span></div>
@@ -352,17 +363,10 @@ export default function HomePage() {
             <div className="lp-price-card lp-price-card--pro">
               <div className="lp-price-popular">Más elegido</div>
               <div className="lp-price-label">Pro</div>
-              {/*
-                CHANGE: Added value anchor ABOVE the price. The user sees "una clase extra"
-                before they see "$25.000" — this frames cost as trivially low before the
-                number lands, which is a proven pricing psychology technique.
-              */}
-              <div className="lp-price-anchor">Menos de lo que ganás con una clase extra</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-                <div className="lp-price-n">$25.000</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 500, color: 'var(--muted-2)', textDecoration: 'line-through' }}>$35.000</div>
-              </div>
+              <div style={{ fontSize: '1.15rem', fontWeight: 500, color: 'var(--muted-2)', textDecoration: 'line-through', marginBottom: '2px' }}>$35.000</div>
+              <div className="lp-price-n">$25.000</div>
               <div className="lp-price-period">ARS / mes</div>
+              <div className="lp-price-anchor">Lo mismo que cobrás por 1 hora de clase</div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span><strong>Alumnos ilimitados</strong></span></div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>App con tu logo y colores</span></div>
               <div className="lp-price-feat"><span className="lp-pc">✓</span><span>Nombre de marca propio</span></div>
